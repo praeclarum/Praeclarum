@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8956A28C-EE46-4576-ADBC-CD26BD147CD0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Praeclarum</RootNamespace>
+    <AssemblyName>Praeclarum</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;PORTABLE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <DefineConstants>PORTABLE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RichText.cs" />
+    <Compile Include="StringRange.cs" />
+    <Compile Include="Graphics\Graphics.cs" />
+    <Compile Include="Graphics\NullGraphics.cs" />
+    <Compile Include="Graphics\Point.cs" />
+    <Compile Include="Graphics\Rectangle.cs" />
+    <Compile Include="Graphics\SvgGraphics.cs" />
+    <Compile Include="Graphics\Vector.cs" />
+    <Compile Include="Graphics\WmfGraphics.cs" />
+    <Compile Include="IO\IConsole.cs" />
+    <Compile Include="UI\ICanvas.cs" />
+    <Compile Include="UI\ITextEditor.cs" />
+    <Compile Include="UI\ITimer.cs" />
+    <Compile Include="UI\IView.cs" />
+    <Compile Include="UI\UserInterface.cs" />
+    <Compile Include="Command.cs" />
+    <Compile Include="App\Application.cs" />
+    <Compile Include="Graphics\Stroke.cs" />
+    <Compile Include="StringHelper.cs" />
+    <Compile Include="HtmlRichText.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

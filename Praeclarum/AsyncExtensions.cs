@@ -14,7 +14,7 @@ namespace Praeclarum
 			var type = eventSource.GetType ();
 			var ev = type.GetTypeInfo ().GetDeclaredEvent (eventName);
 
-			EventHandler<T> handler;
+			EventHandler<T> handler = null;
 			
 			handler = delegate (object sender, T e) {
 				ev.RemoveEventHandler (eventSource, handler);
@@ -32,7 +32,7 @@ namespace Praeclarum
 			var type = eventSource.GetType ();
 			var ev = type.GetTypeInfo ().GetDeclaredEvent (eventName);
 			
-			EventHandler handler;
+			EventHandler handler = null;
 			
 			handler = delegate (object sender, EventArgs e) {
 				ev.RemoveEventHandler (eventSource, handler);

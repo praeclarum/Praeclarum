@@ -38,6 +38,7 @@
     <Reference Include="DropBoxSync.iOS">
       <HintPath>..\Components\dropboxsync-2.0.2.1\lib\ios\DropBoxSync.iOS.dll</HintPath>
     </Reference>
+    <Reference Include="OpenTK-1.0" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -167,6 +168,7 @@
     <Compile Include="..\Praeclarum\StringHelper.cs">
       <Link>StringHelper.cs</Link>
     </Compile>
+    <Compile Include="Graphics\GLGraphics.cs" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="dropboxsync">

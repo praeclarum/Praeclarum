@@ -155,6 +155,11 @@ namespace Praeclarum.Graphics
 			return new Praeclarum.Graphics.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
 		}
 
+        public static Praeclarum.Graphics.RectangleF ToRectangleF (this System.Drawing.Rectangle rect)
+        {
+            return new Praeclarum.Graphics.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
+        }
+
 		public static Praeclarum.Graphics.SizeF ToSizeF (this System.Drawing.SizeF size)
 		{
 			return new Praeclarum.Graphics.SizeF (size.Width, size.Height);

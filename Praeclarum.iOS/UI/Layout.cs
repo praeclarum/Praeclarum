@@ -21,14 +21,34 @@ namespace Praeclarum.UI
 		/// <param name="constraints">Constraint equations and inequalities.</param>
 		public static NSLayoutConstraint[] ConstrainLayout (this UIView view, Expression<Func<bool>> constraints)
 		{
-			var body = ((LambdaExpression)constraints).Body;
+			return ConstrainLayout (view, constraints, UILayoutPriority.Required);
+		}
+
+		/// <summary>
+		/// <para>Constrains the layout of subviews according to equations and
+		/// inequalities specified in <paramref name="constraints"/>.  Issue
+		/// multiple constraints per call using the &amp;&amp; operator.</para>
+		/// <para>e.g. button.Frame.Left &gt;= text.Frame.Right + 22 &amp;&amp;
+		/// button.Frame.Width == View.Frame.Width * 0.42f</para>
+		/// </summary>
+		/// <param name="view">The superview laying out the referenced subviews.</param>
+		/// <param name="constraints">Constraint equations and inequalities.</param>
+		/// <param name = "priority">The priority of the constraints</param>
+		public static NSLayoutConstraint[] ConstrainLayout (this UIView view, Expression<Func<bool>> constraints, UILayoutPriority priority)
+		{
+			var body = constraints.Body;
 
 			var exprs = new List<BinaryExpression> ();
 			FindConstraints (body, exprs);
 
 			var layoutConstraints = exprs.Select (e => CompileConstraint (e, view)).ToArray ();
 
-			view.AddConstraints (layoutConstraints);
+			if (layoutConstraints.Length > 0) {
+				foreach (var c in layoutConstraints) {
+					c.Priority = (float)priority;
+				}
+				view.AddConstraints (layoutConstraints);
+			}
 
 			return layoutConstraints;
 		}
@@ -51,12 +71,11 @@ namespace Praeclarum.UI
 			}
 
 			var left = GetViewAndAttribute (expr.Left);
-			if (left.Item1 != constrainedView)
+			if (left.Item1 != constrainedView) {
 				left.Item1.TranslatesAutoresizingMaskIntoConstraints = false;
+			}
 
 			var right = GetRight (expr.Right);
-			if (right.Item1 != null && right.Item1 != constrainedView)
-				right.Item1.TranslatesAutoresizingMaskIntoConstraints = false;
 
 			return NSLayoutConstraint.Create (
 				left.Item1, left.Item2,
@@ -136,11 +155,16 @@ namespace Praeclarum.UI
 				var mexpr = (MemberExpression)expr;
 				var m = mexpr.Member;
 				if (m.MemberType == MemberTypes.Field) {
-					var f = (FieldInfo)m;
-					return f.IsStatic;
+					return true;
 				}
 				return false;
 			}
+
+			if (expr.NodeType == ExpressionType.Convert) {
+				var cexpr = (UnaryExpression)expr;
+				return IsConstant (cexpr.Operand);
+			}
+
 			return false;
 		}
 
@@ -158,9 +182,11 @@ namespace Praeclarum.UI
 			if (fExpr != null) {
 				switch (fExpr.Method.Name) {
 				case "GetMidX":
+				case "GetCenterX":
 					attr = NSLayoutAttribute.CenterX;
 					break;
 				case "GetMidY":
+				case "GetCenterY":
 					attr = NSLayoutAttribute.CenterY;
 					break;
 				case "GetBaseline":
@@ -176,7 +202,7 @@ namespace Praeclarum.UI
 			if (attr == NSLayoutAttribute.NoAttribute) {
 				var memExpr = expr as MemberExpression;
 				if (memExpr == null)
-					throw new NotSupportedException ("Left hand side of a relation must be a member expression");
+					throw new NotSupportedException ("Left hand side of a relation must be a member expression, instead it is " + expr);
 
 				switch (memExpr.Member.Name) {
 					case "Width":
@@ -228,9 +254,15 @@ namespace Praeclarum.UI
 				var m = mexpr.Member;
 				if (m.MemberType == MemberTypes.Field) {
 					var f = (FieldInfo)m;
-					if (f.IsStatic)
-						return f.GetValue (null);
+					var v = f.GetValue (Eval (mexpr.Expression));
+					return v;
 				}
+			}
+
+			if (expr.NodeType == ExpressionType.Convert) {
+				var cexpr = (UnaryExpression)expr;
+				var op = Eval (cexpr.Operand);
+				return Convert.ChangeType (op, cexpr.Type);
 			}
 
 			return Expression.Lambda (expr).Compile ().DynamicInvoke ();
@@ -256,6 +288,22 @@ namespace Praeclarum.UI
 		public static float GetBaseline (this System.Drawing.RectangleF viewFrame)
 		{
 			return 0;
+		}
+
+		/// <summary>
+		/// The x coordinate of the center of the frame. Use only when defining constraints.
+		/// </summary>
+		public static float GetCenterX (this System.Drawing.RectangleF viewFrame)
+		{
+			return viewFrame.X + viewFrame.Width / 2;
+		}
+
+		/// <summary>
+		/// The y coordinate of the center of the frame. Use only when defining constraints.
+		/// </summary>
+		public static float GetCenterY (this System.Drawing.RectangleF viewFrame)
+		{
+			return viewFrame.Y + viewFrame.Height / 2;
 		}
 	}
 }

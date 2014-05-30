@@ -31,7 +31,7 @@ namespace Praeclarum.UI
 //			TextColor = WhiteTheme.BarTextColor;
 //			ShadowColor = WhiteTheme.BarTextShadowColor;
 //			ShadowOffset = new SizeF (WhiteTheme.BarTextShadowOffset.Horizontal, WhiteTheme.BarTextShadowOffset.Vertical);
-//			Font = UIFont.FromName (WhiteTheme.TitleFontName, WhiteTheme.BarTitleFontSize);
+			Font = UIFont.FromName (WhiteTheme.TitleFontName, WhiteTheme.BarTitleFontSize);
 			AdjustsFontSizeToFitWidth = true;
 			TextAlignment = UITextAlignment.Center;
 			UserInteractionEnabled = true;

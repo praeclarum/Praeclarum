@@ -56,6 +56,11 @@ namespace Praeclarum.UI
 			dupBtn = theme.CreateDuplicateButton (HandleDuplicate);
 			cancelSelBtn = theme.CreateCancelButton (HandleCancelSelection);
 
+			NavigationItem.BackBarButtonItem = new UIBarButtonItem (
+				"Back",
+				UIBarButtonItemStyle.Bordered,
+				null);			
+
 			SetTitle ();
 		}
 
@@ -141,6 +146,15 @@ namespace Praeclarum.UI
 		}
 
 		public async Task LoadDocs ()
+		{
+			try {
+				await LoadDocsUnsafe ();
+			} catch (Exception ex) {
+				Console.WriteLine (ex);
+			}
+		}
+
+		async Task LoadDocsUnsafe ()
 		{
 //			Console.WriteLine ("LOAD");
 
@@ -313,6 +327,8 @@ namespace Praeclarum.UI
 		{
 			if (ios7) {
 				EditButtonItem.TintColor = UIColor.White;
+				dupBtn.TintColor = UIColor.White;
+				deleteBtn.TintColor = UIColor.White;
 			}
 
 			NavigationItem.LeftItemsSupplementBackButton = false;
@@ -327,6 +343,10 @@ namespace Praeclarum.UI
 
 		void SetSelectingNavItems (bool animated)
 		{
+			if (ios7) {
+				cancelSelBtn.TintColor = UIColor.White;
+			}
+
 			NavigationItem.LeftItemsSupplementBackButton = false;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
 				cancelSelBtn,

@@ -142,6 +142,7 @@ namespace Praeclarum.UI
 		void IDocumentsView.DeleteItems (int[] docIndices, bool animated)
 		{
 			try {				
+//				Console.WriteLine ("DeleteItems " + string.Join (", ", docIndices.Select (x => x.ToString ())));
 				var indexPaths = docIndices.Select (x => NSIndexPath.FromRowSection (x+1, 1)).ToArray ();
 				DeleteItems (indexPaths);
 			} catch (Exception ex) {
@@ -164,8 +165,10 @@ namespace Praeclarum.UI
 
 		void IDocumentsView.InsertItems (int[] docIndices)
 		{
-			var indexPaths = docIndices.Select (x => NSIndexPath.FromRowSection (x+1, 1)).ToArray ();
-			InsertItems (indexPaths);
+//			Console.WriteLine ("InsertItems " + string.Join (", ", docIndices.Select (x => x.ToString ())));
+//			var indexPaths = docIndices.Select (x => NSIndexPath.FromRowSection (x+1, 1)).ToArray ();
+//			InsertItems (indexPaths);
+			ReloadData ();
 		}
 
 		public void RefreshListTimes ()

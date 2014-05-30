@@ -233,28 +233,28 @@ namespace Praeclarum.UI
 
 		protected string GetPathFromTitle (string rawTitle)
 		{
-			var title = rawTitle.Trim ().Replace ("/", "-");
+			var title = (rawTitle??"").Trim ().Replace ("/", "-").Replace ("?", "-").Replace ("*", "-").Replace(":", "-");
 
 			var baseName = Path.GetFileNameWithoutExtension (title);
 
 			var ext = Path.GetExtension (title);
 
 			if (string.IsNullOrEmpty (ext))
-				ext = App.DefaultExtension;
+				ext = "." + App.DefaultExtension;
 
 			return Path.Combine (
 				CurrentDocumentListController.Directory, 
 				baseName + ext);
 		}
 
-		protected static string GetPathFromPath (string rawPath)
+		protected static string GetPathFromRawPath (string rawPath)
 		{
 			var path = rawPath.Trim ();
 
 			var ext = Path.GetExtension (path);
 
 			if (string.IsNullOrEmpty (ext)) {
-				ext = Shared.App.DefaultExtension;
+				ext = "." + Shared.App.DefaultExtension;
 				var baseName = Path.GetFileNameWithoutExtension (path);
 				var dir = Path.GetDirectoryName (path);
 				return Path.Combine (dir, baseName + ext);

@@ -10,7 +10,7 @@ namespace Praeclarum
 
 		public Action Action { get; set; }
 
-		public Command (string name, Action action)
+		public Command (string name, Action action = null)
 		{
 			Name = name;
 			Action = action;

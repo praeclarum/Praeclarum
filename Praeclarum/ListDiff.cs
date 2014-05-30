@@ -138,4 +138,30 @@ namespace Praeclarum
             }
         }
     }
+
+	public static class ListDiffEx
+	{
+		public static bool MergeInto<T> (this IList<T> source, IEnumerable<T> destination, Func<T, T, bool> match)
+		{
+			var changed = false;
+			var diff = new ListDiff<T, T> (source, destination, match);
+
+			var p = 0;
+
+			foreach (var a in diff.Actions) {
+				if (a.ActionType == ListDiffActionType.Add) {
+					source.Insert (p, a.DestinationItem);
+					changed = true;
+					p++;
+				} else if (a.ActionType == ListDiffActionType.Remove) {
+					source.RemoveAt (p);
+					changed = true;
+				} else {
+					p++;
+				}
+			}
+
+			return changed;
+		}
+	}
 }

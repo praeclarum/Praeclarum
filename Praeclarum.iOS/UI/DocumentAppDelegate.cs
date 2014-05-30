@@ -321,7 +321,7 @@ namespace Praeclarum.UI
 				firstHierarchy = false;
 
 				if (pendingUrl != null) {
-//					OpenPendingUrl (); // This causes a deadlock for some reason
+					NSTimer.CreateScheduledTimer (0.1, OpenPendingUrl);
 				} else {
 					await OpenLastDocument ();
 				}

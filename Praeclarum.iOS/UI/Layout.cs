@@ -291,7 +291,7 @@ namespace Praeclarum.UI
 		}
 
 		/// <summary>
-		/// The x coordinate of the center of the frame. Use only when defining constraints.
+		/// The x coordinate of the center of the frame.
 		/// </summary>
 		public static float GetCenterX (this System.Drawing.RectangleF viewFrame)
 		{
@@ -299,7 +299,7 @@ namespace Praeclarum.UI
 		}
 
 		/// <summary>
-		/// The y coordinate of the center of the frame. Use only when defining constraints.
+		/// The y coordinate of the center of the frame.
 		/// </summary>
 		public static float GetCenterY (this System.Drawing.RectangleF viewFrame)
 		{

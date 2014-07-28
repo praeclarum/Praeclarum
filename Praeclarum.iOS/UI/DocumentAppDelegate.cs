@@ -696,6 +696,8 @@ namespace Praeclarum.UI
 				GetNewDocumentText ()));
 		}
 
+		public bool ShowAddFromClipboard { get; set; }
+
 		public void ShowAddUI (UIBarButtonItem addButton, bool dup, bool folder)
 		{
 			if (DismissSheetsAndPopovers ()) {
@@ -714,7 +716,7 @@ namespace Praeclarum.UI
 			};
 
 			var pbtext = GetPasteboardText ();
-			if (!string.IsNullOrWhiteSpace (pbtext) && lastClipboard != pbtext) {
+			if (ShowAddFromClipboard && !string.IsNullOrWhiteSpace (pbtext) && lastClipboard != pbtext) {
 				lastClipboard = pbtext;
 				form.Add (new FormAction (
 					"From Clipboard",

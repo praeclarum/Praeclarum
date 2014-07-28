@@ -130,10 +130,13 @@ namespace Praeclarum.UI
 			//
 			var uiSync = TaskScheduler.FromCurrentSynchronizationContext ();
 			InitFileSystem ().ContinueWith (t => {
-				if (!t.IsFaulted)
+				if (!t.IsFaulted) {
 					Debug.WriteLine ("File system initialized");
-				else
+					App.OnFileSystemInitialized ();
+				}
+				else {
 					Debug.WriteLine (t.Exception);
+				}
 			}, uiSync);
 
 			return true;
@@ -437,13 +440,13 @@ namespace Praeclarum.UI
 			get { return NSBundle.MainBundle.ObjectForInfoDictionary ("CFBundleVersion").ToString (); }
 		}
 
-		protected DocumentsViewController CurrentDocumentListController {
+		public DocumentsViewController CurrentDocumentListController {
 			get {
 				return docListNav.ViewControllers.OfType<DocumentsViewController> ().LastOrDefault ();
 			}
 		}
 
-		protected IDocumentEditor CurrentDocumentEditor {
+		public IDocumentEditor CurrentDocumentEditor {
 			get {
 				var vcs = (detailNav ?? docListNav).ViewControllers;
 				return vcs.OfType<IDocumentEditor> ().LastOrDefault ();

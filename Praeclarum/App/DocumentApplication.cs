@@ -46,6 +46,13 @@ namespace Praeclarum.App
 			}
 		}
 
+		/// <summary>
+		/// Called once everything is loaded
+		/// </summary>
+		public virtual void OnFileSystemInitialized ()
+		{
+		}
+
 		static string Pluralize (string word)
 		{
 			if (string.IsNullOrEmpty (word))

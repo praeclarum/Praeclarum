@@ -127,6 +127,7 @@ namespace Praeclarum.IO
 			return Task.Run (() => {
 				var r = new DeviceFile (path, documentsPath);
 				if (!string.IsNullOrEmpty (contents)) {
+					Directory.CreateDirectory (Path.GetDirectoryName (r.LocalPath));
 					File.WriteAllText (r.LocalPath, contents, Encoding.UTF8);
 				}
 				return (IFile)r;

@@ -428,15 +428,15 @@ namespace Praeclarum.UI
 			if (ios7) {
 				segs.TintColor = darkColor;
 			} else {
-				segs.TintColor = UIColor.FromWhiteAlpha (192/255.0f, 1);
+				segs.TintColor = UIColor.FromWhiteAlpha (165/255.0f, 1);
 				segs.SetTitleTextAttributes (new UITextAttributes {
-					TextColor = UIColor.FromWhiteAlpha (240/255.0f, 1),
+					TextColor = UIColor.FromWhiteAlpha (220/255.0f, 1),
 					TextShadowColor = UIColor.LightGray,
 					TextShadowOffset = new UIOffset (0, -1),
 				}, UIControlState.Normal);
 				segs.SetTitleTextAttributes (new UITextAttributes {
 					TextColor = UIColor.White,
-					TextShadowColor = UIColor.DarkGray,
+					TextShadowColor = UIColor.Gray,
 					TextShadowOffset = new UIOffset (0, -1),
 				}, UIControlState.Selected);
 				segs.ControlStyle = UISegmentedControlStyle.Bar;

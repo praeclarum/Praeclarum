@@ -597,6 +597,13 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public override void WillRotate (UIInterfaceOrientation toInterfaceOrientation, double duration)
+		{
+			base.WillRotate (toInterfaceOrientation, duration);
+
+			docsView.UpdateLayout ();
+		}
+
 		static void ShowSyncError ()
 		{
 			var alert = new UIAlertView (

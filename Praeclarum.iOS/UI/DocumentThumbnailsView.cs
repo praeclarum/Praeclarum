@@ -67,6 +67,13 @@ namespace Praeclarum.UI
 			thumbHeight = (int)(thumbHeight + 0.5f);
 
 			ThumbnailSize = new Praeclarum.Graphics.SizeF (thumbWidth, thumbHeight);
+
+//			Console.WriteLine ("THUMB SIZE = {0}", ThumbnailSize);
+		}
+
+		public void UpdateLayout ()
+		{
+			CollectionViewLayout.InvalidateLayout ();
 		}
 
 		void HandleSelectedDocumentsChanged (object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -262,7 +269,9 @@ namespace Praeclarum.UI
 			var controller = (DocumentThumbnailsView)collectionView;
 
 			var s = controller.ThumbnailSize;
-			return new SizeF (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
+			var itemSize = new SizeF (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
+//			Console.WriteLine ("item size = {0}", itemSize);
+			return itemSize;
 		}
 
 		public override UIEdgeInsets GetInsetForSection (UICollectionView collectionView, UICollectionViewLayout layout, int section)

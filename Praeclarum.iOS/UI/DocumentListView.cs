@@ -95,6 +95,10 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public void UpdateLayout ()
+		{
+		}
+
 		public DocumentsViewItem GetItemAtPoint (Praeclarum.Graphics.PointF p)
 		{
 			var index = IndexPathForRowAtPoint (Praeclarum.Graphics.RectangleEx.ToPointF (p));

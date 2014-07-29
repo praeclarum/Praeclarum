@@ -182,7 +182,7 @@ namespace Praeclarum.UI
 			//
 			// Sort them
 			//
-			if (docsView.Sort == DocumentsSort.Date) {
+			if (SortOrder == DocumentsSort.Date) {
 
 				newItems.Sort ((a, b) => b.ModifiedTime.CompareTo (a.ModifiedTime));
 
@@ -207,6 +207,8 @@ namespace Praeclarum.UI
 
 			ReloadData ();
 		}
+
+		DocumentsSort SortOrder { get { return docsView != null ? docsView.Sort : DocumentsSort.Name; } }
 
 		static async Task<Tuple<IFile, DateTime>> GetModifiedTimeAsync (IFile file)
 		{

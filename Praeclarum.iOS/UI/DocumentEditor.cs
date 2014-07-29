@@ -21,7 +21,7 @@ namespace Praeclarum.UI
 
 			View.BackgroundColor = UIColor.White;
 
-			Created ();
+			OnCreated ();
 		}
 
 		IView editorView = null;
@@ -45,7 +45,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public virtual void Created ()
+		public virtual void OnCreated ()
 		{
 		}
 

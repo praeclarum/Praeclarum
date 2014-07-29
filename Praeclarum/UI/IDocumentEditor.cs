@@ -10,7 +10,7 @@ namespace Praeclarum.UI
 		IView EditorView { get; }
 
 		void WillEnterForeground ();
-		void Created ();
+		void OnCreated ();
 
 		void BindDocument ();
 		void UnbindDocument ();

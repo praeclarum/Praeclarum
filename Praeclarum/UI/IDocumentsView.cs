@@ -55,6 +55,8 @@ namespace Praeclarum.UI
 
 		void SetSelecting (bool selecting, bool animated);
 
+		void UpdateLayout ();
+
 		ObservableCollection<string> SelectedDocuments { get; }
 	}
 }

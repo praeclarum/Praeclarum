@@ -18,6 +18,8 @@ namespace Praeclarum.UI
 		public DocumentReference Reference { get; set; }
 		public List<DocumentReference> SubReferences { get; set; }
 
+		public bool IsDirectory { get { return Reference.File.IsDirectory; } }
+
 		public DateTime ModifiedTime {
 			get {
 				if (SubReferences == null || SubReferences.Count == 0)

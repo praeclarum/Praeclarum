@@ -321,19 +321,25 @@ namespace Praeclarum.UI
 					// Add
 				} else {
 					row--;
-					var d = controller.Items [row].Reference;
 
-					if (controller.SelectedDocuments.Contains (d.File.Path)) {
+					var item = controller.Items [row];
 
-						controller.SelectedDocuments.Remove (d.File.Path);
+					if (!item.IsDirectory) {
 
-					} else {
+						var d = item.Reference;
 
-						controller.SelectedDocuments.Add (d.File.Path);
+						if (controller.SelectedDocuments.Contains (d.File.Path)) {
+
+							controller.SelectedDocuments.Remove (d.File.Path);
+
+						} else {
+
+							controller.SelectedDocuments.Add (d.File.Path);
+
+						}
 
 					}
 				}
-
 
 			} else {
 

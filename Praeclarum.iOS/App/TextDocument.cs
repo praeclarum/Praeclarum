@@ -93,13 +93,18 @@ namespace Praeclarum.App
 
 		static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 
-		public virtual NSObject[] GetActivities ()
+		public virtual Task<NSObject[]> GetActivityItemsAsync ()
 		{
 			var str = new NSAttributedString (TextData);
-			return new NSObject[] {
+			return Task.FromResult (new NSObject[] {
 				str,
 				ios7 ? new UISimpleTextPrintFormatter (str) : new UISimpleTextPrintFormatter (TextData),
-			};
+			});
+		}
+
+		public virtual Task<UIActivity[]> GetActivitiesAsync ()
+		{
+			return Task.FromResult (new UIActivity[0]);
 		}
 	}
 

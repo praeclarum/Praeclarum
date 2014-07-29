@@ -1229,14 +1229,17 @@ namespace Praeclarum.UI
 			if (ad.DismissSheetsAndPopovers ())
 				return;
 
-			NSObject[] acts = new NSObject[0];
+			NSObject[] items = new NSObject[0];
+			UIActivity[] aa = new UIActivity[0];
 
 			try {
 
 				var d = (await docRef.Open ()) as TextDocument;
 
-				if (d != null)
-					acts = d.GetActivities ();
+				if (d != null) {
+					items = await d.GetActivityItemsAsync ();
+					aa = await d.GetActivitiesAsync ();
+				}
 
 				await docRef.Close ();
 								
@@ -1244,9 +1247,9 @@ namespace Praeclarum.UI
 				Debug.WriteLine (ex);
 			}
 
-			if (acts.Length > 0) {
+			if (items.Length > 0) {
 				var tcs = new TaskCompletionSource<bool> ();
-				var a = new UIActivityViewController (acts, null);
+				var a = new UIActivityViewController (items, aa);
 				a.CompletionHandler = (x,success) => {
 					Console.WriteLine ("COMPLETE {0} {1}", x, success);
 					tcs.SetResult (success);

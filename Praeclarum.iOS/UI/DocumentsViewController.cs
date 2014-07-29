@@ -150,7 +150,7 @@ namespace Praeclarum.UI
 			try {
 				await LoadDocsUnsafe ();
 			} catch (Exception ex) {
-				Console.WriteLine (ex);
+				Console.WriteLine ("LoadDocs Failed: " + ex);
 			}
 		}
 
@@ -537,6 +537,10 @@ namespace Praeclarum.UI
 		public override async void ViewWillAppear (bool animated)
 		{
 			base.ViewWillAppear (animated);
+
+			//
+			// Style the navigation controller
+			//
 			if (NavigationController != null) {
 
 				var toolbar = NavigationController.Toolbar;
@@ -554,27 +558,31 @@ namespace Praeclarum.UI
 
 				NavigationController.SetToolbarHidden (false, animated);
 			}
+
+			//
+			// Create the auto time refresher
+			//
 			refreshTimer = NSTimer.CreateRepeatingScheduledTimer (RefreshListTimesInterval, RefreshListTimes);
 
-			var needsLoad = false;
-
+			//
+			// Update the sort order
+			//
 			var currentSort = DocumentAppDelegate.Shared.Settings.DocumentsSort;
 
 			if (docsView.Sort != currentSort) {
 				forcingSort = true;
 				docsView.Sort = currentSort;
 				forcingSort = false;
-				needsLoad = true;
 			}
 
-			if (needsLoad) {
-				try {
-					await LoadDocs ();
-				} catch (Exception ex) {
-					Debug.WriteLine (ex);
-				}
-			}
+			//
+			// Update the view
+			//
+			await LoadDocs ();
 
+			//
+			// Show which doc is open
+			//
 			SetOpenedDocument (DocumentAppDelegate.Shared.OpenedDocIndex, animated);
 		}
 

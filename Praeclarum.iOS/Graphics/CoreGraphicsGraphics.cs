@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010 Frank A. Krueger
+// Copyright (c) 2010-2014 Frank A. Krueger
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -214,6 +214,7 @@ namespace Praeclarum.Graphics
 		{
 			if (!_linesBegun)
 				return;
+			_c.SaveState ();
 			_c.SetLineJoin (_lineRounded ? CGLineJoin.Round : CGLineJoin.Miter);
 			_c.SetLineWidth (_lineWidth);
 			for (var i = 0; i < _numLinePoints; i++) {
@@ -225,6 +226,7 @@ namespace Praeclarum.Graphics
 				}
 			}
 			_c.StrokePath ();
+			_c.RestoreState ();
 			_linesBegun = false;
 		}
 		

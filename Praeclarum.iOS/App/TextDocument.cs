@@ -93,7 +93,7 @@ namespace Praeclarum.App
 
 		static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 
-		public virtual Task<NSObject[]> GetActivityItemsAsync ()
+		public virtual Task<NSObject[]> GetActivityItemsAsync (UIViewController fromController)
 		{
 			var str = new NSAttributedString (TextData);
 			return Task.FromResult (new NSObject[] {
@@ -102,7 +102,7 @@ namespace Praeclarum.App
 			});
 		}
 
-		public virtual Task<UIActivity[]> GetActivitiesAsync ()
+		public virtual Task<UIActivity[]> GetActivitiesAsync (UIViewController fromController)
 		{
 			return Task.FromResult (new UIActivity[0]);
 		}

@@ -504,14 +504,14 @@ namespace Praeclarum.UI
 
 		async Task PerformActionOnDocument (string filePath)
 		{
+			BeginInvokeOnMainThread (() => SetSelecting (false, true));
+
 			var docRef = this.Docs.FirstOrDefault (x => x.File.Path == filePath);
 			if (docRef != null) {
 
 				await DocumentAppDelegate.Shared.PerformActionOnDocument (docRef, this);
 
 			}
-
-			SetSelecting (false, true);
 		}
 
 		bool IsSyncing {

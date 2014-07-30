@@ -65,16 +65,18 @@ namespace Praeclarum.UI
 				var f = item as IFileSystemProvider;
 				if (f != null) {
 
-					f.ShowAddUI (Form).ContinueWith (t => {
-
-						Form.Dismiss ();
-
-					}, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext ());
+					AddFileSystemAsync (f);
 
 					return false;
 				}
 
 				return false;
+			}
+
+			async Task AddFileSystemAsync (IFileSystemProvider f)
+			{
+				await f.ShowAddUI (Form);
+				await Form.DismissAsync ();
 			}
 		}
 
@@ -194,8 +196,8 @@ namespace Praeclarum.UI
 
 				var fs = item as IFileSystem;
 				SetNeedsFormat ();
-				if (Form != null) Form.Dismiss ();
-				DocumentListAppDelegate.Shared.SetFileSystem (fs, true).ContinueWith (t => {
+				if (Form != null) Form.DismissAsync ();
+				DocumentAppDelegate.Shared.SetFileSystem (fs, true).ContinueWith (t => {
 				}, TaskScheduler.FromCurrentSynchronizationContext ());
 
 				return true;

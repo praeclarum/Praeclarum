@@ -1219,7 +1219,7 @@ namespace Praeclarum.UI
 
 		#region Actions
 
-		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController controller)
+		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController fromController)
 		{
 			if (docRef == null)
 				return;
@@ -1237,8 +1237,8 @@ namespace Praeclarum.UI
 				var d = (await docRef.Open ()) as TextDocument;
 
 				if (d != null) {
-					items = await d.GetActivityItemsAsync ();
-					aa = await d.GetActivitiesAsync ();
+					items = await d.GetActivityItemsAsync (fromController);
+					aa = await d.GetActivitiesAsync (fromController);
 				}
 
 				await docRef.Close ();
@@ -1255,7 +1255,7 @@ namespace Praeclarum.UI
 					tcs.SetResult (success);
 				};
 
-				controller.PresentViewController (a, true, null);
+				fromController.PresentViewController (a, true, null);
 
 				await tcs.Task;
 			}

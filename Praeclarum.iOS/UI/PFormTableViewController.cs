@@ -4,16 +4,24 @@ using MonoTouch.Foundation;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Praeclarum.UI
 {
 	public partial class PForm : UITableViewController
 	{
+		public bool AutoDoneButton { get; set; }
+
+		partial void InitializeUI ()
+		{
+			AutoDoneButton = true;
+		}
+
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
 
-			if (NavigationController == null || NavigationController.ViewControllers.Length == 1) {
+			if (AutoDoneButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
 				NavigationItem.RightBarButtonItem = new UIBarButtonItem (
 					UIBarButtonSystemItem.Done,
 					HandleDone);
@@ -26,12 +34,12 @@ namespace Praeclarum.UI
 			TableView.Source = new FormSource (this);
 		}
 
-		protected virtual void HandleDone (object sender, EventArgs e)
+		protected virtual async void HandleDone (object sender, EventArgs e)
 		{
-			Dismiss ();
+			await DismissAsync ();
 		}
 
-		public virtual void Dismiss ()
+		public virtual async Task DismissAsync ()
 		{
 			foreach (var s in sections) {
 				s.Dismiss ();
@@ -43,12 +51,12 @@ namespace Praeclarum.UI
 
 			if (NavigationController != null) {
 				if (NavigationController.ViewControllers.Length == 1) {
-					NavigationController.DismissViewController (true, null);
+					await NavigationController.DismissViewControllerAsync (true);
 				} else {
 					NavigationController.PopViewControllerAnimated (true);
 				}
 			} else {
-				DismissViewController (true, null);
+				await DismissViewControllerAsync (true);
 			}
 		}
 //

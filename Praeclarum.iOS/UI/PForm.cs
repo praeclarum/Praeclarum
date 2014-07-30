@@ -19,7 +19,11 @@ namespace Praeclarum.UI
 
 			sections = new ObservableCollection<PFormSection> ();
 			sections.CollectionChanged += HandleSectionsChanged;
+
+			InitializeUI ();
 		}
+
+		partial void InitializeUI ();
 
 		void HandleSectionsChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{

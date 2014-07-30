@@ -2,6 +2,7 @@
 using MonoTouch.UIKit;
 using MonoTouch.Foundation;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Praeclarum.App
 {
@@ -38,6 +39,8 @@ namespace Praeclarum.App
 			var text = TextData;
 
 			var data = NSData.FromString (text, NSStringEncoding.UTF8);
+
+			Debug.WriteLine ("SAVE " + LocalFilePath);
 
 			Saving (this, new SavingEventArgs {
 				TextData = text

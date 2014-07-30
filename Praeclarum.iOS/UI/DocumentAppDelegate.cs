@@ -1221,44 +1221,51 @@ namespace Praeclarum.UI
 
 		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController fromController)
 		{
-			if (docRef == null)
-				return;
-
-			var ad = this;
-
-			if (ad.DismissSheetsAndPopovers ())
-				return;
-
-			NSObject[] items = new NSObject[0];
-			UIActivity[] aa = new UIActivity[0];
-
 			try {
+				
+				if (docRef == null)
+					return;
 
-				var d = (await docRef.Open ()) as TextDocument;
+				var ad = this;
 
-				if (d != null) {
-					items = await d.GetActivityItemsAsync (fromController);
-					aa = await d.GetActivitiesAsync (fromController);
+				if (ad.DismissSheetsAndPopovers ())
+					return;
+
+				NSObject[] items = new NSObject[0];
+				UIActivity[] aa = new UIActivity[0];
+
+				try {
+
+					var d = (await docRef.Open ()) as TextDocument;
+
+					if (d != null) {
+						items = await d.GetActivityItemsAsync (fromController);
+						aa = await d.GetActivitiesAsync (fromController);
+					}
+
+					await docRef.Close ();
+									
+				} catch (Exception ex) {
+					Debug.WriteLine (ex);
 				}
 
-				await docRef.Close ();
-								
+				if (items.Length > 0) {
+					var tcs = new TaskCompletionSource<bool> ();
+					var a = new UIActivityViewController (items, aa);
+					a.CompletionHandler = (x,success) => {
+						Console.WriteLine ("COMPLETE {0} {1}", x, success);
+						tcs.SetResult (success);
+					};
+
+					fromController.PresentViewController (a, true, null);
+
+					await tcs.Task;
+				}
+
 			} catch (Exception ex) {
-				Debug.WriteLine (ex);
+				Console.WriteLine ("Perform Act of Doc Failed: " + ex);
 			}
 
-			if (items.Length > 0) {
-				var tcs = new TaskCompletionSource<bool> ();
-				var a = new UIActivityViewController (items, aa);
-				a.CompletionHandler = (x,success) => {
-					Console.WriteLine ("COMPLETE {0} {1}", x, success);
-					tcs.SetResult (success);
-				};
-
-				fromController.PresentViewController (a, true, null);
-
-				await tcs.Task;
-			}
 		
 		}
 

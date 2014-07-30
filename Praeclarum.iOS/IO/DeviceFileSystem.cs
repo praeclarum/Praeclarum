@@ -93,7 +93,8 @@ namespace Praeclarum.IO
 					fs.AddRange (Directory.GetFiles (dirPath, "*." + ex));
 				}
 				fs.AddRange (from d in Directory.GetDirectories (dirPath) 
-				             where !Path.GetFileName (d).Contains ("Temp")
+							let fn = Path.GetFileName (d)
+							where fn.Length > 0 && fn[0] != '.' && !fn.Contains ("Temp")
 				             select d);
 
 				return fs.

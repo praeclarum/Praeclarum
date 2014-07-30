@@ -98,10 +98,14 @@ namespace Praeclarum.UI
 
 			ActionSheet.CancelButtonIndex = ActionSheet.ButtonCount - 1;
 
-			ActionSheet.Clicked += (ss, se) => {
+			ActionSheet.Clicked += async (ss, se) => {
 				var index = se.ButtonIndex;
 				if (0 <= index && index < actions.Count) {
-					actions[index].Execute ();
+					try {
+						await actions[index].ExecuteAsync ();						
+					} catch (Exception ex) {
+						Console.WriteLine ("Failed to execute action: " + ex);
+					}
 				}
 			};
 

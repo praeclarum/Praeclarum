@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Praeclarum.UI
 {
@@ -103,7 +104,13 @@ namespace Praeclarum.UI
 		{
 			var c = item as Command;
 			if (c != null) {
-				c.Execute ();
+				c.ExecuteAsync ().ContinueWith (t => {
+
+					if (t.IsFaulted) {
+						Console.WriteLine ("Execute command async failed: " + t.Exception);
+					}
+
+				}, TaskScheduler.FromCurrentSynchronizationContext ());
 				return false;
 			}
 

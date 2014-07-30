@@ -39,11 +39,6 @@ namespace Praeclarum.UI
 			await DismissAsync ();
 		}
 
-		public virtual void Dismiss ()
-		{
-			DismissAsync ();
-		}
-
 		public virtual async Task DismissAsync ()
 		{
 			foreach (var s in sections) {
@@ -257,7 +252,10 @@ namespace Praeclarum.UI
 						if (!sel) {
 							tableView.DeselectRow (indexPath, true);
 							var cell = tableView.CellAt (indexPath);
-							((FormSource)tableView.Source).FormatCell (cell, section, item);
+							var source = tableView.Source as FormSource;
+							if (source != null) {
+								source.FormatCell (cell, section, item);
+							}
 						}
 					}
 					else {

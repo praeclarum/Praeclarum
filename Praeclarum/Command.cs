@@ -1,25 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Praeclarum
 {
+	public delegate Task AsyncAction ();
+
 	public class Command
 	{
 		public string Name { get; set; }
 
-		public Action Action { get; set; }
+		public AsyncAction Action { get; set; }
 
-		public Command (string name, Action action = null)
+		public Command (string name, AsyncAction action = null)
 		{
 			Name = name;
 			Action = action;
 		}
 
-		public virtual void Execute ()
+		public virtual async Task ExecuteAsync ()
 		{
 			if (Action != null)
-				Action ();
+				await Action ();
 		}
 	}
 

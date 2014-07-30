@@ -684,10 +684,10 @@ namespace Praeclarum.UI
 				NavigationController.NavigationBar.TintColor = UIColor.White;
 				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 				SetNeedsStatusBarAppearanceUpdate ();
+				UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.LightContent;
 			} else {
 				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 			}
-			UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.LightContent;
 			NavigationController.SetToolbarHidden (true, animated);
 			UpdateEditingForSelection ();
 		}
@@ -699,11 +699,11 @@ namespace Praeclarum.UI
 				NavigationController.NavigationBar.TintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
 				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
 				SetNeedsStatusBarAppearanceUpdate ();
+				UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.Default;
 			} else {
 				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
 			}
 
-			UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.Default;
 			NavigationController.SetToolbarHidden (false, animated);
 		}
 

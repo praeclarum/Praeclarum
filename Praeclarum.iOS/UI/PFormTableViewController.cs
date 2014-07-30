@@ -39,6 +39,11 @@ namespace Praeclarum.UI
 			await DismissAsync ();
 		}
 
+		public virtual void Dismiss ()
+		{
+			DismissAsync ();
+		}
+
 		public virtual async Task DismissAsync ()
 		{
 			foreach (var s in sections) {

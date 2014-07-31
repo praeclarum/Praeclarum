@@ -414,6 +414,7 @@ namespace Praeclarum.UI
 
 		public virtual Task RestoreDocumentation ()
 		{
+			Settings.DocumentationVersion = Version;
 			return Task.FromResult<object> (null);
 		}
 

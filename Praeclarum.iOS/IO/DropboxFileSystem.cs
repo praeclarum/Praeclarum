@@ -88,9 +88,15 @@ namespace Praeclarum.IO
 			return new DropboxFile (fileInfo, filesystem);
 		}
 
+		/// <summary>
+		/// Overwrites
+		/// </summary>
 		public async Task<IFile> CreateFile (string path, string contents)
 		{
 			var dbpath = new DBPath (path);
+
+			// Delete it so that CreateFile overwrites
+			await filesystem.DeletePathAsync (dbpath);
 
 			var file = await filesystem.CreateFileAsync (dbpath);
 			if (file == null)

@@ -43,7 +43,12 @@ namespace Praeclarum.IO
 		Task<List<IFile>> ListFiles (string directory);
 
 		Task<IFile> GetFile (string path);
+
+		/// <summary>
+		/// Overwrites
+		/// </summary>
 		Task<IFile> CreateFile (string path, string contents);
+
 		Task<bool> CreateDirectory (string path);
 		Task<bool> FileExists (string path);
 		Task<bool> DeleteFile (string path);

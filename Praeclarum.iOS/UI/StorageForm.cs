@@ -196,9 +196,9 @@ namespace Praeclarum.UI
 
 				var fs = item as IFileSystem;
 				SetNeedsFormat ();
-				if (Form != null) Form.DismissAsync ();
-				DocumentAppDelegate.Shared.SetFileSystem (fs, true).ContinueWith (t => {
-				}, TaskScheduler.FromCurrentSynchronizationContext ());
+				if (Form != null)
+					Form.DismissAsync ();
+				DocumentAppDelegate.Shared.SetFileSystemAsync (fs, true);
 
 				return true;
 			}

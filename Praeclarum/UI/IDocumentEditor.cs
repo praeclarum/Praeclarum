@@ -9,6 +9,7 @@ namespace Praeclarum.UI
 
 		IView EditorView { get; }
 
+		void DidEnterBackground ();
 		void WillEnterForeground ();
 		void OnCreated ();
 

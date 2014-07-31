@@ -59,6 +59,10 @@ namespace Praeclarum.UI
 
 		#region IDocumentEditor implementation
 
+		public virtual void DidEnterBackground ()
+		{
+		}
+
 		public virtual void WillEnterForeground ()
 		{
 		}

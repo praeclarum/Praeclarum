@@ -190,6 +190,14 @@ namespace Praeclarum.UI
 		bool uiInitialized = false;
 		NSUrl pendingUrl = null;
 
+		public override void DidEnterBackground (UIApplication application)
+		{
+			var ed = CurrentDocumentEditor;
+			if (ed != null) {
+				ed.DidEnterBackground ();
+			}
+		}
+
 		public override void WillEnterForeground (UIApplication application)
 		{
 			UpdateFonts ();
@@ -226,8 +234,7 @@ namespace Praeclarum.UI
 				}
 
 				if (fs.IsAvailable) {
-					SetFileSystem (fs, true).ContinueWith (t => {
-					});
+					SetFileSystemAsync (fs, true).ContinueWith (t => {});
 				}
 
 				return true;
@@ -281,7 +288,7 @@ namespace Praeclarum.UI
 			return path;
 		}
 
-		public async Task SetFileSystem (IFileSystem newFileSystem, bool animated)
+		public async Task SetFileSystemAsync (IFileSystem newFileSystem, bool animated)
 		{
 			if (newFileSystem == null || newFileSystem == ActiveFileSystem)
 				return;
@@ -433,7 +440,7 @@ namespace Praeclarum.UI
 				Settings.UseCloud = false;
 			}
 
-			await SetFileSystem (fsman.ChooseFileSystem (lastFS), false);
+			await SetFileSystemAsync (fsman.ChooseFileSystem (lastFS), false);
 
 			//
 			// Add the docs

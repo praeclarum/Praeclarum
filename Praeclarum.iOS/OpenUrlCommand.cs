@@ -67,6 +67,7 @@ namespace Praeclarum
 			var mainBundle = NSBundle.MainBundle;
 
 			var dev = UIDevice.CurrentDevice;
+			var scr = UIScreen.MainScreen;
 
 			var appName = mainBundle.ObjectForInfoDictionary ("CFBundleDisplayName");
 			var version = mainBundle.ObjectForInfoDictionary ("CFBundleVersion");
@@ -78,6 +79,7 @@ namespace Praeclarum
 			sb.AppendFormat ("<br/><br/><ul>");
 			sb.AppendFormat ("<li>Software: <b>{0} {1}</b></li>", appName, version);
 			sb.AppendFormat ("<li>Model: <b>{0}</b></li>", dev.Model);
+			sb.AppendFormat ("<li>Screen: <b>{0}x{1} @{2}x</b></li>", scr.Bounds.Width, scr.Bounds.Height, scr.Scale);
 			sb.AppendFormat ("<li>System: <b>{0} {1}</b></li>", dev.SystemName, dev.SystemVersion);
 			sb.AppendFormat ("<li>Culture: <b>{0}</b></li>", System.Globalization.CultureInfo.CurrentCulture.EnglishName);
 			sb.AppendFormat ("</ul>");

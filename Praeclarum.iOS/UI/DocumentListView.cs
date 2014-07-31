@@ -248,7 +248,7 @@ namespace Praeclarum.UI
 					DocumentAppDelegate.Shared.OpenDirectory (indexPath.Row, animated: true);
 
 				} else {
-					await DocumentAppDelegate.Shared.Open (indexPath.Row, animated: true);
+					await DocumentAppDelegate.Shared.OpenDocument (indexPath.Row, animated: true);
 				}
 
 			} catch (Exception ex) {

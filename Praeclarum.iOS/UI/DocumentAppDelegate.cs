@@ -129,9 +129,10 @@ namespace Praeclarum.UI
 			// Init the file system
 			//
 			var uiSync = TaskScheduler.FromCurrentSynchronizationContext ();
-			InitFileSystem ().ContinueWith (t => {
+			initFileSystemTask = InitFileSystem ();
+				
+			initFileSystemTask.ContinueWith (t => {
 				if (!t.IsFaulted) {
-					Debug.WriteLine ("File system initialized");
 					App.OnFileSystemInitialized ();
 				}
 				else {
@@ -141,6 +142,8 @@ namespace Praeclarum.UI
 
 			return true;
 		}
+
+		Task initFileSystemTask;
 
 		Theme theme = new Theme ();
 		public Theme Theme { get { return theme; } set { theme = value; } }
@@ -154,21 +157,33 @@ namespace Praeclarum.UI
 
 		protected virtual void UpdateFonts ()
 		{
-
-
 		}
 
-		protected virtual void OpenAppUrl (NSUrl url)
+		protected virtual Task OpenUrlAsync (NSUrl url)
 		{
+			return Task.FromResult (0);
 		}
 
 		void OpenPendingUrl ()
+		{
+			try {
+				OpenPendingUrlAsync ().ContinueWith (t => {
+					if (t.IsFaulted)
+						Console.WriteLine ();
+				});
+			} catch (Exception ex) {
+				Console.WriteLine ("OpenPendingUrl failed", ex);
+			}
+		}
+
+		async Task OpenPendingUrlAsync ()
 		{
 			var url = pendingUrl;
 			pendingUrl = null;
 
 			if (url != null) {
-				OpenAppUrl (url);
+				await initFileSystemTask;
+				await OpenUrlAsync (url);
 			}
 		}
 
@@ -218,7 +233,7 @@ namespace Praeclarum.UI
 				return true;
 			}
 
-			if (url.Scheme == App.UrlScheme) {
+			if (url.Scheme == App.UrlScheme || url.Scheme == "file") {
 				// Ignore pending operation
 				Settings.LastDocumentPath = "";
 
@@ -346,19 +361,33 @@ namespace Praeclarum.UI
 			openedLastDocument |= await OpenDocument (lastPath, false);
 		}
 
-		async Task<bool> OpenDocument (string lastPath, bool animated)
+		public async Task<bool> OpenDocument (string path, bool animated)
 		{
-			var vc = CurrentDocumentListController;
+			if (string.IsNullOrEmpty (path))
+				return false;
 
-			await vc.LoadDocs ();
+			var fileDir = Path.GetDirectoryName (path);
+			if (fileDir == "/")
+				fileDir = "";
 
-			var docs = Docs;
+			var dl = CurrentDocumentListController;
 
-			var i = docs.FindIndex (x => x.File.Path == lastPath);
+			if (dl.Directory != fileDir) {
+				await CreateDocListHierarchy (fileDir, true);
+				dl = CurrentDocumentListController;
+			}
 
+			// Incase we just created the file, try to refresh for it
+			// Still doesn't work for iCloud :-(
+			await FileSystem.Sync (TimeSpan.FromSeconds (10));
+			await dl.LoadDocs ();
+
+			var i = dl.Docs.FindIndex (x => x.File.Path == path);
 			if (i >= 0) {
-				await Open (i, animated);
+				await OpenDocument (i, animated);
 				return true;
+			} else {
+				Console.WriteLine ("Could not open '{0}' because it could not be found", path);
 			}
 
 			return false;
@@ -373,6 +402,8 @@ namespace Praeclarum.UI
 
 		async Task InitFileSystem ()
 		{
+			Console.WriteLine ("Initializing File System");
+
 			var fsman = FileSystemManager.Shared;
 
 			if (!Settings.AskedToUseCloud && CloudFileSystemProvider.CloudAvailable) {
@@ -410,6 +441,8 @@ namespace Praeclarum.UI
 			if (ShouldRestoreDocs ()) {
 				await RestoreDocumentation ();
 			}
+
+			Console.WriteLine ("File System Initialized");
 		}
 
 		public virtual Task RestoreDocumentation ()
@@ -564,7 +597,7 @@ namespace Praeclarum.UI
 			return new DocumentsViewController (path, DocumentsViewMode.List);
 		}
 
-		public async Task Open (int docIndex, bool animated)
+		public async Task OpenDocument (int docIndex, bool animated)
 		{
 			if (docIndex == OpenedDocIndex)
 				return;
@@ -872,7 +905,7 @@ namespace Praeclarum.UI
 			// If it is, open it
 			//
 			if (index >= 0) {
-				await Open (index, true);
+				await OpenDocument (index, true);
 			} else {
 				Console.WriteLine ("Document list does not contain " + path);
 			}
@@ -900,7 +933,7 @@ namespace Praeclarum.UI
 
 			dl.InsertDocument (0, dr);
 
-			await Open (0, true);
+			await OpenDocument (0, true);
 		}
 
 		public async Task<bool> DuplicateDocuments (IFile[] files, UIBarButtonItem duplicateButton)
@@ -1022,7 +1055,7 @@ namespace Praeclarum.UI
 
 				if (Docs.Count > 0) {
 					var newIndex = Math.Min (Docs.Count - 1, Math.Max (0, docIndex));
-					await Open (newIndex, true);
+					await OpenDocument (newIndex, true);
 				} else if (FileSystem.IsWritable) {
 					await AddAndOpenDocRef (await DocumentReference.New (
 						CurrentDocumentListController.Directory,

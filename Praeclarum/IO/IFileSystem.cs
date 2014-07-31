@@ -107,6 +107,26 @@ namespace Praeclarum.IO
 				await Task.Delay (LoopTime);
 			}
 		}
+
+		public static async Task<string> GetUniquePath (this IFileSystem fs, string basePath)
+		{
+			var folder = System.IO.Path.GetDirectoryName (basePath);
+			var baseName = System.IO.Path.GetFileNameWithoutExtension (basePath);
+			var extension = System.IO.Path.GetExtension (basePath);
+
+			var path = basePath;
+
+			if (await fs.FileExists (path)) {
+				var uniqueId = 2;
+				path = System.IO.Path.Combine (folder, baseName + " " + uniqueId + extension);
+				while (await fs.FileExists (path)) {
+					uniqueId++;
+					path = System.IO.Path.Combine (folder, baseName + " " + uniqueId + extension);
+				}
+			}
+
+			return path;
+		}
 	}
 
 	public static class IFileEx

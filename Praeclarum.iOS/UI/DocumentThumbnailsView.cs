@@ -354,7 +354,7 @@ namespace Praeclarum.UI
 						if (d.File.IsDirectory) {
 							DocumentAppDelegate.Shared.OpenDirectory (row, animated: true);
 						} else {
-							await DocumentAppDelegate.Shared.Open (row, animated: true);
+							await DocumentAppDelegate.Shared.OpenDocument (row, animated: true);
 						}
 					}
 

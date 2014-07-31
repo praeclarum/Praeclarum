@@ -30,14 +30,14 @@ namespace Praeclarum
 	{
 		public string Address { get; set; }
 		public string Subject { get; set; }
-		public string Body { get; set; }
+		public string BodyHtml { get; set; }
 
 		public EmailCommand (string name, string address, AsyncAction action = null)
 			: base (name, action)
 		{
 			Address = address;
 			Subject = "";
-			Body = "";
+			BodyHtml = "";
 		}
 
 		public override async Task ExecuteAsync ()
@@ -53,9 +53,9 @@ namespace Praeclarum
 			c.Finished += (sender, e) => c.DismissViewController (true, null);
 			c.SetToRecipients (new [] { Address });
 			c.SetSubject (Subject);
-			c.SetMessageBody (Body, false);
+			c.SetMessageBody (BodyHtml, true);
 
-			fromVC.PresentViewController (c, true, null);
+			await fromVC.PresentViewControllerAsync (c, true);
 		}
 	}
 
@@ -68,20 +68,21 @@ namespace Praeclarum
 
 			var dev = UIDevice.CurrentDevice;
 
-			Subject =
-				mainBundle.ObjectForInfoDictionary ("CFBundleDisplayName") + 
-				" " + mainBundle.ObjectForInfoDictionary ("CFBundleVersion") +
-				" Feedback (" + dev.SystemName + ")";
+			var appName = mainBundle.ObjectForInfoDictionary ("CFBundleDisplayName");
+			var version = mainBundle.ObjectForInfoDictionary ("CFBundleVersion");
 
-			var b = new StringWriter ();
+			Subject = appName + " " + version + " Feedback (" + dev.SystemName + ")";
 
-			b.WriteLine ();
-			b.WriteLine ();
+			var sb = new System.Text.StringBuilder();
 
-			b.WriteLine ("Model: {0}", dev.Model);
-			b.WriteLine ("System: {0} {1}", dev.SystemName, dev.SystemVersion);
+			sb.AppendFormat ("<br/><br/><ul>");
+			sb.AppendFormat ("<li>Software: <b>{0} {1}</b></li>", appName, version);
+			sb.AppendFormat ("<li>Model: <b>{0}</b></li>", dev.Model);
+			sb.AppendFormat ("<li>System: <b>{0} {1}</b></li>", dev.SystemName, dev.SystemVersion);
+			sb.AppendFormat ("<li>Culture: <b>{0}</b></li>", System.Globalization.CultureInfo.CurrentCulture.EnglishName);
+			sb.AppendFormat ("</ul>");
 
-			Body = b.ToString ();
+			BodyHtml = sb.ToString ();
 		}
 	}
 

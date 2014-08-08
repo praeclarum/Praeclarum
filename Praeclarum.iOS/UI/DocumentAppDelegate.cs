@@ -724,9 +724,16 @@ namespace Praeclarum.UI
 			return "";
 		}
 
+		public string CurrentDirectory {
+			get {
+				var c = CurrentDocumentListController;
+				return c != null ? c.Directory : "";
+			}
+		}
+
 		public async Task AddAndOpenNewDocument ()
 		{
-			var directory = CurrentDocumentListController.Directory;
+			var directory = CurrentDirectory;
 
 			await AddAndOpenDocRef (await DocumentReference.New (
 				directory, 

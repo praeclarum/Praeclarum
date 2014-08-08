@@ -293,6 +293,11 @@ namespace Praeclarum.Graphics
 			return new Color (r, g, b, a);
 		}
 
+		public static Color FromRgb (int r, int g, int b)
+		{
+			return new Color (r, g, b, 255);
+		}
+
 		public static Color FromWhite (float white, float alpha)
 		{
 			var g = ByteFromFloat (white);

@@ -38,6 +38,8 @@ namespace Praeclarum.UI
 
 		public Praeclarum.Graphics.SizeF ThumbnailSize { get; private set; }
 
+		public static readonly UIColor DefaultBackgroundColor = UIColor.FromRGB (222, 222, 222);
+
 		public DocumentThumbnailsView (RectangleF frame)
 			: base (frame, new UICollectionViewFlowLayout ())
 		{
@@ -47,7 +49,7 @@ namespace Praeclarum.UI
 
 			AlwaysBounceVertical = true;
 
-			BackgroundColor = UIColor.FromRGB (222, 222, 222);
+			BackgroundColor = DefaultBackgroundColor;
 
 			RegisterClassForCell (typeof(AddDocumentCell), AddId);
 			RegisterClassForCell (typeof(DocumentThumbnailCell), FileId);

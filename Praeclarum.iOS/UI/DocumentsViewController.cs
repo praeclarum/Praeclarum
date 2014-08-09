@@ -133,7 +133,7 @@ namespace Praeclarum.UI
 		{
 			var FileSystem = FileSystemManager.Shared.ActiveFileSystem;
 
-			Title = Editing ? "" : 
+			Title = (Editing || makingDefaultImage) ? "" : 
 			        (selecting ? "Select a " + DocumentAppDelegate.Shared.App.DocumentBaseName : 
 			        (IsRoot ? DocumentAppDelegate.Shared.App.DocumentBaseNamePluralized : DirectoryName));
 
@@ -282,6 +282,12 @@ namespace Praeclarum.UI
 			SwitchToMode (false);
 			((UIView)docsView).AddSubview (refresh);
 
+			if (makingDefaultImage) {
+				View = new UIView {
+					BackgroundColor = DocumentThumbnailsView.DefaultBackgroundColor,
+				};
+			}
+
 			//
 			// Set the add button
 			//
@@ -290,11 +296,13 @@ namespace Praeclarum.UI
 			//
 			// Set the toobar
 			//
-			SetToolbarItems (new[] { 
-				thereforeBtn,
-				new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
-				fileSystemsBtn
-			}, false);
+			if (!makingDefaultImage) {
+				SetToolbarItems (new[] { 
+					thereforeBtn,
+					new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
+					fileSystemsBtn
+				}, false);
+			}
 
 			//
 			// Load the documents
@@ -304,6 +312,8 @@ namespace Praeclarum.UI
 					Debug.WriteLine (t.Exception);
 			});
 		}
+
+		const bool makingDefaultImage = false;
 
 		void SetNormalNavItems (bool animated)
 		{
@@ -315,14 +325,16 @@ namespace Praeclarum.UI
 				EditButtonItem.TintColor = tint;
 			}
 
-			NavigationItem.LeftItemsSupplementBackButton = true;
-			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
-				actionBtn,
-			}, animated);
-			NavigationItem.SetRightBarButtonItems (new UIBarButtonItem[] {
-				addBtn,
-				EditButtonItem,
-			}, animated);
+			if (!makingDefaultImage) {
+				NavigationItem.LeftItemsSupplementBackButton = true;
+				NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
+					actionBtn,
+				}, animated);
+				NavigationItem.SetRightBarButtonItems (new UIBarButtonItem[] {
+					addBtn,
+					EditButtonItem,
+				}, animated);
+			}
 		}
 
 		void SetEditingNavItems (bool animated)

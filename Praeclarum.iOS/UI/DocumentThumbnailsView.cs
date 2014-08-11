@@ -677,6 +677,9 @@ namespace Praeclarum.UI
 				return doc;
 			}
 			set {
+				if (doc == value)
+					return;
+
 				doc = value;
 				if (doc == null)
 					return;

@@ -72,7 +72,7 @@ namespace Praeclarum
 			var appName = mainBundle.ObjectForInfoDictionary ("CFBundleDisplayName");
 			var version = mainBundle.ObjectForInfoDictionary ("CFBundleVersion");
 
-			Subject = appName + " " + version + " Feedback (" + dev.SystemName + ")";
+			Subject = appName + " Feedback (" + dev.SystemName + ")";
 
 			var sb = new System.Text.StringBuilder();
 

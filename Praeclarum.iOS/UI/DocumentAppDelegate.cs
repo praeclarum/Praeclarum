@@ -1098,11 +1098,19 @@ namespace Praeclarum.UI
 		{
 			try {
 
-				await FileSystem.DeleteFile (path);
+				var deleted = await FileSystem.DeleteFile (path);
 
-				CurrentDocumentListController.RemoveDocument (path, true);
-
-				Console.WriteLine ("DELETE {0}", path);
+				if (deleted) {
+					CurrentDocumentListController.RemoveDocument (path, true);
+					Console.WriteLine ("DELETE {0}", path);
+				}
+				else {
+					var alert = new UIAlertView (
+						"Unable to Delete", 
+						"An error occured while trying to delete. If the problem persists, try restarting " + App.Name + ".",
+						null, "OK");
+					alert.Show ();
+				}
 
 			} catch (Exception ex) {
 				Console.WriteLine (ex);

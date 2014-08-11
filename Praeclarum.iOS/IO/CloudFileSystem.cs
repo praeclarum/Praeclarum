@@ -382,6 +382,9 @@ namespace Praeclarum.IO
 					}
 					tcs.SetResult (r);
 				});
+				if (coordErr != null) {
+					tcs.SetResult (false);
+				}
 			});
 
 			return tcs.Task;

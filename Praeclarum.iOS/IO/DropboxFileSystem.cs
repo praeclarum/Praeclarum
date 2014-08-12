@@ -96,7 +96,10 @@ namespace Praeclarum.IO
 			var dbpath = new DBPath (path);
 
 			// Delete it so that CreateFile overwrites
-			await filesystem.DeletePathAsync (dbpath);
+			try {
+				await filesystem.DeletePathAsync (dbpath);				
+			} catch (Exception) {
+			}
 
 			var file = await filesystem.CreateFileAsync (dbpath);
 			if (file == null)

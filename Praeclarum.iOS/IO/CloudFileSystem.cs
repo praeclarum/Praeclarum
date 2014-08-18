@@ -185,14 +185,25 @@ namespace Praeclarum.IO
 					NSError coordErr;
 					c.CoordinateWrite (f.LocalUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl => {
 
-						var dir = Path.GetDirectoryName (f.LocalPath);
+						var newPath = newUrl.Path;
+
+//						Console.WriteLine ("CLOUD WRITE TO " + newUrl + "    from: " + f.LocalUrl + "    at: " + newPath);
+
+						var dir = Path.GetDirectoryName (newPath);
 						if (!string.IsNullOrEmpty (dir) && dir != "/" && !Directory.Exists (dir)) {
 							Directory.CreateDirectory (dir);
 						}
 
-						File.WriteAllText (f.LocalPath, contents, Encoding.UTF8);
-						tcs.SetResult (f);
+						try {
+							File.WriteAllText (newPath, contents, Encoding.UTF8);
+							tcs.SetResult (f);							
+						} catch (Exception ex) {
+							tcs.SetException (ex);
+						}
 					});
+					if (coordErr != null) {
+						tcs.SetException (new Exception ("Could not coordinate iCloud write for CreateFile: " + coordErr.DebugDescription));
+					}
 				});
 			} else {
 				tcs.SetResult (f);

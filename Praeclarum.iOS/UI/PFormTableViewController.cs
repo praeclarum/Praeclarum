@@ -10,16 +10,31 @@ namespace Praeclarum.UI
 {
 	public partial class PForm : UITableViewController
 	{
+		/// <summary>
+		/// Automatically show a done button?
+		/// </summary>
 		public bool AutoDoneButton { get; set; }
+
+		/// <summary>
+		/// Automatically show a cancel button?
+		/// </summary>
+		public bool AutoCancelButton { get; set; }
 
 		partial void InitializeUI ()
 		{
+			AutoCancelButton = false;
 			AutoDoneButton = true;
 		}
 
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
+
+			if (AutoCancelButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
+				NavigationItem.LeftBarButtonItem = new UIBarButtonItem (
+					UIBarButtonSystemItem.Cancel,
+					HandleCancel);
+			}
 
 			if (AutoDoneButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
 				NavigationItem.RightBarButtonItem = new UIBarButtonItem (
@@ -34,12 +49,22 @@ namespace Praeclarum.UI
 			TableView.Source = new FormSource (this);
 		}
 
-		protected virtual async void HandleDone (object sender, EventArgs e)
+		protected virtual async void HandleCancel (object sender, EventArgs e)
 		{
-			await DismissAsync ();
+			await DismissAsync (false);
 		}
 
-		public virtual async Task DismissAsync ()
+		protected virtual async void HandleDone (object sender, EventArgs e)
+		{
+			await DismissAsync (true);
+		}
+
+		public Task DismissAsync ()
+		{
+			return DismissAsync (true);
+		}
+
+		public virtual async Task DismissAsync (bool done)
 		{
 			foreach (var s in sections) {
 				s.Dismiss ();
@@ -58,6 +83,15 @@ namespace Praeclarum.UI
 			} else {
 				await DismissViewControllerAsync (true);
 			}
+
+			OnDismissed (done);
+		}
+
+		public event Action<bool> Dismissed = delegate{};
+
+		protected virtual void OnDismissed (bool done)
+		{
+			Dismissed (done);
 		}
 //
 //		protected virtual bool IsSingleTextEntry {
@@ -74,15 +108,21 @@ namespace Praeclarum.UI
 
 		public virtual void ReloadSection (PFormSection section)
 		{
+			if (!IsViewLoaded)
+				return;
+
 			var si = sections.IndexOf (section);
 			if (si < 0)
 				return;
 
-			TableView.ReloadSections (NSIndexSet.FromIndex (si), UITableViewRowAnimation.Automatic);
+			TableView.ReloadData ();//.ReloadSections (NSIndexSet.FromIndex (si), UITableViewRowAnimation.Automatic);
 		}
 
 		public virtual void FormatSection (PFormSection section)
 		{
+			if (!IsViewLoaded)
+				return;
+
 			var si = sections.IndexOf (section);
 			if (si < 0)
 				return;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.IO;
 
 namespace Praeclarum.IO
 {
@@ -47,14 +48,12 @@ namespace Praeclarum.IO
 		/// <summary>
 		/// Overwrites
 		/// </summary>
-		Task<IFile> CreateFile (string path, string contents);
+		Task<IFile> CreateFile (string path, byte[] contents);
 
 		Task<bool> CreateDirectory (string path);
 		Task<bool> FileExists (string path);
 		Task<bool> DeleteFile (string path);
 		Task<bool> Move (string fromPath, string toPath);
-
-		string GetLocalPath (string path);
 	}
 
 	public interface IFile
@@ -89,11 +88,47 @@ namespace Praeclarum.IO
 
 	public static class IFileSystemEx
 	{
-		public static async Task Sync (this IFileSystem fs, TimeSpan timeout)
+		public static Task<IFile> CreateFile (this IFileSystem fs, string path, string contents)
 		{
+			var bytes = System.Text.Encoding.UTF8.GetBytes (contents);
+			return fs.CreateFile (path, bytes);
+		}
+
+		public static async Task<byte[]> ReadAllBytesAsync (this IFile file)
+		{
+			var a = await file.BeginLocalAccess ();
+			Exception err = null;
+			var r = new byte[0];
+			try {
+				r = File.ReadAllBytes (a.LocalPath);
+			}
+			catch (Exception ex) {
+				err = ex;
+			}
+			await a.End ();
+			if (err != null)
+				throw new AggregateException (err);
+			return r;
+		}
+
+		public static async Task MoveFileAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
+		{
+			var contents = await file.ReadAllBytesAsync ();
+			var newPath = Path.Combine (destDir, Path.GetFileName (file.Path));
+			await dest.CreateFile (newPath, contents);
+			if (!await src.DeleteFile (file.Path)) {
+				throw new Exception ("Failed to delete " + file.Path + " from " + src);
+			}
+		}
+
+		public static async Task<bool> Sync (this IFileSystem fs, TimeSpan timeout)
+		{
+			if (!fs.IsAvailable)
+				return false;
+
 //			Console.WriteLine ("SYNCCCC");
 
-			var LoopTime = TimeSpan.FromSeconds (1);
+			var LoopTime = TimeSpan.FromSeconds (0.5);
 			var MaxLoops = (int)(timeout.TotalSeconds / LoopTime.TotalSeconds);
 
 			for (int i = 0; i < MaxLoops; i++) {
@@ -101,11 +136,13 @@ namespace Praeclarum.IO
 //				Console.WriteLine ("SYNC STATUS " + fs.SyncStatus);
 
 				if (!fs.IsSyncing) {
-					return;
+					return true;
 				}
 
 				await Task.Delay (LoopTime);
 			}
+
+			return false;
 		}
 
 		public static async Task<string> GetUniquePath (this IFileSystem fs, string basePath)

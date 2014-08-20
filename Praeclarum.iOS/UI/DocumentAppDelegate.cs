@@ -288,6 +288,19 @@ namespace Praeclarum.UI
 			return path;
 		}
 
+		async Task InitializeFileSystemAsync (IFileSystem fs)
+		{
+			if (fs.FileExtensions.Count > 0)
+				return;
+
+			fs.FileExtensions.Clear ();
+			foreach (var f in App.FileExtensions) {
+				fs.FileExtensions.Add (f);
+			}
+
+			await fs.Initialize ();
+		}
+
 		public async Task SetFileSystemAsync (IFileSystem newFileSystem, bool animated)
 		{
 			if (newFileSystem == null || newFileSystem == ActiveFileSystem)
@@ -296,12 +309,7 @@ namespace Praeclarum.UI
 			Settings.UseCloud = newFileSystem is CloudFileSystem;
 			Settings.FileSystem = newFileSystem.Id;
 
-			newFileSystem.FileExtensions.Clear ();
-			foreach (var f in App.FileExtensions) {
-				newFileSystem.FileExtensions.Add (f);
-			}
-
-			await newFileSystem.Initialize ();
+			await InitializeFileSystemAsync (newFileSystem);
 
 			if (ActiveFileSystem != null) {
 				ActiveFileSystem.FilesChanged -= HandleFilesChanged;
@@ -950,6 +958,70 @@ namespace Praeclarum.UI
 			await OpenDocument (0, true);
 		}
 
+		public async Task<bool> MoveDocuments (IFile[] files, UIBarButtonItem duplicateButton)
+		{
+			if (DismissSheetsAndPopovers ())
+				return false;
+
+			if (files.Length == 0)
+				return false;
+
+			//
+			// Make sure all the file systems are initialized
+			//
+			foreach (var fs in FileSystemManager.Shared.FileSystems) {
+				await InitializeFileSystemAsync (fs);
+			}
+
+			//
+			// Find where we're supposed to move to
+			//
+			var tcs = new TaskCompletionSource<bool> ();
+
+			var form = new MoveDocumentsForm {
+				Title = "Move " + (files.Length == 1 ? App.DocumentBaseName : (files.Length + " " + App.DocumentBaseNamePluralized)) + " to",
+				AutoCancelButton = true,
+				AutoDoneButton = false,
+			};
+			form.Dismissed += tcs.SetResult;
+			var formNav = new UINavigationController (form) {
+				ModalPresentationStyle = UIModalPresentationStyle.FormSheet,
+			};
+			await window.RootViewController.PresentViewControllerAsync (formNav, true);
+
+			var shouldMove = await tcs.Task;
+
+			if (!shouldMove)
+				return false;
+
+			//
+			// Skip the move?
+			//
+			if (ActiveFileSystem == form.FileSystem && CurrentDirectory == form.Directory) {
+				return true;
+			}
+
+			//
+			// Perform the move
+			//
+			foreach (var f in files) {
+				await MoveDoc (f, form.FileSystem, form.Directory, false);
+			}
+
+			//
+			// Update the UI
+			//
+			await CurrentDocumentListController.LoadDocs ();
+
+			return true;
+		}
+
+		async Task MoveDoc (IFile file, IFileSystem dest, string destDir, bool animated)
+		{
+			await ActiveFileSystem.MoveFileAsync (file, dest, destDir);
+			CurrentDocumentListController.RemoveDocument (file.Path, animated);
+		}
+
 		public async Task<bool> DuplicateDocuments (IFile[] files, UIBarButtonItem duplicateButton)
 		{
 			if (DismissSheetsAndPopovers ())
@@ -1176,6 +1248,21 @@ namespace Praeclarum.UI
 
 			CurrentCulture = cult;
 		}
+
+		#region Quick UI stuff
+
+		public static void Alert (string title, Exception ex)
+		{
+			Console.WriteLine (ex);
+			var v = new UIAlertView (
+				        title,
+				        ex.Message,
+				        null,
+				        "OK");
+			v.Show ();
+		}
+
+		#endregion
 
 		#region Thumbnails
 

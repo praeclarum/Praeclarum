@@ -76,7 +76,7 @@ namespace Praeclarum.UI
 			async Task AddFileSystemAsync (IFileSystemProvider f)
 			{
 				await f.ShowAddUI (Form);
-				await Form.DismissAsync ();
+				await Form.DismissAsync (true);
 			}
 		}
 
@@ -197,7 +197,7 @@ namespace Praeclarum.UI
 				var fs = item as IFileSystem;
 				SetNeedsFormat ();
 				if (Form != null)
-					Form.DismissAsync ();
+					Form.DismissAsync (true);
 				DocumentAppDelegate.Shared.SetFileSystemAsync (fs, true);
 
 				return true;

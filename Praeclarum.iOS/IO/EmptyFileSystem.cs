@@ -51,7 +51,7 @@ namespace Praeclarum.IO
 			throw new Exception ("Empty File System contains no files");
 		}
 
-		public Task<IFile> CreateFile (string path, string contents)
+		public Task<IFile> CreateFile (string path, byte[] contents)
 		{
 			var tcs = new TaskCompletionSource<IFile> ();
 			tcs.SetResult (new DeviceFile (path, path));

@@ -70,6 +70,11 @@ namespace Praeclarum.IO
 			FileExtensions = new Collection<string> ();
 		}
 
+		public override string ToString ()
+		{
+			return Description;
+		}
+
 		public event EventHandler FilesChanged;
 
 		public Task Initialize ()
@@ -91,7 +96,7 @@ namespace Praeclarum.IO
 		/// <summary>
 		/// Overwrites
 		/// </summary>
-		public async Task<IFile> CreateFile (string path, string contents)
+		public async Task<IFile> CreateFile (string path, byte[] contents)
 		{
 			var dbpath = new DBPath (path);
 
@@ -105,8 +110,8 @@ namespace Praeclarum.IO
 			if (file == null)
 				throw new Exception ("Failed to create file");
 
-			if (!string.IsNullOrEmpty (contents)) {
-				var r = await file.WriteStringAsync (contents);
+			if (contents != null) {
+				var r = await file.WriteDataAsync (MonoTouch.Foundation.NSData.FromArray (contents));
 				if (!r)
 					throw new Exception ("Failed to write contents of new file");
 			}
@@ -270,6 +275,11 @@ namespace Praeclarum.IO
 				throw new ArgumentNullException ("fileSystem");
 			this.fileInfo = fileInfo;
 			this.fileSystem = fileSystem;
+		}
+
+		public override string ToString ()
+		{
+			return fileInfo.Path.StringValue;
 		}
 
 		public bool IsDirectory { get { return fileInfo.IsFolder; } }

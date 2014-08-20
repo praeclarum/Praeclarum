@@ -11,6 +11,9 @@ namespace Praeclarum.UI
 		readonly Lazy<UIImage> CloneButtonImage = new Lazy<UIImage> (
 			() => UIImage.FromBundle ("Clone.png"));
 
+		readonly Lazy<UIImage> MoveButtonImage = new Lazy<UIImage> (
+			() => UIImage.FromBundle ("Move.png"));
+
 		public virtual void Apply ()
 		{
 			if (ios7) {
@@ -81,6 +84,11 @@ namespace Praeclarum.UI
 		public virtual UIBarButtonItem CreateDuplicateButton (EventHandler handler)
 		{
 			return CreateBarButton (CloneButtonImage.Value, handler, UIBarButtonSystemItem.Add);
+		}
+
+		public virtual UIBarButtonItem CreateMoveButton (EventHandler handler)
+		{
+			return CreateBarButton (MoveButtonImage.Value, handler);
 		}
 
 		public virtual UIBarButtonItem CreateBarButton (UIImage image, EventHandler handler, UIBarButtonSystemItem fallback = UIBarButtonSystemItem.Add)

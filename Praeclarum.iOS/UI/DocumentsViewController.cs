@@ -54,6 +54,7 @@ namespace Praeclarum.UI
 			actionBtn = theme.CreateActionButton (HandleAction);
 			deleteBtn = theme.CreateDeleteButton (HandleDelete);
 			dupBtn = theme.CreateDuplicateButton (HandleDuplicate);
+			moveBtn = theme.CreateMoveButton (HandleMove);
 			cancelSelBtn = theme.CreateCancelButton (HandleCancelSelection);
 
 			NavigationItem.BackBarButtonItem = new UIBarButtonItem (
@@ -154,6 +155,11 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public Task LoadFolders ()
+		{
+			return LoadDocs ();
+		}
+
 		async Task LoadDocsUnsafe ()
 		{
 //			Console.WriteLine ("LOAD");
@@ -245,6 +251,7 @@ namespace Praeclarum.UI
 		readonly UIBarButtonItem actionBtn;
 		readonly UIBarButtonItem deleteBtn;
 		readonly UIBarButtonItem dupBtn;
+		readonly UIBarButtonItem moveBtn;
 		readonly UIBarButtonItem cancelSelBtn;
 
 		static readonly TimeSpan SyncTimeout = TimeSpan.FromSeconds (20);
@@ -342,12 +349,14 @@ namespace Praeclarum.UI
 			if (ios7) {
 				EditButtonItem.TintColor = UIColor.White;
 				dupBtn.TintColor = UIColor.White;
+				moveBtn.TintColor = UIColor.White;
 				deleteBtn.TintColor = UIColor.White;
 			}
 
 			NavigationItem.LeftItemsSupplementBackButton = false;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
 				dupBtn,
+				moveBtn,
 				deleteBtn,
 			}, animated);
 			NavigationItem.SetRightBarButtonItems (new UIBarButtonItem[] {
@@ -372,6 +381,7 @@ namespace Praeclarum.UI
 		void UpdateEditingForSelection ()
 		{
 			dupBtn.Enabled = docsView.SelectedDocuments.Count > 0;
+			moveBtn.Enabled = docsView.SelectedDocuments.Count > 0;
 			deleteBtn.Enabled = docsView.SelectedDocuments.Count > 0;
 		}
 
@@ -668,17 +678,36 @@ namespace Praeclarum.UI
 			return q.ToArray ();
 		}
 
+		async void HandleMove (object sender, EventArgs e)
+		{
+			try {
+				if (await DocumentAppDelegate.Shared.MoveDocuments (GetSelectedFiles (), moveBtn)) {
+					SetEditing (false, true);
+				}				
+			} catch (Exception ex) {
+				DocumentAppDelegate.Alert ("Move Failed", ex);
+			}
+		}
+
 		async void HandleDuplicate (object sender, EventArgs e)
 		{
-			if (await DocumentAppDelegate.Shared.DuplicateDocuments (GetSelectedFiles (), dupBtn)) {
-				SetEditing (false, true);
+			try {
+				if (await DocumentAppDelegate.Shared.DuplicateDocuments (GetSelectedFiles (), dupBtn)) {
+					SetEditing (false, true);
+				}
+			} catch (Exception ex) {
+				DocumentAppDelegate.Alert ("Duplicate Failed", ex);
 			}
 		}
 
 		async void HandleDelete (object sender, EventArgs e)
 		{
-			if (await DocumentAppDelegate.Shared.DeleteDocuments (GetSelectedFiles (), deleteBtn)) {
-				SetEditing (false, true);
+			try {
+				if (await DocumentAppDelegate.Shared.DeleteDocuments (GetSelectedFiles (), deleteBtn)) {
+					SetEditing (false, true);
+				}
+			} catch (Exception ex) {
+				DocumentAppDelegate.Alert ("Delete Failed", ex);
 			}
 		}
 

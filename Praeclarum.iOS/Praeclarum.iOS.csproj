@@ -171,6 +171,7 @@
     </Compile>
     <Compile Include="Graphics\GLGraphics.cs" />
     <Compile Include="UI\SelectableButtonItem.cs" />
+    <Compile Include="UI\MoveDocumentsForm.cs" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="dropboxsync">

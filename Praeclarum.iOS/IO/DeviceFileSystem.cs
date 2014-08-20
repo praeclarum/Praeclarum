@@ -47,7 +47,10 @@ namespace Praeclarum.IO
 
 			Description = DeviceFileSystemProvider.DeviceName;
 		}
-
+		public override string ToString ()
+		{
+			return Description;
+		}
 		public string Id {
 			get {
 				return "Device";
@@ -123,13 +126,13 @@ namespace Praeclarum.IO
 			return Path.Combine (documentsPath, path);
 		}
 
-		public Task<IFile> CreateFile (string path, string contents)
+		public Task<IFile> CreateFile (string path, byte[] contents)
 		{
 			return Task.Run (() => {
 				var r = new DeviceFile (path, documentsPath);
-				if (!string.IsNullOrEmpty (contents)) {
+				if (contents != null) {
 					Directory.CreateDirectory (Path.GetDirectoryName (r.LocalPath));
-					File.WriteAllText (r.LocalPath, contents, Encoding.UTF8);
+					File.WriteAllBytes (r.LocalPath, contents);
 				}
 				return (IFile)r;
 			});

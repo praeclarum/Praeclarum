@@ -144,12 +144,18 @@ namespace Praeclarum.IO
 
 			await Task.Run (() => {
 				var containerUrl = NSFileManager.DefaultManager.GetUrlForUbiquityContainer (null);
-				documentsUrl = containerUrl.Append ("Documents", true);
 
-				try {
-					Directory.CreateDirectory (documentsUrl.Path);
-				} catch (Exception ex) {
-					Debug.WriteLine (ex);
+				if (containerUrl == null) {
+					documentsUrl = null;
+				}
+				else {
+					documentsUrl = containerUrl.Append ("Documents", true);
+
+					try {
+						Directory.CreateDirectory (documentsUrl.Path);
+					} catch (Exception ex) {
+						Debug.WriteLine (ex);
+					}
 				}
 			});
 
@@ -160,7 +166,7 @@ namespace Praeclarum.IO
 			await BeginQuery ();
 		}
 
-		public bool IsWritable { get { return true; } }
+		public bool IsWritable { get { return this.documentsUrl != null; } }
 
 		public bool IsAvailable { get { return CloudFileSystemProvider.CloudAvailable; } }
 		public string AvailabilityReason { get { return "Not signed in"; } }
@@ -173,13 +179,13 @@ namespace Praeclarum.IO
 			return documentsUrl.Append (path, false).Path;
 		}
 
-		public Task<IFile> CreateFile (string path, string contents)
+		public Task<IFile> CreateFile (string path, byte[] contents)
 		{
 			var tcs = new TaskCompletionSource<IFile> ();
 
 			var f = new CloudFile (path, documentsUrl);
 
-			if (!string.IsNullOrEmpty (contents)) {
+			if (contents != null) {
 				Task.Factory.StartNew (() => {
 					var c = new NSFileCoordinator (filePresenterOrNil: null);
 					NSError coordErr;
@@ -195,7 +201,7 @@ namespace Praeclarum.IO
 						}
 
 						try {
-							File.WriteAllText (newPath, contents, Encoding.UTF8);
+							File.WriteAllBytes (newPath, contents);
 							tcs.SetResult (f);							
 						} catch (Exception ex) {
 							tcs.SetException (ex);
@@ -226,9 +232,13 @@ namespace Praeclarum.IO
 				NSError coordErr;
 				c.CoordinateWrite (url, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl => {
 					try {
+						if (Directory.Exists (newUrl.Path)) {
+							tcs.SetResult (true);
+							return;
+						}
+
 						var man = new NSFileManager ();
 						NSError mkdirErr;
-
 						var r = man.CreateDirectory (newUrl, false, null, out mkdirErr);
 						Debug.WriteLineIf (!r, mkdirErr);
 
@@ -286,12 +296,19 @@ namespace Praeclarum.IO
 			if (firstQueryResult != null) {
 				var t = firstQueryResult;
 				firstQueryResult = null;
-				t.SetException (new Exception ("Stopped"));
+				if (!t.Task.IsCompleted)
+					t.SetException (new Exception ("Stopped"));
 			}
 			if (query != null) {
 				query.StopQuery ();
 			}
 
+			firstQueryResult = new TaskCompletionSource<object> ();
+
+			if (documentsUrl == null) {
+				firstQueryResult.SetResult (null);
+				return firstQueryResult.Task;
+			}
 
 			var queryString = "";
 			var head = "";
@@ -310,7 +327,6 @@ namespace Praeclarum.IO
 
 			Console.WriteLine ("START iCLOUD QUERY");
 
-			firstQueryResult = new TaskCompletionSource<object> ();
 			query.StartQuery ();
 
 			needsRefresh = false;

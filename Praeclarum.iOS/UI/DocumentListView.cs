@@ -23,13 +23,13 @@ namespace Praeclarum.UI
 		public DocumentsSort Sort { get; set; }
 		public event EventHandler SortChanged =  delegate {};
 
-		public ObservableCollection<string> SelectedDocuments { get; private set; }
+		public ObservableCollection<IFile> SelectedDocuments { get; private set; }
 
 		public DocumentListView (RectangleF frame)
 			: base (frame)
 		{
 			Items = new List<DocumentsViewItem> ();
-			SelectedDocuments = new ObservableCollection<string> ();
+			SelectedDocuments = new ObservableCollection<IFile> ();
 			Source = new DocumentListViewSource (this);
 		}
 

@@ -4,6 +4,7 @@ using Praeclarum.UI;
 using Praeclarum.App;
 using System.Linq;
 using System.Collections.ObjectModel;
+using Praeclarum.IO;
 
 namespace Praeclarum.UI
 {
@@ -59,6 +60,6 @@ namespace Praeclarum.UI
 
 		void UpdateLayout ();
 
-		ObservableCollection<string> SelectedDocuments { get; }
+		ObservableCollection<IFile> SelectedDocuments { get; }
 	}
 }

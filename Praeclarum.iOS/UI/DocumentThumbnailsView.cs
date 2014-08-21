@@ -44,7 +44,7 @@ namespace Praeclarum.UI
 			: base (frame, new UICollectionViewFlowLayout ())
 		{
 			Items = new List<DocumentsViewItem> ();
-			SelectedDocuments = new ObservableCollection<string> ();
+			SelectedDocuments = new ObservableCollection<IFile> ();
 			SelectedDocuments.CollectionChanged += HandleSelectedDocumentsChanged;
 
 			AlwaysBounceVertical = true;
@@ -80,10 +80,10 @@ namespace Praeclarum.UI
 
 		void HandleSelectedDocumentsChanged (object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
 		{
-			var cells = VisibleCells.OfType<DocumentThumbnailCell> ().ToList ();
+			var cells = VisibleCells.OfType<BaseDocumentThumbnailCell> ().ToList ();
 
 			foreach (var c in cells) {
-				c.SetDocumentSelected (SelectedDocuments.Contains (c.Document.File.Path), true);
+				c.SetDocumentSelected (SelectedDocuments.Contains (c.Document.File), true);
 			}
 		}
 
@@ -129,7 +129,7 @@ namespace Praeclarum.UI
 		bool selecting = false;
 		public bool Selecting { get { return selecting; } set { SetSelecting (value, false); } }
 
-		public ObservableCollection<string> SelectedDocuments { get; private set; }
+		public ObservableCollection<IFile> SelectedDocuments { get; private set; }
 
 		public void SetSelecting (bool selecting, bool animated)
 		{
@@ -326,19 +326,15 @@ namespace Praeclarum.UI
 
 					var item = controller.Items [row];
 
-					if (!item.IsDirectory) {
+					var d = item.Reference;
 
-						var d = item.Reference;
+					if (controller.SelectedDocuments.Contains (d.File)) {
 
-						if (controller.SelectedDocuments.Contains (d.File.Path)) {
+						controller.SelectedDocuments.Remove (d.File);
 
-							controller.SelectedDocuments.Remove (d.File.Path);
+					} else {
 
-						} else {
-
-							controller.SelectedDocuments.Add (d.File.Path);
-
-						}
+						controller.SelectedDocuments.Add (d.File);
 
 					}
 				}
@@ -660,38 +656,8 @@ namespace Praeclarum.UI
 		}
 
 		public abstract UIView CreateThumbnailView ();
-	}
-
-	class DocumentThumbnailCell : BaseDocumentThumbnailCell
-	{
-		UIImageView imageView;
-
-		ThumbnailFrameView frameView;
 
 		SelectedView selectedView;
-
-		DocumentReference doc;
-
-		public override DocumentReference Document {
-			get {
-				return doc;
-			}
-			set {
-				if (doc == value)
-					return;
-
-				doc = value;
-				if (doc == null)
-					return;
-
-				AccessibilityLabel = doc.Name;
-				label.Text = doc.Name;
-
-				SetThumbnail (null);
-
-				RefreshThumbnail ();
-			}
-		}
 
 		bool selected = false;
 		public bool DocumentSelected
@@ -701,7 +667,9 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public void SetDocumentSelected (bool value, bool animated)
+		public abstract void SetDocumentSelected (bool value, bool animated);
+
+		protected void SetDocumentSelected (bool value, UIView frameView, bool animated)
 		{
 			if (value == selected)
 				return;
@@ -728,6 +696,65 @@ namespace Praeclarum.UI
 						selectedView.Alpha = 0;
 					}
 				}
+			}
+		}
+
+		class SelectedView : UIView
+		{
+			UIColor SelectionColor = UIColor.Blue;
+
+			const float borderThickness = 3.0f;
+
+			public SelectedView ()
+			{
+				Opaque = false;
+				SelectionColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor);
+				BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor).ColorWithAlpha (0.1f);
+			}
+
+			public override void Draw (RectangleF dirtyRect)
+			{
+				var c = UIGraphics.GetCurrentContext ();
+
+				var rect = Bounds;
+
+				rect.Inflate (-borderThickness/2, -borderThickness/2);
+
+				SelectionColor.SetStroke ();
+
+				c.SetLineWidth (borderThickness);
+				c.StrokeRect (rect);
+			}
+		}
+
+	}
+
+	class DocumentThumbnailCell : BaseDocumentThumbnailCell
+	{
+		UIImageView imageView;
+
+		ThumbnailFrameView frameView;
+
+		DocumentReference doc;
+
+		public override DocumentReference Document {
+			get {
+				return doc;
+			}
+			set {
+				if (doc == value)
+					return;
+
+				doc = value;
+				if (doc == null)
+					return;
+
+				AccessibilityLabel = doc.Name;
+				label.Text = doc.Name;
+
+				SetThumbnail (null);
+
+				RefreshThumbnail ();
 			}
 		}
 
@@ -830,32 +857,9 @@ namespace Praeclarum.UI
 			return fr;
 		}
 
-		class SelectedView : UIView
+		public override void SetDocumentSelected (bool value, bool animated)
 		{
-			UIColor SelectionColor = UIColor.Blue;
-
-			const float borderThickness = 3.0f;
-
-			public SelectedView ()
-			{
-				Opaque = false;
-				SelectionColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor);
-				BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor).ColorWithAlpha (0.1f);
-			}
-
-			public override void Draw (RectangleF dirtyRect)
-			{
-				var c = UIGraphics.GetCurrentContext ();
-
-				var rect = Bounds;
-
-				rect.Inflate (-borderThickness/2, -borderThickness/2);
-
-				SelectionColor.SetStroke ();
-
-				c.SetLineWidth (borderThickness);
-				c.StrokeRect (rect);
-			}
+			SetDocumentSelected (value, frameView, animated);
 		}
 	}
 
@@ -863,7 +867,6 @@ namespace Praeclarum.UI
 	{
 		DocumentsViewItem item;
 		DirectoryBackgroundView bg;
-		DirectoryBackgroundView disable;
 
 		readonly List<UIImageView> thumbnailViews = new List<UIImageView> ();
 
@@ -1009,25 +1012,6 @@ namespace Praeclarum.UI
 			SetThumbnails (null);
 		}
 
-		protected override void BeginEditingStyle ()
-		{
-			if (disable == null) {
-				disable = new DirectoryBackgroundView {
-					Opaque = false,
-					GrayColor = NotSelectableColor,
-				};
-			}
-			disable.Frame = bg.Frame;
-			ContentView.AddSubview (disable);
-		}
-
-		protected override void EndEditingStyle ()
-		{
-			if (disable == null)
-				return;
-			disable.RemoveFromSuperview ();
-		}
-
 		public override UIView CreateThumbnailView ()
 		{
 			var b = new DirectoryBackgroundView {
@@ -1054,6 +1038,11 @@ namespace Praeclarum.UI
 				GrayColor.SetFill ();
 				UIBezierPath.FromRoundedRect (Bounds, 10).Fill ();
 			}
+		}
+
+		public override void SetDocumentSelected (bool value, bool animated)
+		{
+			SetDocumentSelected (value, bg, animated);
 		}
 	}
 
@@ -1158,13 +1147,14 @@ namespace Praeclarum.UI
 				dirCell.Item = item;
 				dirCell.Editing = controller.Editing;
 				dirCell.Selecting = controller.Selecting;
+				dirCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
 			} else {
 				var docCell = ((DocumentThumbnailCell)c);
 				docCell.ThumbnailSize = controller.ThumbnailSize;
 				docCell.Document = d;
 				docCell.Editing = controller.Editing;
 				docCell.Selecting = controller.Selecting;
-				docCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File.Path), false);
+				docCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
 			}
 
 			return c;

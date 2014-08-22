@@ -1,11 +1,10 @@
 using System;
-using System.IO;
-using System.Threading.Tasks;
-using System.Linq;
 using System.Collections.Generic;
-using System.Text;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Praeclarum.IO
 {
@@ -75,7 +74,7 @@ namespace Praeclarum.IO
 		public Task<IFile> GetFile (string path)
 		{
 			var file = new DeviceFile (path, documentsPath);
-			return Task.FromResult ((IFile)file);
+			return Task.FromResult<IFile> (file);
 		}
 
 		public Task<List<IFile>> ListFiles (string directory)
@@ -83,7 +82,7 @@ namespace Praeclarum.IO
 			var dirPath = Path.Combine (documentsPath, directory);
 
 			var len = documentsPath.Length;
-			if (!documentsPath.EndsWith ("/"))
+			if (!documentsPath.EndsWith ("/", StringComparison.Ordinal))
 				len++;
 
 			return Task.Run (() => {
@@ -110,8 +109,7 @@ namespace Praeclarum.IO
 		public Task<bool> FileExists (string path)
 		{
 			var localPath = GetLocalPath (path);
-			var ex = File.Exists (localPath);
-			return Task.FromResult (ex);
+			return Task.Run (() => File.Exists (localPath) || Directory.Exists (localPath));
 		}
 
 		public Task Initialize ()
@@ -128,13 +126,13 @@ namespace Praeclarum.IO
 
 		public Task<IFile> CreateFile (string path, byte[] contents)
 		{
-			return Task.Run (() => {
+			return Task.Run<IFile> (() => {
 				var r = new DeviceFile (path, documentsPath);
 				if (contents != null) {
 					Directory.CreateDirectory (Path.GetDirectoryName (r.LocalPath));
 					File.WriteAllBytes (r.LocalPath, contents);
 				}
-				return (IFile)r;
+				return r;
 			});
 		}
 
@@ -174,13 +172,19 @@ namespace Praeclarum.IO
 
 		public Task<bool> DeleteFile (string path)
 		{
-			var localPath = System.IO.Path.Combine (documentsPath, path);
+			var localPath = Path.Combine (documentsPath, path);
 
 			return Task.Factory.StartNew (() => {
 				try {
-					File.Delete (localPath);
+					if (Directory.Exists (localPath)) {
+						Directory.Delete (localPath, true);
+					}
+					else if (File.Exists (localPath)) {
+						File.Delete (localPath);
+					}
 					return true;
-				} catch (Exception) {
+				} catch (Exception ex) {
+					Console.WriteLine (ex);
 					return false;
 				}
 			});

@@ -979,7 +979,7 @@ namespace Praeclarum.UI
 			var tcs = new TaskCompletionSource<bool> ();
 
 			var form = new MoveDocumentsForm {
-				Title = "Move " + (files.Length == 1 ? App.DocumentBaseName : (files.Length + " " + App.DocumentBaseNamePluralized)) + " to",
+				Title = "Move " + DescribeFiles (files) + " to",
 				AutoCancelButton = true,
 				AutoDoneButton = false,
 			};
@@ -1018,7 +1018,7 @@ namespace Praeclarum.UI
 
 		async Task MoveDoc (IFile file, IFileSystem dest, string destDir, bool animated)
 		{
-			await ActiveFileSystem.MoveFileAsync (file, dest, destDir);
+			await ActiveFileSystem.MoveAsync (file, dest, destDir);
 			CurrentDocumentListController.RemoveDocument (file.Path, animated);
 		}
 
@@ -1044,7 +1044,7 @@ namespace Praeclarum.UI
 			var tcs = new TaskCompletionSource<int> ();
 
 			ActionSheet = new UIActionSheet ();
-			var msg = "Duplicate " + files.Length + " " + App.DocumentBaseNamePluralized;
+			var msg = "Duplicate " + DescribeFiles (files);
 			ActionSheet.AddButton (msg);
 			ActionSheet.AddButton ("Cancel");
 			ActionSheet.CancelButtonIndex = 1;
@@ -1067,6 +1067,26 @@ namespace Praeclarum.UI
 			return true;
 		}
 
+		string DescribeFiles (IFile[] files)
+		{
+			var msg = "";
+			if (files.Length == 1) {
+				msg = files [0].IsDirectory ? "Folder" : App.DocumentBaseName;
+			} else {
+				var ndir = files.Count (x => x.IsDirectory);
+				var ndoc = files.Length - ndir;
+				var head = "";
+				if (ndoc > 0) {
+					msg = ndoc + " " + (ndoc > 1 ? App.DocumentBaseNamePluralized : App.DocumentBaseName);
+					head = ", ";
+				}
+				if (ndir > 0) {
+					msg += head + ndir + (ndir > 1 ? " Folders" : " Folder");
+				}
+			}
+			return msg;
+		}
+
 		public async Task<bool> DeleteDocuments (IFile[] files, UIBarButtonItem deleteButton)
 		{
 			if (DismissSheetsAndPopovers ())
@@ -1081,12 +1101,7 @@ namespace Praeclarum.UI
 			var tcs = new TaskCompletionSource<int> ();
 
 			ActionSheet = new UIActionSheet ();
-			var msg = "Delete ";
-			if (files.Length == 1)
-				msg += App.DocumentBaseName;
-			else
-				msg += files.Length + " " + App.DocumentBaseNamePluralized;
-			ActionSheet.AddButton (msg);
+			ActionSheet.AddButton ("Delete " + DescribeFiles (files));
 			ActionSheet.AddButton ("Cancel");
 			ActionSheet.DestructiveButtonIndex = 0;
 			ActionSheet.CancelButtonIndex = 1;
@@ -1158,11 +1173,11 @@ namespace Praeclarum.UI
 
 		async Task DuplicateFile (IFile file)
 		{
-			try {				
-				DocumentReference source = new DocumentReference (file, App.CreateDocument, isNew:false);
-				AddDocRef (await source.Duplicate (ActiveFileSystem));
+			try {
+				var newFile = await ActiveFileSystem.DuplicateAsync (file);
+				AddDocRef (new DocumentReference (newFile, App.CreateDocument, isNew:false));
 			} catch (Exception ex) {
-				Console.WriteLine (ex);
+				Alert ("Failed to Duplicate " + file.Path, ex);
 			}
 		}
 

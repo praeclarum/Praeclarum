@@ -111,14 +111,85 @@ namespace Praeclarum.IO
 			return r;
 		}
 
-		public static async Task MoveFileAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
+		public static Task<IFile> DuplicateAsync (this IFileSystem fs, IFile file)
+		{
+			return fs.CopyAsync (file, fs, Path.GetDirectoryName (file.Path));
+		}
+
+		public static Task<IFile> CopyAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
+		{
+			if (file.IsDirectory)
+				return CopyDirectoryAsync (src, file, dest, destDir);
+			return CopyFileAsync (src, file, dest, destDir);
+		}
+
+		static async Task<IFile> CopyFileAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
 		{
 			var contents = await file.ReadAllBytesAsync ();
-			var newPath = Path.Combine (destDir, Path.GetFileName (file.Path));
-			await dest.CreateFile (newPath, contents);
+			var newPath = await dest.GetAvailableNameAsync (Path.Combine (destDir, Path.GetFileName (file.Path)));
+			return await dest.CreateFile (newPath, contents);
+		}
+
+		static async Task<IFile> CopyDirectoryAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
+		{
+			var newPath = await dest.GetAvailableNameAsync (Path.Combine (destDir, Path.GetFileName (file.Path)));
+
+			var r = await dest.CreateDirectory (newPath);
+			if (!r)
+				throw new Exception ("Failed to create destination directory " + newPath + " on " + dest);
+
+			var srcFiles = await src.ListFiles (file.Path);
+			foreach (var f in srcFiles) {
+				await src.CopyAsync (f, dest, newPath);
+			}
+
+			return await dest.GetFile (newPath);
+		}
+
+		public static Task MoveAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
+		{
+			if (file.IsDirectory)
+				return MoveDirectoryAsync (src, file, dest, destDir);
+			return MoveFileAsync (src, file, dest, destDir);
+		}
+
+		static async Task MoveFileAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
+		{
+			await src.CopyFileAsync (file, dest, destDir);
 			if (!await src.DeleteFile (file.Path)) {
 				throw new Exception ("Failed to delete " + file.Path + " from " + src);
 			}
+		}
+
+		static async Task MoveDirectoryAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)
+		{
+			await src.CopyDirectoryAsync (file, dest, destDir);
+			if (!await src.DeleteFile (file.Path)) {
+				throw new Exception ("Failed to delete directory " + file.Path + " from " + src);
+			}
+		}
+
+		public static async Task<string> GetAvailableNameAsync (this IFileSystem fs, string path)
+		{
+			if (!await fs.FileExists (path))
+				return path;
+
+			var dir = Path.GetDirectoryName (path);
+			var name = Path.GetFileNameWithoutExtension (path);
+			var ext = Path.GetExtension (path);
+
+			var postfix = " Copy";
+
+			Func<string> makeName = () => Path.Combine (dir, name + postfix + ext);
+
+			var newPath = makeName ();
+
+			while (await fs.FileExists (newPath)) {
+				postfix += " Copy";
+				newPath = makeName ();
+			}
+
+			return newPath;
 		}
 
 		public static async Task<bool> Sync (this IFileSystem fs, TimeSpan timeout)

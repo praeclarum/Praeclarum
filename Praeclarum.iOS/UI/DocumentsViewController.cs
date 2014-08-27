@@ -681,15 +681,11 @@ namespace Praeclarum.UI
 		async void HandleMove (object sender, EventArgs e)
 		{
 			try {
-				if (await DocumentAppDelegate.Shared.MoveDocuments (GetSelectedFiles (), moveBtn, this)) {
-					SetEditing (false, true);
-				}
-				else {
-					SetEditing (true, true);
-				}
+				await DocumentAppDelegate.Shared.MoveDocuments (GetSelectedFiles (), moveBtn, this);
 			} catch (Exception ex) {
 				DocumentAppDelegate.Alert ("Move Failed", ex);
 			}
+			SetEditing (false, true);
 		}
 
 		async void HandleDuplicate (object sender, EventArgs e)

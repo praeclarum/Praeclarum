@@ -1002,6 +1002,15 @@ namespace Praeclarum.UI
 			}
 
 			//
+			// Make sure we're not trying to move a directory into its own child
+			//
+			if (ActiveFileSystem == form.FileSystem) {
+				if (files.Any (x => x.IsDirectory && form.Directory.StartsWith (x.Path, StringComparison.Ordinal))) {
+					throw new Exception ("You cannot move a folder into one of its subfolders.");
+				}
+			}
+
+			//
 			// Perform the move
 			//
 			foreach (var f in files) {

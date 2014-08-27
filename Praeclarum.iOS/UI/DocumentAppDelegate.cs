@@ -958,7 +958,7 @@ namespace Praeclarum.UI
 			await OpenDocument (0, true);
 		}
 
-		public async Task<bool> MoveDocuments (IFile[] files, UIBarButtonItem duplicateButton)
+		public async Task<bool> MoveDocuments (IFile[] files, UIBarButtonItem duplicateButton, UIViewController fromViewController)
 		{
 			if (DismissSheetsAndPopovers ())
 				return false;
@@ -987,7 +987,7 @@ namespace Praeclarum.UI
 			var formNav = new UINavigationController (form) {
 				ModalPresentationStyle = UIModalPresentationStyle.FormSheet,
 			};
-			await window.RootViewController.PresentViewControllerAsync (formNav, true);
+			await fromViewController.PresentViewControllerAsync (formNav, true);
 
 			var shouldMove = await tcs.Task;
 

@@ -681,9 +681,12 @@ namespace Praeclarum.UI
 		async void HandleMove (object sender, EventArgs e)
 		{
 			try {
-				if (await DocumentAppDelegate.Shared.MoveDocuments (GetSelectedFiles (), moveBtn)) {
+				if (await DocumentAppDelegate.Shared.MoveDocuments (GetSelectedFiles (), moveBtn, this)) {
 					SetEditing (false, true);
-				}				
+				}
+				else {
+					SetEditing (true, true);
+				}
 			} catch (Exception ex) {
 				DocumentAppDelegate.Alert ("Move Failed", ex);
 			}

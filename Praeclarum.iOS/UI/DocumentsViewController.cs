@@ -59,7 +59,7 @@ namespace Praeclarum.UI
 
 			NavigationItem.BackBarButtonItem = new UIBarButtonItem (
 				"Back",
-				UIBarButtonItemStyle.Bordered,
+				UIBarButtonItemStyle.Plain,
 				null);			
 
 			SetTitle ();

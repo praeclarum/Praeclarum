@@ -419,6 +419,26 @@ namespace Praeclarum.Graphics
             return t;
         }
 
+		public Transform2D Invert ()
+		{
+			// [ M22, -M12,  M12*M23 - M13*M22; 
+			//  -M21,  M11, -M11*M23 + M13*M21; 
+			//     0,    0,  M11*M22 - M12*M21]/(M11*M22 - M21*M12)
+			var d = M11 * M22 - M21 * M12;
+			if (d == 0)
+				throw new InvalidOperationException ();
+
+			var r = 1.0f / d;
+			var t = new Transform2D ();
+			t.M11 = r * (M22);
+			t.M12 = r * (-M12);
+			t.M13 = r * (M12 * M23 - M13 * M22);
+			t.M21 = r * (-M21);
+			t.M22 = r * (M11);
+			t.M23 = r * (-M11 * M23 + M13 * M21);
+			return t;
+		}
+
         public static Transform2D Identity ()
         {
             var t = new Transform2D ();

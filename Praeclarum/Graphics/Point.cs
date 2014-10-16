@@ -117,6 +117,20 @@ namespace Praeclarum.Graphics
 			return (float)Math.Sqrt (dx*dx + dy*dy);
 		}
 
+		public static float DistanceSquaredTo (this PointF a, float bx, float by)
+		{
+			var dx = a.X - bx;
+			var dy = a.Y - by;
+			return dx * dx + dy * dy;
+		}
+
+		public static double DistanceSquaredTo (this PointF a, double bx, double by)
+		{
+			var dx = a.X - bx;
+			var dy = a.Y - by;
+			return dx * dx + dy * dy;
+		}
+
 		public static PointF Normalized (this PointF a)
 		{
 			var d = a.X * a.X + a.Y * a.Y;

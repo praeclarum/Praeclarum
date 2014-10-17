@@ -25,6 +25,10 @@ namespace Praeclarum.Graphics
 			color = new Vector4 (c.RedValue, c.GreenValue, c.BlueValue, c.AlphaValue);
 		}
 
+		public void SetGradient (Gradient g)
+		{
+		}
+
 		Vector4 color = Vector4.Zero;
 
 		public void Clear (Color c)

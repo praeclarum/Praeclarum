@@ -22,6 +22,7 @@
 using System;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Linq;
 
 #if MONOMAC
 using MonoMac.CoreGraphics;
@@ -49,6 +50,8 @@ namespace Praeclarum.Graphics
 	public class CoreGraphicsGraphics : IGraphics
 	{
 		CGContext _c;
+
+		Gradient _g;
 
 		public CGContext Context { get { return _c; } }
 
@@ -84,6 +87,11 @@ namespace Praeclarum.Graphics
 			SetColor (Colors.Black);
 		}
 
+		public void SetGradient (Gradient g)
+		{
+			_g = g;
+		}
+
 		public void SetColor (Color c)
 		{
 			var cgcol = c.GetCGColor ();
@@ -94,6 +102,7 @@ namespace Praeclarum.Graphics
 			_c.SetFillColor (cgcol);
 			_c.SetStrokeColor (cgcol);
 #endif
+			_g = null;
 		}
 
 		public void Clear (Color color)
@@ -109,7 +118,26 @@ namespace Praeclarum.Graphics
 				var p = poly.Points[i];
 				_c.AddLineToPoint (p.X, p.Y);
 			}
-			_c.FillPath ();
+			_c.ClosePath ();
+			FillPath ();
+		}
+
+		void FillPath ()
+		{
+			if (_g != null) {
+				FillPathWithGradient ();
+			} else {
+				_c.FillPath ();
+			}
+		}
+
+		void FillPathWithGradient ()
+		{
+			var gr = new CGGradient (CGColorSpace.CreateDeviceRGB (), _g.Colors.Select (c => c.GetCGColor ()).ToArray (), _g.Locations.ToArray ());
+			_c.SaveState ();
+			_c.Clip ();
+			_c.DrawLinearGradient (gr, _g.Start.ToPointF (), _g.End.ToPointF (), CGGradientDrawingOptions.DrawsAfterEndLocation | CGGradientDrawingOptions.DrawsBeforeStartLocation);
+			_c.RestoreState ();
 		}
 
 		public void DrawPolygon (Polygon poly, float w)
@@ -120,14 +148,14 @@ namespace Praeclarum.Graphics
 				var p = poly.Points[i];
 				_c.AddLineToPoint (p.X, p.Y);
 			}
-			_c.AddLineToPoint (poly.Points[0].X, poly.Points[0].Y);
+			_c.ClosePath ();
 			_c.StrokePath ();
 		}
 
 		public void FillRoundedRect (float x, float y, float width, float height, float radius)
 		{
 			_c.AddRoundedRect (new RectangleF (x, y, width, height), radius);
-			_c.FillPath ();
+			FillPath ();
 		}
 
 		public void DrawRoundedRect (float x, float y, float width, float height, float radius, float w)
@@ -139,12 +167,22 @@ namespace Praeclarum.Graphics
 
 		public void FillRect (float x, float y, float width, float height)
 		{
-			_c.FillRect (new DRectangleF (x, y, width, height));
+			if (_g != null) {
+				_c.AddRect (new DRectangleF (x, y, width, height));
+				FillPath ();
+			} else {
+				_c.FillRect (new DRectangleF (x, y, width, height));
+			}
 		}
 
 		public void FillOval (float x, float y, float width, float height)
 		{
-			_c.FillEllipseInRect (new DRectangleF (x, y, width, height));
+			if (_g != null) {
+				_c.AddEllipseInRect (new DRectangleF (x, y, width, height));
+				FillPath ();
+			} else {
+				_c.FillEllipseInRect (new DRectangleF (x, y, width, height));
+			}
 		}
 
 		public void DrawOval (float x, float y, float width, float height, float w)
@@ -169,7 +207,7 @@ namespace Praeclarum.Graphics
 		public void FillArc (float cx, float cy, float radius, float startAngle, float endAngle)
 		{
 			_c.AddArc (cx, cy, radius, -startAngle, -endAngle, true);
-			_c.FillPath ();
+			FillPath ();
 		}
 
 		const int _linePointsCount = 1024;

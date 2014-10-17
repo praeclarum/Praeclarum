@@ -169,6 +169,10 @@ namespace Praeclarum.Graphics
 			_lastColor = FormatColor (c);
 		}
 
+		public void SetGradient (Gradient g)
+		{
+		}
+
 		public void FillPolygon (Polygon poly)
 		{
 			Write("<polygon fill=\"{0}\" stroke=\"none\" points=\"", _lastColor);

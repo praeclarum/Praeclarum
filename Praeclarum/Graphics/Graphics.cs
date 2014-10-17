@@ -32,6 +32,8 @@ namespace Praeclarum.Graphics
 
 		void SetColor(Color c);
 
+		void SetGradient(Gradient g);
+
 		void Clear (Color c);
 
 		void FillPolygon(Polygon poly);
@@ -208,6 +210,18 @@ namespace Praeclarum.Graphics
 		public static int StringWidth (this IFontMetrics fm, string s)
 		{
 			return fm.StringWidth (s, 0, s.Length);
+		}
+	}
+
+	public class Gradient
+	{
+		public List<float> Locations = new List<float> (2);
+		public List<Color> Colors = new List<Color> (2);
+		public PointF Start;
+		public PointF End;
+		public void Add (float location, Color color) {
+			Locations.Add (location);
+			Colors.Add (color);
 		}
 	}
 

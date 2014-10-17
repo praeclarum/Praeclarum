@@ -43,6 +43,10 @@ namespace Praeclarum.Graphics
 		{
 		}
 
+		public void SetGradient (Gradient g)
+		{
+		}
+
 		public void Clear (Color c)
 		{
 		}

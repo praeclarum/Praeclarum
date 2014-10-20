@@ -25,10 +25,14 @@ using System.Collections.Generic;
 using System.Linq;
 
 #if MONOMAC
-using MonoMac.CoreGraphics;
 using MonoMac.AppKit;
+using MonoMac.CoreGraphics;
+using MonoMac.CoreText;
+using MonoMac.Foundation;
 #else
 using MonoTouch.CoreGraphics;
+using MonoTouch.CoreText;
+using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 #endif
 
@@ -92,8 +96,11 @@ namespace Praeclarum.Graphics
 			_g = g;
 		}
 
+		Color _color = Colors.Black;
+
 		public void SetColor (Color c)
 		{
+			_color = c;
 			var cgcol = c.GetCGColor ();
 #if MONOMAC
 			_c.SetFillColorWithColor (cgcol);
@@ -270,7 +277,7 @@ namespace Praeclarum.Graphics
 		
 		static CGAffineTransform _textMatrix;
 
-		Font _lastFont = null;
+		Font _lastFont;
 
 		public void SetFont (Font f)
 		{
@@ -279,7 +286,8 @@ namespace Praeclarum.Graphics
 				SelectFont ();
 			}
 		}
-		
+		CTStringAttributes _attrs;
+		float _descent = 0;
 		void SelectFont ()
 		{
 			var f = _lastFont;
@@ -302,59 +310,51 @@ namespace Praeclarum.Graphics
 			else if (f.IsBold) {
 				name = "Helvetica-Bold";
 			}
+			var font = new CTFont (name, f.Size);
+			_descent = font.DescentMetric;
+			_attrs = new CTStringAttributes {
+				Font = font,
+				ForegroundColorFromContext = true,
+			};
 			_c.SelectFont (name, f.Size, CGTextEncoding.MacRoman);
-			_c.TextMatrix = _textMatrix;
-		}
-		
-		static Dictionary<string, byte[]> _stringFixups = new Dictionary<string, byte[]>();
-		
-		byte[] FixupString (string s)
-		{
-			byte[] fix;
-			if (_stringFixups.TryGetValue (s, out fix)) {
-				return fix;
-			}
-			else {
-				var n = s.Length;
-				var bad = false;
-				for (var i = 0; i < n && !bad; i++) {
-					bad = ((int)s[i] > 127);
-				}
-				if (bad) {
-					fix = MacRomanEncoding.GetBytes (s.Replace ("\u03A9", "Ohm"));
-					_stringFixups [s] = fix;
-					return fix;
-				}
-				else {
-					return null;
-				}
-			}
+//			_c.TextMatrix = _textMatrix;
 		}
 		
 		public void SetClippingRect (float x, float y, float width, float height)
 		{
 			_c.ClipToRect (new DRectangleF (x, y, width, height));
 		}
-		
+
 		public void DrawString (string s, float x, float y)
-		{			
-			if (_lastFont == null) return;
-			var fm = GetFontMetrics ();
-			var fix = FixupString (s);
-			
-			if (fix == null) {
-				_c.ShowTextAtPoint (x, y + fm.Height, s);
-			}
-			else {
-				_c.ShowTextAtPoint (x, y + fm.Height, fix);
-			}
+		{
+			var astr = new NSMutableAttributedString (s);
+			astr.AddAttributes (_attrs, new NSRange (0, s.Length));
+			var fs = new MonoMac.CoreText.CTFramesetter (astr);
+			var path = new CGPath ();
+			var h = _lastFont.Size * 2;
+			path.AddRect (new System.Drawing.RectangleF (0, 0, 10000, h));
+			var f = fs.GetFrame (new NSRange (0, 0), path, null);
+
+
+
+			_c.SaveState ();
+			_c.TranslateCTM (x, h + y - _descent);
+			_c.ScaleCTM (1, -1);
+
+
+			f.Draw (_c);
+			_c.RestoreState ();
+
+//			var c = _color;
+//			SetColor (Colors.Black);
+//			DrawRect (x, y, 100, _lastFont.Size, 1);
+//			SetColor (c);
 		}
 
 		public void DrawString (string s, float x, float y, float width, float height, LineBreakMode lineBreak, TextAlignment align)
 		{
 			if (_lastFont == null) return;
 			var fm = GetFontMetrics ();
-			var fix = FixupString (s);
 			var xx = x;
 			var yy = y;
 			if (align == TextAlignment.Center) {
@@ -364,12 +364,7 @@ namespace Praeclarum.Graphics
 				xx = (x + width) - fm.StringWidth (s);
 			}
 			
-			if (fix == null) {
-				_c.ShowTextAtPoint (xx, yy + fm.Height, s);
-			}
-			else {
-				_c.ShowTextAtPoint (xx, yy + fm.Height, fix);
-			}
+			DrawString (s, xx, yy);
 		}
 
 		public IFontMetrics GetFontMetrics ()
@@ -686,49 +681,6 @@ namespace Praeclarum.Graphics
 			c.AddLineToPoint (b.Right, b.Top);
 			
 			c.AddLineToPoint (b.Left, b.Top);
-		}
-	}
-	
-	public class MacRomanEncoding {
-		static Dictionary<int, byte> _uniToMac= new Dictionary<int, byte>() {
-			{160, 202}, {161, 193}, {162, 162}, {163, 163}, {165, 180}, {167, 164}, {168, 172}, {169,
-			169}, {170, 187}, {171, 199}, {172, 194}, {174, 168}, {175, 248}, {176, 161}, {177, 177},
-			{180, 171}, {181, 181}, {182, 166}, {183, 225}, {184, 252}, {186, 188}, {187, 200}, {191,
-			192}, {192, 203}, {193, 231}, {194, 229}, {195, 204}, {196, 128}, {197, 129}, {198, 174},
-			{199, 130}, {200, 233}, {201, 131}, {202, 230}, {203, 232}, {204, 237}, {205, 234}, {206,
-			235}, {207, 236}, {209, 132}, {210, 241}, {211, 238}, {212, 239}, {213, 205}, {214, 133},
-			{216, 175}, {217, 244}, {218, 242}, {219, 243}, {220, 134}, {223, 167}, {224, 136}, {225,
-			135}, {226, 137}, {227, 139}, {228, 138}, {229, 140}, {230, 190}, {231, 141}, {232, 143},
-			{233, 142}, {234, 144}, {235, 145}, {236, 147}, {237, 146}, {238, 148}, {239, 149}, {241,
-			150}, {242, 152}, {243, 151}, {244, 153}, {245, 155}, {246, 154}, {247, 214}, {248, 191},
-			{249, 157}, {250, 156}, {251, 158}, {252, 159}, {255, 216}, {305, 245}, {338, 206}, {339,
-			207}, {376, 217}, {402, 196}, {710, 246}, {711, 255}, {728, 249}, {729, 250}, {730, 251},
-			{731, 254}, {732, 247}, {733, 253}, {937, 189}, {960, 185}, {8211, 208}, {8212, 209},
-			{8216, 212}, {8217, 213}, {8218, 226}, {8220, 210}, {8221, 211}, {8222, 227}, {8224, 160},
-			{8225, 224}, {8226, 165}, {8230, 201}, {8240, 228}, {8249, 220}, {8250, 221}, {8260, 218},
-			{8364, 219}, {8482, 170}, {8706, 182}, {8710, 198}, {8719, 184}, {8721, 183}, {8730, 195},
-			{8734, 176}, {8747, 186}, {8776, 197}, {8800, 173}, {8804, 178}, {8805, 179}, {9674, 215},
-			{63743, 240}, {64257, 222}, {64258, 223},
-		};
-		public static byte[] GetBytes (string str)
-		{
-			if (str == null) throw new ArgumentNullException ("str");
-			var n = str.Length;
-			var r = new byte [n];
-			for (var i = 0; i < n; i++) {
-				var ch = (int)str [i];
-				var mac = (byte)'?';
-				if (ch <= 127) {
-					mac = (byte)ch;
-				}
-				else if (_uniToMac.TryGetValue (ch, out mac)) {
-				}
-				else {
-					mac = (byte)'?';
-				}
-				r [i] = mac;
-			}
-			return r;
 		}
 	}
 }

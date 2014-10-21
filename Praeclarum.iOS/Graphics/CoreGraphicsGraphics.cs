@@ -63,15 +63,6 @@ namespace Praeclarum.Graphics
 
 		static CoreGraphicsGraphics ()
 		{
-			//foreach (var f in UIFont.FamilyNames) {
-			//	Console.WriteLine (f);
-			//	var fs = UIFont.FontNamesForFamilyName (f);
-			//	foreach (var ff in fs) {
-			//		Console.WriteLine ("  " + ff);
-			//	}
-			//}
-			
-			_textMatrix = CGAffineTransform.MakeScale (1, -1);
 		}
 
 		public CoreGraphicsGraphics (CGContext c, bool highQuality)
@@ -275,8 +266,6 @@ namespace Praeclarum.Graphics
 			_linesBegun = false;
 		}
 		
-		static CGAffineTransform _textMatrix;
-
 		Font _lastFont;
 
 		public void SetFont (Font f)
@@ -287,7 +276,6 @@ namespace Praeclarum.Graphics
 			}
 		}
 		CTStringAttributes _attrs;
-		float _descent = 0;
 		void SelectFont ()
 		{
 			var f = _lastFont;
@@ -310,14 +298,10 @@ namespace Praeclarum.Graphics
 			else if (f.IsBold) {
 				name = "Helvetica-Bold";
 			}
-			var font = new CTFont (name, f.Size);
-			_descent = font.DescentMetric;
 			_attrs = new CTStringAttributes {
-				Font = font,
+				Font = new CTFont (name, f.Size),
 				ForegroundColorFromContext = true,
 			};
-			_c.SelectFont (name, f.Size, CGTextEncoding.MacRoman);
-//			_c.TextMatrix = _textMatrix;
 		}
 		
 		public void SetClippingRect (float x, float y, float width, float height)
@@ -327,20 +311,26 @@ namespace Praeclarum.Graphics
 
 		public void DrawString (string s, float x, float y)
 		{
-			var astr = new NSMutableAttributedString (s);
-			astr.AddAttributes (_attrs, new NSRange (0, s.Length));
-			var fs = new CTFramesetter (astr);
-			var path = new CGPath ();
-			var h = _lastFont.Size * 2;
-			path.AddRect (new System.Drawing.RectangleF (0, 0, s.Length * h, h));
-			var f = fs.GetFrame (new NSRange (0, 0), path, null);
+			using (var astr = new NSMutableAttributedString (s)) {
+				astr.AddAttributes (_attrs, new NSRange (0, s.Length));
+				using (var fs = new CTFramesetter (astr)) {
+					using (var path = new CGPath ()) {
+						var h = _lastFont.Size * 2;
+						path.AddRect (new System.Drawing.RectangleF (0, 0, s.Length * h, h));
+						using (var f = fs.GetFrame (new NSRange (0, 0), path, null)) {
+							var b = f.GetLines () [0].GetBounds (CTLineBoundsOptions.ExcludeTypographicLeading);
 
-			_c.SaveState ();
-			_c.TranslateCTM (x, h + y - _descent);
-			_c.ScaleCTM (1, -1);
+							_c.SaveState ();
+							_c.TranslateCTM (x, h + y + b.Y);
+							_c.ScaleCTM (1, -1);
 
-			f.Draw (_c);
-			_c.RestoreState ();
+							f.Draw (_c);
+
+							_c.RestoreState ();
+						}
+					}
+				}
+			}
 
 //			var c = _color;
 //			SetColor (Colors.Black);
@@ -371,14 +361,10 @@ namespace Praeclarum.Graphics
 
 			var fm = f.Tag as CoreGraphicsFontMetrics;
 			if (fm == null) {
-				fm = new CoreGraphicsFontMetrics ();
+				fm = new CoreGraphicsFontMetrics (_attrs);
 				f.Tag = fm;
 			}
-			
-			if (fm.Widths == null) {
-				fm.MeasureText (_c, _lastFont);
-			}
-			
+
 			return fm;
 		}
 
@@ -541,77 +527,44 @@ namespace Praeclarum.Graphics
 
 	public class CoreGraphicsFontMetrics : IFontMetrics
 	{
-		int _height;
+		int _height = 0;
 		public float[] Widths;
-		
-		const float DefaultWidth = 8.0f;
 
-		public void MeasureText (CGContext c, Font f)
+		readonly CTStringAttributes attrs;
+		public CoreGraphicsFontMetrics (CTStringAttributes attrs)
 		{
-//			Console.WriteLine ("MEASURE {0}", f);
-			
-			c.SetTextDrawingMode (CGTextDrawingMode.Invisible);
-			c.TextPosition = new DPointF(0, 0);
-			c.ShowText ("MM");
-			
-			var mmWidth = c.TextPosition.X;
-			
-			_height = f.Size - 5;
-			
-			Widths = new float[0x80];
-
-			for (var i = ' '; i < 127; i++) {
-
-				var s = "M" + ((char)i).ToString() + "M";
-				
-				c.TextPosition = new DPointF(0, 0);
-				c.ShowText (s);
-				
-				var sz = c.TextPosition.X - mmWidth;
-				
-				if (sz < 0.1f) {
-					Widths = null;
-					return;
-				}
-				
-				Widths[i] = sz;
-			}
-			
-			c.SetTextDrawingMode (CGTextDrawingMode.Fill);
-		}
-
-		public CoreGraphicsFontMetrics ()
-		{
+			this.attrs = attrs;
 		}
 		
 		public int StringWidth (string str, int startIndex, int length)
 		{
-			if (str == null) return 0;
+			return (int)(StringSize (str, startIndex, length).Width + 0.5f);
+		}
 
-			var end = startIndex + str.Length;
-			if (end <= 0) return 0;
-			
-			if (Widths == null) {
-				return 0;
-			}
+		System.Drawing.SizeF StringSize (string str, int startIndex, int length)
+		{
+			if (str == null || length <= 0) return System.Drawing.SizeF.Empty;
 
-			var w = 0.0f;
-
-			for (var i = startIndex; i < end; i++) {
-				var ch = (int)str[i];
-				if (ch < Widths.Length) {
-					w += Widths[ch];
+			using (var astr = new NSMutableAttributedString (str)) {
+				astr.AddAttributes (attrs, new NSRange (startIndex, length));
+				using (var fs = new CTFramesetter (astr)) {
+					using (var path = new CGPath ()) {
+						path.AddRect (new System.Drawing.RectangleF (0, 0, 30000, attrs.Font.XHeightMetric * 10));
+						using (var f = fs.GetFrame (new NSRange (startIndex, length), path, null)) {
+							var b = f.GetLines () [0].GetBounds ((CTLineBoundsOptions)0);
+							return b.Size;
+						}
+					}
 				}
-				else {
-					w += DefaultWidth;
-				}
 			}
-			return (int)(w + 0.5f);
 		}
 
 		public int Height
 		{
 			get {
+				if (_height <= 0) {
+					_height = (int)(StringSize ("M", 0, 1).Height + 0.5f);
+				}
 				return _height;
 			}
 		}

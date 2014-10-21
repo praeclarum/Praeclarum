@@ -329,18 +329,15 @@ namespace Praeclarum.Graphics
 		{
 			var astr = new NSMutableAttributedString (s);
 			astr.AddAttributes (_attrs, new NSRange (0, s.Length));
-			var fs = new MonoMac.CoreText.CTFramesetter (astr);
+			var fs = new CTFramesetter (astr);
 			var path = new CGPath ();
 			var h = _lastFont.Size * 2;
-			path.AddRect (new System.Drawing.RectangleF (0, 0, 10000, h));
+			path.AddRect (new System.Drawing.RectangleF (0, 0, s.Length * h, h));
 			var f = fs.GetFrame (new NSRange (0, 0), path, null);
-
-
 
 			_c.SaveState ();
 			_c.TranslateCTM (x, h + y - _descent);
 			_c.ScaleCTM (1, -1);
-
 
 			f.Draw (_c);
 			_c.RestoreState ();

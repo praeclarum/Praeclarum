@@ -160,5 +160,37 @@ namespace Praeclarum
 
 			return diff;
 		}
+
+		public static ListDiff<TSource, TDestination> MergeInto<TSource, TDestination> (this IList<TSource> source, IEnumerable<TDestination> destination, Func<TSource, TDestination, bool> match, Func<TDestination, TSource> create, Action<TSource, TDestination> update, Action<TSource> delete)
+		{
+			var diff = new ListDiff<TSource, TDestination> (source, destination, match);
+
+			var p = 0;
+
+			foreach (var a in diff.Actions) {
+				if (a.ActionType == ListDiffActionType.Add) {
+					source.Insert (p, create (a.DestinationItem));
+					p++;
+				} else if (a.ActionType == ListDiffActionType.Remove) {
+					delete (a.SourceItem);
+					source.RemoveAt (p);
+				} else {
+					update (a.SourceItem, a.DestinationItem);
+					p++;
+				}
+			}
+
+			return diff;
+		}
+
+		public static ListDiff<TSource, TDestination> Diff<TSource, TDestination> (this IEnumerable<TSource> sources, IEnumerable<TDestination> destinations)
+		{
+			return new ListDiff<TSource, TDestination> (sources, destinations);
+		}
+
+		public static ListDiff<TSource, TDestination> Diff<TSource, TDestination> (this IEnumerable<TSource> sources, IEnumerable<TDestination> destinations, Func<TSource, TDestination, bool> match)
+		{
+			return new ListDiff<TSource, TDestination> (sources, destinations, match);
+		}
 	}
 }

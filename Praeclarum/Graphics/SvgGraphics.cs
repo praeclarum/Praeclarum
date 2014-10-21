@@ -29,9 +29,9 @@ namespace Praeclarum.Graphics
 	{
 		TextWriter _tw;
 
-		SvgGraphicsFontMetrics _fontMetrics;
-		//Font _lastFont = null;
+		Font _lastFont = null;
 		string _lastColor = null;
+		string _lastColorOp = null;
 		
 		class State {
             public PointF Scale;
@@ -48,7 +48,6 @@ namespace Praeclarum.Graphics
 			_viewBox = viewBox;
 			_tw = tw;
 			IncludeXmlAndDoctype = true;
-			_fontMetrics = new SvgGraphicsFontMetrics ();
 			SetColor (Colors.Black);			
 			_states.Push (_state);
 		}
@@ -100,8 +99,8 @@ namespace Praeclarum.Graphics
 			if (inGroup) {
 				WriteLine ("</g>");
 			}
-			var klass = (entity != null) ? entity.ToString () : "";
-			WriteLine ("<g class=\"{0}\">", klass);
+			var id = (entity != null) ? entity.ToString () : "";
+			WriteLine ("<g id=\"{0}\">", id);
 			inGroup = true;
 		}
 
@@ -117,6 +116,33 @@ namespace Praeclarum.Graphics
 				WriteLine ("</g>");
 				inGroup = false;
 			}
+			WriteLine("<defs>");
+			var i = 0;
+			foreach (var gt in grads) {
+				var g = gt.Item1;
+				var r = gt.Item2;
+				if (r.Width <= 0) {
+					r.Inflate (2e-16f, 0);
+				}
+				if (r.Height <= 0) {
+					r.Inflate (0, 2e-16f);
+				}
+				WriteLine ("<linearGradient id=\"grad{0}\" x1=\"{1}%\" y1=\"{2}%\" x2=\"{3}%\" y2=\"{4}%\">",
+					i,
+					(g.Start.X - r.X) / r.Width * 100,
+					(g.Start.Y - r.Y) / r.Height * 100,
+					(g.End.X - r.X) / r.Width * 100,
+					(g.End.Y - r.Y) / r.Height * 100);
+				for (var s = 0; s < g.Colors.Count; s++) {
+					WriteLine ("<stop offset=\"{0}%\" stop-color=\"{1}\" stop-opacity=\"{2}\" />",
+						g.Locations[s]*100,
+						FormatColor (g.Colors[s]),
+						g.Colors[s].AlphaValue);
+				}
+				WriteLine ("</linearGradient>");
+				i++;
+			}
+			WriteLine("</defs>");
 			WriteLine("</svg>");
 			_tw.Flush();
 		}
@@ -156,7 +182,7 @@ namespace Praeclarum.Graphics
 
 		public void SetFont (Font f)
 		{
-			//_lastFont = f;
+			_lastFont = f;
 		}
 
 		static string FormatColor (Color c)
@@ -166,16 +192,36 @@ namespace Praeclarum.Graphics
 
 		public void SetColor (Color c)
 		{
+			_lastColorOp = c.AlphaValue.ToString (System.Globalization.CultureInfo.InvariantCulture);
 			_lastColor = FormatColor (c);
+			_grad = null;
 		}
+
+		Gradient _grad = null;
 
 		public void SetGradient (Gradient g)
 		{
+			_grad = g;
+		}
+
+		List<Tuple<Gradient, RectangleF>> grads = new List<Tuple<Gradient, RectangleF>> ();
+
+		string AddGradient (Gradient g, RectangleF bounds)
+		{
+			var url = "url(#grad" + grads.Count + ")";
+			grads.Add (Tuple.Create (g, bounds));
+			return url;
 		}
 
 		public void FillPolygon (Polygon poly)
 		{
-			Write("<polygon fill=\"{0}\" stroke=\"none\" points=\"", _lastColor);
+			var fill = _lastColor;
+
+			if (this._grad != null) {
+				fill = AddGradient (_grad, poly.BoundingBox);
+			}
+
+			Write("<polygon fill=\"{0}\" stroke=\"none\" points=\"", fill);
 			foreach (var p in poly.Points) {
 				Write("{0}", p.X);
 				Write(",");
@@ -187,7 +233,10 @@ namespace Praeclarum.Graphics
 
 		public void DrawPolygon (Polygon poly, float w)
 		{
-			Write("<polygon stroke=\"{0}\" stroke-width=\"{1}\" fill=\"none\" points=\"", _lastColor, w);
+			Write("<polygon stroke=\"{0}\" stroke-opacity=\"{1}\" stroke-width=\"{2}\" fill=\"none\" points=\"",
+				_lastColor,
+				_lastColorOp,
+				w);
 			foreach (var p in poly.Points) {
 				Write("{0}", p.X);
 				Write(",");
@@ -203,8 +252,8 @@ namespace Praeclarum.Graphics
 			var ry = height / 2;
 			var cx = x + rx;
 			var cy = y + ry;
-			WriteLine("<ellipse cx=\"{0}\" cy=\"{1}\" rx=\"{2}\" ry=\"{3}\" fill=\"{4}\" stroke=\"none\" />", 
-				cx, cy, rx, ry, _lastColor);
+			WriteLine("<ellipse cx=\"{0}\" cy=\"{1}\" rx=\"{2}\" ry=\"{3}\" fill=\"{4}\" fill-opacity=\"{5}\" stroke=\"none\" />", 
+				cx, cy, rx, ry, _lastColor, _lastColorOp);
 		}
 
 		public void DrawOval (float x, float y, float width, float height, float w)
@@ -213,21 +262,21 @@ namespace Praeclarum.Graphics
 			var ry = height / 2;
 			var cx = x + rx;
 			var cy = y + ry;
-			WriteLine("<ellipse cx=\"{0}\" cy=\"{1}\" rx=\"{2}\" ry=\"{3}\" stroke=\"{4}\" stroke-width=\"{5}\" fill=\"none\" />", 
-				cx, cy, rx, ry, _lastColor, w);
+			WriteLine("<ellipse cx=\"{0}\" cy=\"{1}\" rx=\"{2}\" ry=\"{3}\" stroke=\"{4}\" stroke-opacity=\"{5}\" stroke-width=\"{6}\" fill=\"none\" />", 
+				cx, cy, rx, ry, _lastColor, _lastColorOp, w);
 		}
 
 		public void FillArc (float cx, float cy, float radius, float startAngle, float endAngle)
 		{
-			WriteArc (cx, cy, radius, startAngle, endAngle, 0, "none", _lastColor);
+			WriteArc (cx, cy, radius, startAngle, endAngle, 0, "none", "0", _lastColor);
 		}
 		
 		public void DrawArc (float cx, float cy, float radius, float startAngle, float endAngle, float w)
 		{
-			WriteArc (cx, cy, radius, startAngle, endAngle, w, _lastColor, "none");
+			WriteArc (cx, cy, radius, startAngle, endAngle, w, _lastColor, _lastColorOp, "none");
 		}
 
-		public void WriteArc (float cx, float cy, float radius, float startAngle, float endAngle, float w, string stroke, string fill)
+		public void WriteArc (float cx, float cy, float radius, float startAngle, float endAngle, float w, string stroke, string strokeOp, string fill)
 		{
 			var sa = startAngle + Math.PI;
 			var ea = endAngle + Math.PI;
@@ -237,23 +286,26 @@ namespace Praeclarum.Graphics
 			var ex = cx + radius * Math.Cos (ea);
 			var ey = cy + radius * Math.Sin (ea);
 			
-			WriteLine("<path d=\"M {0} {1} A {2} {3} 0 0 1 {4} {5}\" stroke=\"{6}\" stroke-width=\"{7}\" fill=\"{8}\" />", 
+			WriteLine("<path d=\"M {0} {1} A {2} {3} 0 0 1 {4} {5}\" stroke=\"{6}\" stroke-opacity=\"{7}\" stroke-width=\"{8}\" fill=\"{9}\" />", 
 				sx, sy,
 				radius, radius,
 				ex, ey,				 
-				stroke, w, fill);
+				stroke, strokeOp, w, fill);
 		}
 
 		public void FillRoundedRect (float x, float y, float width, float height, float radius)
 		{
-			WriteLine("<rect x=\"{0}\" y=\"{1}\" width=\"{2}\" height=\"{3}\" rx=\"{5}\" ry=\"{5}\" fill=\"{4}\" stroke=\"none\" />", 
-				x, y, width, height, _lastColor, radius);
+			WriteLine("<rect x=\"{0}\" y=\"{1}\" width=\"{2}\" height=\"{3}\" rx=\"{4}\" ry=\"{4}\" fill=\"{5}\" fill-opacity=\"{6}\" stroke=\"none\" />", 
+				x, y, width, height, radius, _lastColor, _lastColorOp);
 		}
 
 		public void DrawRoundedRect (float x, float y, float width, float height, float radius, float w)
 		{
-			WriteLine("<rect x=\"{0}\" y=\"{1}\" width=\"{2}\" height=\"{3}\" rx=\"{6}\" ry=\"{6}\" stroke=\"{4}\" stroke-width=\"{5}\" fill=\"none\" />", 
-				x, y, width, height, _lastColor, w, radius);
+			WriteLine("<rect x=\"{0}\" y=\"{1}\" width=\"{2}\" height=\"{3}\" rx=\"{4}\" ry=\"{4}\" stroke=\"{5}\" stroke-opacity=\"{6}\" stroke-width=\"{7}\" fill=\"none\" />", 
+				x, y, width, height,
+				radius,
+				_lastColor, _lastColorOp,
+				w);
 		}
 
 		public void FillRect (float x, float y, float width, float height)
@@ -264,8 +316,8 @@ namespace Praeclarum.Graphics
 
 		public void DrawRect (float x, float y, float width, float height, float w)
 		{
-			WriteLine("<rect x=\"{0}\" y=\"{1}\" width=\"{2}\" height=\"{3}\" stroke=\"{4}\" stroke-width=\"{5}\" fill=\"none\" />", 
-				x, y, width, height, _lastColor, w);
+			WriteLine("<rect x=\"{0}\" y=\"{1}\" width=\"{2}\" height=\"{3}\" stroke=\"{4}\" stroke-opacity=\"{5}\" stroke-width=\"{6}\" fill=\"none\" />", 
+				x, y, width, height, _lastColor, _lastColorOp, w);
 		}
 		
 		bool _inPolyline = false;
@@ -280,14 +332,14 @@ namespace Praeclarum.Graphics
 		{
 			if (_inPolyline) {
 				if (!_startedPolyline) {
-					Write ("<polyline stroke=\"{0}\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"{1}\" fill=\"none\" points=\"", _lastColor, w);
+					Write ("<polyline stroke=\"{0}\" stroke-opacity=\"{1}\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"{2}\" fill=\"none\" points=\"", _lastColor, _lastColorOp, w);
 					Write("{0},{1} ", sx, sy);
 					_startedPolyline = true;
 				}
 				Write("{0},{1} ", ex, ey);
 			}
 			else {
-				WriteLine("<line x1=\"{0}\" y1=\"{1}\" x2=\"{2}\" y2=\"{3}\" stroke=\"{4}\" stroke-width=\"{5}\" stroke-linecap=\"round\" fill=\"none\" />", sx, sy, ex, ey, _lastColor, w);
+				WriteLine("<line x1=\"{0}\" y1=\"{1}\" x2=\"{2}\" y2=\"{3}\" stroke=\"{4}\" stroke-opacity=\"{5}\" stroke-width=\"{6}\" stroke-linecap=\"round\" fill=\"none\" />", sx, sy, ex, ey, _lastColor, _lastColorOp, w);
 			}
 		}
 
@@ -302,21 +354,26 @@ namespace Praeclarum.Graphics
 		
 		public void DrawString(string s, float x, float y, float width, float height, LineBreakMode lineBreak, TextAlignment align)
 		{
-			WriteLine("<text x=\"{0}\" y=\"{1}\" font-family=\"sans-serif\">{2}</text>",
-				x, y + _fontMetrics.Height,
-				s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;"));
+			DrawString (s, x, y);
 		}
 
 		public void DrawString (string s, float x, float y)
 		{
-			WriteLine("<text x=\"{0}\" y=\"{1}\" font-family=\"sans-serif\">{2}</text>",
-				x, y + _fontMetrics.Height,
+			WriteLine("<text x=\"{0}\" y=\"{1}\" fill=\"{2}\" fill-opacity=\"{3}\" font-family=\"sans-serif\" font-size=\"{4}\">{5}</text>",
+				x, y + GetFontMetrics ().Height * 0.8f,
+				_lastColor, _lastColorOp,
+				_lastFont.Size,
 				s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;"));
 		}
 
 		public IFontMetrics GetFontMetrics ()
 		{
-			return _fontMetrics;
+			var fm = _lastFont.Tag as SvgGraphicsFontMetrics;
+			if (fm == null) {
+				fm = new SvgGraphicsFontMetrics (_lastFont);
+				_lastFont.Tag = fm;
+			}
+			return fm;
 		}
 
 		public void DrawImage (IImage img, float x, float y, float width, float height)
@@ -333,14 +390,14 @@ namespace Praeclarum.Graphics
 	{
 		int _height;
 		
-		public SvgGraphicsFontMetrics ()
+		public SvgGraphicsFontMetrics (Font font)
 		{
-			_height = 10;
+			_height = font.Size;
 		}
 
 		public int StringWidth (string str, int startIndex, int length)
 		{
-			return length * 10;
+			return (int)(length * _height * 0.42f + 0.5f);
 		}
 
 		public int Height

@@ -398,12 +398,35 @@ namespace Praeclarum.Graphics
 			Version++;
 		}
 
-
-
 		public void AddPoint(float x, float y)
 		{
 			Points.Add (new PointF (x, y));
 			Version++;
+		}
+
+		public RectangleF BoundingBox
+		{
+			get {
+				if (Points.Count <= 1)
+					return new RectangleF ();
+				var p = Points [0];
+				var x = p.X;
+				var y = p.Y;
+				var maxX = x;
+				var maxY = y;
+				for (var i = 0; i < Points.Count; i++) {
+					p = Points [i];
+					if (p.X < x)
+						x = p.X;
+					if (p.Y < y)
+						y = p.Y;
+					if (p.X > maxX)
+						maxX = p.X;
+					if (p.Y > maxY)
+						maxY = p.Y;
+				}
+				return new RectangleF (x, y, maxX - x, maxY - y);
+			}
 		}
 	}
 

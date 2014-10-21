@@ -291,6 +291,11 @@ namespace Praeclarum.Graphics
 			return new Color (Red, Green, Blue, aa);
 		}
 
+		public Color WithAlphaValue(float a)
+		{
+			return new Color (Red, Green, Blue, (int)(a*255 + 0.5f));
+		}
+
         public override bool Equals (object obj)
         {
             var o = obj as Color;

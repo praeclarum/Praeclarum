@@ -119,8 +119,8 @@ namespace Praeclarum.Graphics
 			WriteLine("<defs>");
 			var i = 0;
 			foreach (var gt in grads) {
-				var g = gt.Item1;
-				var r = gt.Item2;
+				var g = gt.Gradient;
+				var r = gt.Bounds;
 				if (r.Width <= 0) {
 					r.Inflate (2e-16f, 0);
 				}
@@ -204,12 +204,18 @@ namespace Praeclarum.Graphics
 			_grad = g;
 		}
 
-		List<Tuple<Gradient, RectangleF>> grads = new List<Tuple<Gradient, RectangleF>> ();
+		class GradientAndBounds
+		{
+			public Gradient Gradient;
+			public RectangleF Bounds;
+		}
+
+		List<GradientAndBounds> grads = new List<GradientAndBounds> ();
 
 		string AddGradient (Gradient g, RectangleF bounds)
 		{
 			var url = "url(#grad" + grads.Count + ")";
-			grads.Add (Tuple.Create (g, bounds));
+			grads.Add (new GradientAndBounds { Gradient = g, Bounds = bounds });
 			return url;
 		}
 

@@ -208,7 +208,7 @@ namespace Praeclarum.Graphics
 			FillPath ();
 		}
 
-		const int _linePointsCount = 1024;
+		const int _linePointsCount = 1024*16;
 		PointF[] _linePoints = new PointF[_linePointsCount];
 		bool _linesBegun = false;
 		int _numLinePoints = 0;

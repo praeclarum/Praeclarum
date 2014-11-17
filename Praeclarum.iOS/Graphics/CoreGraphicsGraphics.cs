@@ -318,10 +318,12 @@ namespace Praeclarum.Graphics
 						var h = _lastFont.Size * 2;
 						path.AddRect (new System.Drawing.RectangleF (0, 0, s.Length * h, h));
 						using (var f = fs.GetFrame (new NSRange (0, 0), path, null)) {
-							var b = f.GetLines () [0].GetBounds (CTLineBoundsOptions.ExcludeTypographicLeading);
+							var line = f.GetLines () [0];
+							float a, d, l;
+							line.GetTypographicBounds (out a, out d, out l);
 
 							_c.SaveState ();
-							_c.TranslateCTM (x, h + y + b.Y);
+							_c.TranslateCTM (x, h + y - d);
 							_c.ScaleCTM (1, -1);
 
 							f.Draw (_c);
@@ -551,8 +553,10 @@ namespace Praeclarum.Graphics
 					using (var path = new CGPath ()) {
 						path.AddRect (new System.Drawing.RectangleF (0, 0, 30000, attrs.Font.XHeightMetric * 10));
 						using (var f = fs.GetFrame (new NSRange (startIndex, length), path, null)) {
-							var b = f.GetLines () [0].GetBounds ((CTLineBoundsOptions)0);
-							return b.Size;
+							var line = f.GetLines () [0];
+							float a, d, l;
+							var tw = line.GetTypographicBounds (out a, out d, out l);
+							return new System.Drawing.SizeF ((float)tw, (a + d) * 1.2f);
 						}
 					}
 				}

@@ -27,9 +27,10 @@ namespace Praeclarum
 
 		public NativeCTStringAttributes Attributes { get { return attrs; } }
 
-		public CTStringAttributesWrapper ()
+		public CTStringAttributesWrapper (string className)
 		{
 			attrs = new NativeCTStringAttributes ();
+			ClassName = className;
 		}
 
 		#if MONOTOUCH
@@ -45,7 +46,7 @@ namespace Praeclarum
 		#endif
 
 
-		#region CTStringAttributes implementation
+		#region IRichTextAttributes implementation
 
 		public string ClassName { get; set; }
 

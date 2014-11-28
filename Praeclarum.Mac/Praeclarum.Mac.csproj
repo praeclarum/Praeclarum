@@ -164,6 +164,9 @@
     <Compile Include="..\Praeclarum\AsyncExtensions.cs">
       <Link>AsyncExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\Praeclarum\HtmlRichText.cs">
+      <Link>HtmlRichText.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

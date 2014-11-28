@@ -9,11 +9,17 @@ namespace Praeclarum
 		readonly string text;
 		readonly List<Span>[] spans;
 
+		public bool ForPresentation { get; set; }
+
 		class Span
 		{
 			public readonly StringRange Range;
 			public string Classes;
 			public string Url = null;
+			public bool IsPre = false;
+			public bool IsHidden { get { return Classes.Contains ("hidden"); } }
+			public bool IsCode { get { return Classes == "code"; } }
+			public bool IsXml { get { return Classes.Contains ("xml"); } }
 			public Span(StringRange range, string className)
 			{
 				Range = range;
@@ -28,8 +34,12 @@ namespace Praeclarum
 			}
 			public string Name {
 				get {
-					if (Classes == "a") {
-						return "a";
+					if (Classes == "a" || 
+						Classes == "h1" || Classes == "h2" || Classes == "h3" || Classes == "h4" || 
+						Classes == "code" || 
+						Classes == "strong" || Classes == "em" ||
+						Classes == "body") {
+						return Classes;
 					} else {
 						return "span";
 					}
@@ -42,16 +52,30 @@ namespace Praeclarum
 					sb.Append (Url);
 					sb.Append ("\">");
 				} else {
-					sb.Append ("<span class=\"");
-					sb.Append (Classes);
-					sb.Append ("\">");
+					var name = Name;
+					if (name == "span") {
+						sb.Append ("<span class=\"");
+						sb.Append (Classes);
+						sb.Append ("\">");
+					} else if (name == "body") {
+						// Nothing
+					} else {
+						sb.Append ("<");
+						sb.Append (name);
+						sb.Append (">");
+					}
 				}
 			}
 			public void WriteEnd (StringBuilder sb)
 			{
-				sb.Append ("</");
-				sb.Append (Name);
-				sb.Append (">");
+				var name = Name;
+				if (name == "body") {
+					// Nothing
+				} else {
+					sb.Append ("</");
+					sb.Append (Name);
+					sb.Append (">");
+				}
 			}
 		}
 
@@ -65,12 +89,38 @@ namespace Praeclarum
 			get {
 				var sb = new StringBuilder ();
 				OutputHtml (sb);
-				return sb.ToString ();
+				var raw = sb.ToString ();
+
+				if (ForPresentation) {
+					return raw
+						.Replace ("<?", "<")
+						.Replace ("<pre><code><br/></code></pre>", "<p>")
+						.Replace ("<p><h1>", "\n<h1>")
+						.Replace ("<p><h2>", "\n<h2>")
+						.Replace ("<p><h3>", "\n<h3>")
+						.Replace ("<p><h4>", "\n<h4>")
+						.Replace ("<br/><h1>", "\n<h1>")
+						.Replace ("<br/><h2>", "\n<h2>")
+						.Replace ("<br/><h3>", "\n<h3>")
+						.Replace ("<br/><h4>", "\n<h4>")
+						.Replace ("<br/></h1>", "</h1>\n")
+						.Replace ("<br/></h2>", "</h2>\n")
+						.Replace ("<br/></h3>", "</h3>\n")
+						.Replace ("<br/></h4>", "</h4>\n")
+						.Replace ("<br/>", "\n")
+						.Replace ("<p>", "\n<p>")
+						;
+				} else {
+					return raw;
+				}
 			}
 		}
 
 		void OutputHtml (StringBuilder sb)
 		{
+			var hidden = 0;
+			var literal = 0;
+			var newline = true;
 			var stack = new List<Span> ();
 			for (var i = 0; i < text.Length; i++) {
 
@@ -81,10 +131,24 @@ namespace Praeclarum
 					var changed = true;
 					while (changed) {
 						changed = false;
-						foreach (var s in stack) {
+						for (int j = stack.Count - 1; j >= 0; j--) {
+							var s = stack [j];
 							if (s.Range.End == i) {
-								s.WriteEnd (sb);
-								stack.RemoveAt (stack.Count - 1);
+								if (hidden == 0 && literal == 0) {
+									s.WriteEnd (sb);
+									if (s.IsPre) {
+										sb.Append ("</pre>");
+									}
+								}
+								if (ForPresentation) {
+									if (s.IsHidden) {
+										hidden--;
+									}
+									if (s.IsXml) {
+										literal--;
+									}
+								}
+								stack.RemoveAt (j);
 								changed = true;
 								break;
 							}
@@ -99,32 +163,70 @@ namespace Praeclarum
 
 				if (starts != null && starts.Count > 0) {
 					if (starts.Count == 1) {
-						starts[0].WriteStart (sb);
-						stack.Add (starts[0]);
+						var s = starts [0];
+						if (ForPresentation) {
+							if (s.IsHidden) {
+								hidden++;
+							}
+							if (s.IsXml) {
+								literal++;
+							}
+						}
+						if (hidden == 0 && literal == 0) {
+							if (s.IsCode && newline) {
+								s.IsPre = true;
+								sb.Append ("<pre>");
+							}
+							s.WriteStart (sb);
+						}
+						stack.Add (s);
 					} else {
 						foreach (var s in starts) {
-							s.WriteStart (sb);
+							if (ForPresentation) {
+								if (s.IsHidden) {
+									hidden++;
+								}
+								if (s.IsXml) {
+									literal++;
+								}
+							}
+							if (hidden == 0 && literal == 0) {
+								if (s.IsCode && newline) {
+									s.IsPre = true;
+									sb.Append ("<pre>");
+								}
+								s.WriteStart (sb);
+							}
 							stack.Add (s);
 						}
 					}
 				}
 
-				switch (text [i]) {
-				case '&':
-					sb.Append ("&amp;");
-					break;
-				case '<':
-					sb.Append ("&lt;");
-					break;
-				case '>':
-					sb.Append ("&gt;");
-					break;
-				case '\n':
-					sb.Append ("<br/>");
-					break;
-				default:
-					sb.Append (text [i]);
-					break;
+				newline = false;
+
+				if (hidden == 0) {
+					if (literal > 0) {
+						sb.Append (text [i]);
+					} else {
+						switch (text [i]) {
+						case '&':
+							sb.Append ("&amp;");
+							break;
+						case '<':
+							sb.Append ("&lt;");
+							break;
+						case '>':
+							sb.Append ("&gt;");
+							break;
+						case '\n':
+							newline = true;
+							sb.Append ("<br/>");
+							break;
+						default:
+							sb.Append (text [i]);
+							break;
+						}
+					}
 				}
 
 			}

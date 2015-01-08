@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using MonoTouch.Foundation;
-using MonoTouch.UIKit;
+using Foundation;
+using UIKit;
 using Praeclarum.App;
 using Praeclarum.IO;
-using System.Drawing;
+using CoreGraphics;
 
 namespace Praeclarum.UI
 {

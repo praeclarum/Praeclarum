@@ -1,5 +1,5 @@
 using System;
-using MonoTouch.Foundation;
+using Foundation;
 using Praeclarum.IO;
 using Praeclarum.UI;
 
@@ -84,7 +84,7 @@ namespace Praeclarum.App
 
 		public int RunCount {
 			get {
-				return defs.IntForKey ("RunCount");
+				return (int)defs.IntForKey ("RunCount");
 			}
 			set {
 				defs.SetInt (value, "RunCount");

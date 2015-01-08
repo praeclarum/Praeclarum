@@ -145,44 +145,44 @@ namespace Praeclarum.Graphics
 	public static class RectangleEx
 	{
 #if !PORTABLE
-		public static System.Drawing.RectangleF ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
+		public static CoreGraphics.CGRect ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
 		{
-			return new System.Drawing.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
+			return new CoreGraphics.CGRect (rect.Left, rect.Top, rect.Width, rect.Height);
 		}
 
-		public static Praeclarum.Graphics.RectangleF ToRectangleF (this System.Drawing.RectangleF rect)
+		public static Praeclarum.Graphics.RectangleF ToRectangleF (this CoreGraphics.CGRect rect)
 		{
-			return new Praeclarum.Graphics.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
+			return new Praeclarum.Graphics.RectangleF ((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
 		}
 
-        public static Praeclarum.Graphics.RectangleF ToRectangleF (this System.Drawing.Rectangle rect)
-        {
-            return new Praeclarum.Graphics.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
-        }
+//        public static Praeclarum.Graphics.RectangleF ToRectangleF (this CoreGraphics.CGRect rect)
+//        {
+//            return new Praeclarum.Graphics.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
+//        }
 
-		public static Praeclarum.Graphics.SizeF ToSizeF (this System.Drawing.SizeF size)
+		public static Praeclarum.Graphics.SizeF ToSizeF (this CoreGraphics.CGSize size)
 		{
-			return new Praeclarum.Graphics.SizeF (size.Width, size.Height);
+			return new Praeclarum.Graphics.SizeF ((float)size.Width, (float)size.Height);
 		}
 
-		public static System.Drawing.SizeF ToSizeF (this Praeclarum.Graphics.SizeF size)
+		public static CoreGraphics.CGSize ToSizeF (this Praeclarum.Graphics.SizeF size)
 		{
-			return new System.Drawing.SizeF (size.Width, size.Height);
+			return new CoreGraphics.CGSize (size.Width, size.Height);
 		}
 
-		public static System.Drawing.PointF ToPointF (this Praeclarum.Graphics.PointF point)
+		public static CoreGraphics.CGPoint ToPointF (this Praeclarum.Graphics.PointF point)
 		{
-			return new System.Drawing.PointF (point.X, point.Y);
+			return new CoreGraphics.CGPoint (point.X, point.Y);
 		}
 
-		public static Praeclarum.Graphics.PointF ToPointF (this System.Drawing.PointF point)
+		public static Praeclarum.Graphics.PointF ToPointF (this CoreGraphics.CGPoint point)
 		{
-			return new Praeclarum.Graphics.PointF (point.X, point.Y);
+			return new Praeclarum.Graphics.PointF ((float)point.X, (float)point.Y);
 		}
 
-		public static System.Drawing.Point GetCenter (this System.Drawing.Rectangle r)
+		public static CoreGraphics.CGPoint GetCenter (this CoreGraphics.CGRect r)
 		{
-			return new System.Drawing.Point (
+			return new CoreGraphics.CGPoint (
 				r.Left + r.Width / 2,
 				r.Top + r.Height / 2);
 		}

@@ -14,7 +14,7 @@ namespace Praeclarum.UI
 		public IList<PFormSection> Sections { get { return sections; } }
 
 		public PForm (string title = "")
-			: base (MonoTouch.UIKit.UITableViewStyle.Grouped)
+			: base (UIKit.UITableViewStyle.Grouped)
 		{
 			Title = title ?? "";
 

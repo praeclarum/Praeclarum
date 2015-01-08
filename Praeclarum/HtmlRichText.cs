@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Praeclarum
 {
@@ -85,6 +86,8 @@ namespace Praeclarum
 			this.spans = new List<Span>[text.Length];
 		}
 
+        static readonly Regex preCodeBrRepl = new Regex (@"<pre><code>\s*<br/>\s*</code></pre>");
+
 		public string Html {
 			get {
 				var sb = new StringBuilder ();
@@ -92,9 +95,11 @@ namespace Praeclarum
 				var raw = sb.ToString ();
 
 				if (ForPresentation) {
-					return raw
-						.Replace ("<?", "<")
-						.Replace ("<pre><code><br/></code></pre>", "<p>")
+                    var html = raw
+                        .Replace ("<?", "<");
+
+					return
+                        preCodeBrRepl.Replace (html, "<p>")
 						.Replace ("<p><h1>", "\n<h1>")
 						.Replace ("<p><h2>", "\n<h2>")
 						.Replace ("<p><h3>", "\n<h3>")

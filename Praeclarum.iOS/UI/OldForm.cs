@@ -1,6 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
-using MonoTouch.UIKit;
+using UIKit;
 using System.Linq;
 
 namespace Praeclarum.UI
@@ -73,7 +73,7 @@ namespace Praeclarum.UI
 			ActionSheet.CancelButtonIndex = ActionSheet.ButtonCount - 1;
 
 			ActionSheet.Clicked += (ss, se) => {
-				var index = se.ButtonIndex;
+				var index = (int)se.ButtonIndex;
 				if (0 <= index && index < actions.Count) {
 					actions[index].Execute ();
 				}
@@ -99,7 +99,7 @@ namespace Praeclarum.UI
 			ActionSheet.CancelButtonIndex = ActionSheet.ButtonCount - 1;
 
 			ActionSheet.Clicked += async (ss, se) => {
-				var index = se.ButtonIndex;
+				var index = (int)se.ButtonIndex;
 				if (0 <= index && index < actions.Count) {
 					try {
 						await actions[index].ExecuteAsync ();						

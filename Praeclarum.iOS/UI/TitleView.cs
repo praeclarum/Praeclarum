@@ -1,9 +1,9 @@
 using System;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
-using System.Drawing;
+using UIKit;
+using Foundation;
+using CoreGraphics;
 using System.Collections.Generic;
-using MonoTouch.CoreAnimation;
+using CoreAnimation;
 using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
@@ -25,7 +25,7 @@ namespace Praeclarum.UI
 			var isPhone = UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone;
 			var titleX = isPhone ? (320 - 176) / 2 : (768 - 624) / 2;
 
-			Frame = new RectangleF (titleX + 1, 6, isPhone ? 176 : 624, 30);
+			Frame = new CGRect (titleX + 1, 6, isPhone ? 176 : 624, 30);
 			BackgroundColor = UIColor.Clear;
 			Opaque = false;
 //			TextColor = WhiteTheme.BarTextColor;

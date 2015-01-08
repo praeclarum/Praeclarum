@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
+using UIKit;
+using Foundation;
 using Praeclarum.IO;
 using System.IO;
 using System.Globalization;
@@ -164,7 +164,7 @@ namespace Praeclarum.UI
 			return Task.FromResult (0);
 		}
 
-		void OpenPendingUrl ()
+		void OpenPendingUrl (NSTimer obj)
 		{
 			try {
 				OpenPendingUrlAsync ().ContinueWith (t => {
@@ -246,7 +246,7 @@ namespace Praeclarum.UI
 
 				pendingUrl = url;
 				if (uiInitialized) {
-					OpenPendingUrl ();
+					OpenPendingUrl (null);
 				}
 				return true;
 			}
@@ -1057,7 +1057,7 @@ namespace Praeclarum.UI
 			ActionSheet.AddButton (msg);
 			ActionSheet.AddButton ("Cancel");
 			ActionSheet.CancelButtonIndex = 1;
-			ActionSheet.Clicked += (ss, se) => tcs.SetResult (se.ButtonIndex);
+			ActionSheet.Clicked += (ss, se) => tcs.SetResult ((int)se.ButtonIndex);
 
 			ActionSheet.ShowFrom (duplicateButton, true);
 
@@ -1114,7 +1114,7 @@ namespace Praeclarum.UI
 			ActionSheet.AddButton ("Cancel");
 			ActionSheet.DestructiveButtonIndex = 0;
 			ActionSheet.CancelButtonIndex = 1;
-			ActionSheet.Clicked += (ss, se) => tcs.SetResult (se.ButtonIndex);
+			ActionSheet.Clicked += (ss, se) => tcs.SetResult ((int)se.ButtonIndex);
 
 			ActionSheet.ShowFrom (deleteButton, true);
 
@@ -1357,15 +1357,15 @@ namespace Praeclarum.UI
 				var width = (int)(size.Width * scale);
 				var height = (int)(size.Height * scale);
 
-				using (var colorSpace = MonoTouch.CoreGraphics.CGColorSpace.CreateDeviceRGB ()) {
-					using (var c = new MonoTouch.CoreGraphics.CGBitmapContext (
+				using (var colorSpace = CoreGraphics.CGColorSpace.CreateDeviceRGB ()) {
+					using (var c = new CoreGraphics.CGBitmapContext (
 						              IntPtr.Zero,
 						              width,
 						              height,
 						              8,
 						              4 * width,
 						              colorSpace,
-						              MonoTouch.CoreGraphics.CGImageAlphaInfo.NoneSkipFirst)) {
+						              CoreGraphics.CGImageAlphaInfo.NoneSkipFirst)) {
 
 						c.TranslateCTM (0, height);
 						c.ScaleCTM (scale, -scale);

@@ -1,6 +1,6 @@
 using System;
-using MonoTouch.CoreGraphics;
-using MonoTouch.UIKit;
+using CoreGraphics;
+using UIKit;
 
 namespace Praeclarum.UI
 {
@@ -21,7 +21,7 @@ namespace Praeclarum.UI
 
 		public UIImage Generate ()
 		{
-			UIGraphics.BeginImageContext (new System.Drawing.SizeF (Width, Height));
+			UIGraphics.BeginImageContext (new CGSize (Width, Height));
 
 			var c = UIGraphics.GetCurrentContext ();
 

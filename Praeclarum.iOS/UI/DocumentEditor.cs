@@ -1,5 +1,5 @@
-﻿using System;
-using MonoTouch.UIKit;
+using System;
+using UIKit;
 using Praeclarum.App;
 
 namespace Praeclarum.UI

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Praeclarum.IO;
 using Praeclarum.UI;
 

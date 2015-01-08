@@ -1,13 +1,13 @@
 using System;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
+using UIKit;
+using Foundation;
 using Praeclarum.Graphics;
 
 namespace Praeclarum.UI
 {
 	public class Editor : UITextView, ITextEditor
 	{
-		public Editor (System.Drawing.RectangleF frame)
+		public Editor (CoreGraphics.CGRect frame)
 			: base (frame)
 		{
 		}
@@ -45,7 +45,7 @@ namespace Praeclarum.UI
 		StringRange ITextEditor.SelectedRange {
 			get {
 				var r = SelectedRange;
-				return new StringRange (r.Location, r.Length);
+				return new StringRange ((int)r.Location, (int)r.Length);
 			}
 			set {
 				SelectedRange = new NSRange (value.Location, value.Length);

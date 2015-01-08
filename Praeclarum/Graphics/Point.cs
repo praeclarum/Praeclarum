@@ -1,4 +1,4 @@
-﻿//
+//
 // Copyright (c) 2010 Frank A. Krueger
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -124,7 +124,7 @@ namespace Praeclarum.Graphics
 			return dx * dx + dy * dy;
 		}
 
-		public static double DistanceSquaredTo (this PointF a, double bx, double by)
+		public static double DistanceSquaredToD (this PointF a, double bx, double by)
 		{
 			var dx = a.X - bx;
 			var dy = a.Y - by;

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Text;
 
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
+using UIKit;
+using Foundation;
 using System.Diagnostics;
 
 
@@ -320,7 +320,7 @@ namespace Praeclarum.IO
 			}
 
 			query = new NSMetadataQuery ();
-			query.SearchScopes = new NSObject[] { NSMetadataQuery.QueryUbiquitousDocumentsScope };
+			query.SearchScopes = new NSObject[] { NSMetadataQuery.UbiquitousDocumentsScope };
 			query.Predicate = NSPredicate.FromFormat (
 				queryString,
 				args.ToArray ());
@@ -542,9 +542,9 @@ namespace Praeclarum.IO
 		public CloudErrorCode ErrorCode { get; private set; }
 
 		public CloudException (NSError error)
-			: base (((CloudErrorCode)error.Code) + " (" + error.Code + ")")
+			: base (((CloudErrorCode)(int)error.Code) + " (" + error.Code + ")")
 		{
-			ErrorCode = (CloudErrorCode)error.Code;
+			ErrorCode = (CloudErrorCode)(int)error.Code;
 		}
 	}
 }

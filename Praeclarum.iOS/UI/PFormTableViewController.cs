@@ -1,8 +1,8 @@
 using System;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
+using UIKit;
+using Foundation;
 using System.Collections.Generic;
-using System.Drawing;
+using CoreGraphics;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -78,7 +78,7 @@ namespace Praeclarum.UI
 				if (NavigationController.ViewControllers.Length == 1) {
 					await NavigationController.DismissViewControllerAsync (true);
 				} else {
-					NavigationController.PopViewControllerAnimated (true);
+					NavigationController.PopViewController (true);
 				}
 			} else {
 				await DismissViewControllerAsync (true);
@@ -156,24 +156,24 @@ namespace Praeclarum.UI
 				this.controller = controller;
 			}
 
-			public override int NumberOfSections (UITableView tableView)
+			public override nint NumberOfSections (UITableView tableView)
 			{
 				return controller.Sections.Count;
 			}
 
-			public override int RowsInSection (UITableView tableView, int sectionIndex)
+			public override nint RowsInSection (UITableView tableView, nint sectionIndex)
 			{
-				return controller.Sections [sectionIndex].Items.Count;
+				return controller.Sections [(int)sectionIndex].Items.Count;
 			}
 
-			public override string TitleForHeader (UITableView tableView, int sectionIndex)
+			public override string TitleForHeader (UITableView tableView, nint sectionIndex)
 			{
-				return controller.Sections [sectionIndex].Title;
+				return controller.Sections [(int)sectionIndex].Title;
 			}
 
-			public override string TitleForFooter (UITableView tableView, int sectionIndex)
+			public override string TitleForFooter (UITableView tableView, nint sectionIndex)
 			{
-				return controller.Sections [sectionIndex].Hint;
+				return controller.Sections [(int)sectionIndex].Hint;
 			}
 
 			public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)

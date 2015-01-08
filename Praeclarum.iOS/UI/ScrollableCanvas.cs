@@ -1,5 +1,5 @@
 using System;
-using MonoTouch.UIKit;
+using UIKit;
 using Praeclarum.Graphics;
 
 namespace Praeclarum.UI
@@ -34,7 +34,7 @@ namespace Praeclarum.UI
 		}
 
 		public float Zoom {
-			get { return scroll.ZoomScale; }
+			get { return (float)scroll.ZoomScale; }
 		}
 
 		public ScrollableCanvas ()
@@ -146,7 +146,7 @@ namespace Praeclarum.UI
 			if (visibleArea.Width <= 0 || visibleArea.Height <= 0)
 				return;
 
-			var scale = canvas.Frame.Width / visibleArea.Width;
+			var scale = (float)canvas.Frame.Width / (float)visibleArea.Width;
 
 			g.Scale (scale, scale);
 
@@ -172,7 +172,7 @@ namespace Praeclarum.UI
 
 		public void SetVisibleArea ()
 		{
-			var s = scroll.ZoomScale;
+			var s = (float)scroll.ZoomScale;
 
 			var va = scroll.Bounds.ToRectangleF ();
 			va.X /= s;
@@ -197,7 +197,7 @@ namespace Praeclarum.UI
 
 		class Scroller : UIScrollView
 		{
-			public Scroller (System.Drawing.RectangleF frame)
+			public Scroller (CoreGraphics.CGRect frame)
 				: base (frame)
 			{
 				
@@ -208,7 +208,7 @@ namespace Praeclarum.UI
 				return false;
 			}
 
-			public override bool TouchesShouldBegin (MonoTouch.Foundation.NSSet touches, UIEvent withEvent, UIView inContentView)
+			public override bool TouchesShouldBegin (Foundation.NSSet touches, UIEvent withEvent, UIView inContentView)
 			{
 				var s = Superview as ScrollableCanvas;
 				if (s == null)

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Praeclarum.UI;
 using Praeclarum.IO;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
+using UIKit;
+using Foundation;
 using System.Collections.Specialized;
 using Praeclarum;
 using System.Threading.Tasks;
@@ -113,7 +113,7 @@ namespace Praeclarum.UI
 				}
 			}
 
-			void FormatTick ()
+			void FormatTick (NSTimer obj)
 			{
 				SetNeedsFormat ();
 			}

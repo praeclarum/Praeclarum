@@ -20,7 +20,6 @@
 // THE SOFTWARE.
 //
 using System;
-using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -30,14 +29,14 @@ using MonoMac.CoreGraphics;
 using MonoMac.CoreText;
 using MonoMac.Foundation;
 #else
-using MonoTouch.CoreGraphics;
-using MonoTouch.CoreText;
-using MonoTouch.Foundation;
-using MonoTouch.UIKit;
+using CoreGraphics;
+using CoreText;
+using Foundation;
+using UIKit;
 #endif
 
-using DPointF = System.Drawing.PointF;
-using DRectangleF = System.Drawing.RectangleF;
+using DPointF = CoreGraphics.CGPoint;
+using DRectangleF = CoreGraphics.CGRect;
 
 namespace Praeclarum.Graphics
 {
@@ -131,7 +130,7 @@ namespace Praeclarum.Graphics
 
 		void FillPathWithGradient ()
 		{
-			var gr = new CGGradient (CGColorSpace.CreateDeviceRGB (), _g.Colors.Select (c => c.GetCGColor ()).ToArray (), _g.Locations.ToArray ());
+			var gr = new CGGradient (CGColorSpace.CreateDeviceRGB (), _g.Colors.Select (c => c.GetCGColor ()).ToArray (), _g.Locations.Select (g => (nfloat)g).ToArray ());
 			_c.SaveState ();
 			_c.Clip ();
 			_c.DrawLinearGradient (gr, _g.Start.ToPointF (), _g.End.ToPointF (), CGGradientDrawingOptions.DrawsAfterEndLocation | CGGradientDrawingOptions.DrawsBeforeStartLocation);
@@ -166,33 +165,33 @@ namespace Praeclarum.Graphics
 		public void FillRect (float x, float y, float width, float height)
 		{
 			if (_g != null) {
-				_c.AddRect (new DRectangleF (x, y, width, height));
+				_c.AddRect (new CGRect (x, y, width, height));
 				FillPath ();
 			} else {
-				_c.FillRect (new DRectangleF (x, y, width, height));
+				_c.FillRect (new CGRect (x, y, width, height));
 			}
 		}
 
 		public void FillOval (float x, float y, float width, float height)
 		{
 			if (_g != null) {
-				_c.AddEllipseInRect (new DRectangleF (x, y, width, height));
+				_c.AddEllipseInRect (new CGRect (x, y, width, height));
 				FillPath ();
 			} else {
-				_c.FillEllipseInRect (new DRectangleF (x, y, width, height));
+				_c.FillEllipseInRect (new CGRect (x, y, width, height));
 			}
 		}
 
 		public void DrawOval (float x, float y, float width, float height, float w)
 		{
 			_c.SetLineWidth (w);
-			_c.StrokeEllipseInRect (new DRectangleF (x, y, width, height));
+			_c.StrokeEllipseInRect (new CGRect (x, y, width, height));
 		}
 
 		public void DrawRect (float x, float y, float width, float height, float w)
 		{
 			_c.SetLineWidth (w);
-			_c.StrokeRect (new DRectangleF (x, y, width, height));
+			_c.StrokeRect (new CGRect (x, y, width, height));
 		}
 		
 		public void DrawArc (float cx, float cy, float radius, float startAngle, float endAngle, float w)
@@ -306,7 +305,7 @@ namespace Praeclarum.Graphics
 		
 		public void SetClippingRect (float x, float y, float width, float height)
 		{
-			_c.ClipToRect (new DRectangleF (x, y, width, height));
+			_c.ClipToRect (new CGRect (x, y, width, height));
 		}
 
 		public void DrawString (string s, float x, float y)
@@ -316,10 +315,10 @@ namespace Praeclarum.Graphics
 				using (var fs = new CTFramesetter (astr)) {
 					using (var path = new CGPath ()) {
 						var h = _lastFont.Size * 2;
-						path.AddRect (new System.Drawing.RectangleF (0, 0, s.Length * h, h));
+						path.AddRect (new CGRect (0, 0, s.Length * h, h));
 						using (var f = fs.GetFrame (new NSRange (0, 0), path, null)) {
 							var line = f.GetLines () [0];
-							float a, d, l;
+							nfloat a, d, l;
 							line.GetTypographicBounds (out a, out d, out l);
 
 							_c.SaveState ();
@@ -374,7 +373,7 @@ namespace Praeclarum.Graphics
 		{
 			if (img is UIKitImage) {
 				var uiImg = ((UIKitImage)img).Image;
-				_c.DrawImage (new DRectangleF (x, y, width, height), uiImg);
+				_c.DrawImage (new CGRect (x, y, width, height), uiImg);
 			}
 		}
 
@@ -462,7 +461,7 @@ namespace Praeclarum.Graphics
 		}
 		public static Color GetColor (this UIColor c)
 		{
-			float r, g, b, a;
+			nfloat r, g, b, a;
 			c.GetRGBA (out r, out g, out b, out a);
 			return new Color ((int)(r * 255 + 0.5f), (int)(g * 255 + 0.5f), (int)(b * 255 + 0.5f), (int)(a * 255 + 0.5f));
 		}
@@ -543,20 +542,20 @@ namespace Praeclarum.Graphics
 			return (int)(StringSize (str, startIndex, length).Width + 0.5f);
 		}
 
-		System.Drawing.SizeF StringSize (string str, int startIndex, int length)
+		CGSize StringSize (string str, int startIndex, int length)
 		{
-			if (str == null || length <= 0) return System.Drawing.SizeF.Empty;
+			if (str == null || length <= 0) return CGSize.Empty;
 
 			using (var astr = new NSMutableAttributedString (str)) {
 				astr.AddAttributes (attrs, new NSRange (startIndex, length));
 				using (var fs = new CTFramesetter (astr)) {
 					using (var path = new CGPath ()) {
-						path.AddRect (new System.Drawing.RectangleF (0, 0, 30000, attrs.Font.XHeightMetric * 10));
+						path.AddRect (new CGRect (0, 0, 30000, attrs.Font.XHeightMetric * 10));
 						using (var f = fs.GetFrame (new NSRange (startIndex, length), path, null)) {
 							var line = f.GetLines () [0];
-							float a, d, l;
+							nfloat a, d, l;
 							var tw = line.GetTypographicBounds (out a, out d, out l);
-							return new System.Drawing.SizeF ((float)tw, (a + d) * 1.2f);
+							return new CGSize ((float)tw, (a + d) * 1.2f);
 						}
 					}
 				}
@@ -591,7 +590,7 @@ namespace Praeclarum.Graphics
 	public static class CGContextEx
 	{
 #if !MONOMAC
-		[System.Runtime.InteropServices.DllImport (MonoTouch.Constants.CoreGraphicsLibrary)]
+		[System.Runtime.InteropServices.DllImport (ObjCRuntime.Constants.CoreGraphicsLibrary)]
 		extern static void CGContextShowTextAtPoint(IntPtr c, float x, float y, byte[] bytes, int size_t_length);
 		public static void ShowTextAtPoint (this CGContext c, float x, float y, byte[] bytes)
 		{

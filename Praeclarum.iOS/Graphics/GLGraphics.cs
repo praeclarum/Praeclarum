@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using OpenTK;
 using OpenTK.Graphics.ES11;
 
@@ -34,7 +34,7 @@ namespace Praeclarum.Graphics
 		public void Clear (Color c)
 		{
 			GL.ClearColor (c.RedValue, c.GreenValue, c.BlueValue, c.AlphaValue);
-			GL.Clear ((int)All.ColorBufferBit);
+			GL.Clear (ClearBufferMask.ColorBufferBit);
 		}
 
 		public void FillPolygon (Polygon poly)

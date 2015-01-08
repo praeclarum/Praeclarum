@@ -1,6 +1,6 @@
 using System;
-using MonoTouch.UIKit;
-using System.Drawing;
+using UIKit;
+using CoreGraphics;
 
 namespace Praeclarum.UI
 {
@@ -18,7 +18,7 @@ namespace Praeclarum.UI
 		{
 			Opaque = false;
 
-			var bounds = new RectangleF (0, 0, 150, 44);
+			var bounds = new CGRect (0, 0, 150, 44);
 			Frame = bounds;
 
 			BackgroundColor = UIColor.FromWhiteAlpha (0.96f, 0.85f);
@@ -27,11 +27,11 @@ namespace Praeclarum.UI
 			const float margin = 12;
 
 			activity = new UIActivityIndicatorView (UIActivityIndicatorViewStyle.Gray) {
-				Frame = new RectangleF (margin, margin, 21, 21),
+				Frame = new CGRect (margin, margin, 21, 21),
 				HidesWhenStopped = false,
 			};
 
-			titleLabel = new UILabel (new RectangleF (activity.Frame.Right+margin, 0, bounds.Width - activity.Frame.Right - 2*margin, 44)) {
+			titleLabel = new UILabel (new CGRect (activity.Frame.Right+margin, 0, bounds.Width - activity.Frame.Right - 2*margin, 44)) {
 				TextAlignment = UITextAlignment.Center,
 				TextColor = UIColor.FromWhiteAlpha (0.33f, 1),
 				BackgroundColor = UIColor.Clear,

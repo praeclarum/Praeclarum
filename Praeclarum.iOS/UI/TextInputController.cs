@@ -1,6 +1,6 @@
 using System;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
+using UIKit;
+using Foundation;
 using System.Threading.Tasks;
 
 namespace Praeclarum.UI
@@ -51,7 +51,6 @@ namespace Praeclarum.UI
 			return UIInterfaceOrientation.Portrait;
 		}
 		
-		[Obsolete ("Deprecated in iOS6. Replace it with both GetSupportedInterfaceOrientations and PreferredInterfaceOrientationForPresentation")]
 		public override bool ShouldAutorotateToInterfaceOrientation (UIInterfaceOrientation toInterfaceOrientation)
 		{
 			return true;
@@ -127,22 +126,22 @@ namespace Praeclarum.UI
 				this.controller = controller;
 			}
 				
-			public override int NumberOfSections (UITableView tableView)
+			public override nint NumberOfSections (UITableView tableView)
 			{
 				return 1;
 			}
 				
-			public override int RowsInSection (UITableView tableView, int section)
+			public override nint RowsInSection (UITableView tableView, nint section)
 			{
 				return 1;
 			}
 
-			public override string TitleForFooter (UITableView tableView, int section)
+			public override string TitleForFooter (UITableView tableView, nint section)
 			{
 				return controller.Hint;
 			}
 				
-			public override UITableViewCell GetCell (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
+			public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 			{
 				if (cell == null) {
 					cell = new TextInputCell (
@@ -203,7 +202,7 @@ namespace Praeclarum.UI
 
 			var text = TextLabel.Text;
 			if (!string.IsNullOrEmpty (text)) {
-				var lw = TextLabel.StringSize (TextLabel.Text, TextLabel.Font).Width;
+				var lw = TextLabel.Text.StringSize (TextLabel.Font, nfloat.MaxValue, UILineBreakMode.TailTruncation).Width;
 			
 				b.Width -= lw + 33;
 				b.X += lw + 33;

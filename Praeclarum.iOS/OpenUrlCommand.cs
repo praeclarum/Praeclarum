@@ -1,7 +1,7 @@
 using System;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
-using MonoTouch.MessageUI;
+using UIKit;
+using Foundation;
+using MessageUI;
 using System.IO;
 using System.Threading.Tasks;
 

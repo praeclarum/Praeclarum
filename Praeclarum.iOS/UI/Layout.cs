@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using MonoTouch.UIKit;
+using UIKit;
 using System.Reflection;
-using MonoTouch.Foundation;
+using Foundation;
 
 namespace Praeclarum.UI
 {
@@ -285,7 +285,7 @@ namespace Praeclarum.UI
 		/// <summary>
 		/// The baseline of the view whose frame is viewFrame. Use only when defining constraints.
 		/// </summary>
-		public static float GetBaseline (this System.Drawing.RectangleF viewFrame)
+		public static nfloat GetBaseline (this CoreGraphics.CGRect viewFrame)
 		{
 			return 0;
 		}
@@ -293,7 +293,7 @@ namespace Praeclarum.UI
 		/// <summary>
 		/// The x coordinate of the center of the frame.
 		/// </summary>
-		public static float GetCenterX (this System.Drawing.RectangleF viewFrame)
+		public static nfloat GetCenterX (this CoreGraphics.CGRect viewFrame)
 		{
 			return viewFrame.X + viewFrame.Width / 2;
 		}
@@ -301,7 +301,7 @@ namespace Praeclarum.UI
 		/// <summary>
 		/// The y coordinate of the center of the frame.
 		/// </summary>
-		public static float GetCenterY (this System.Drawing.RectangleF viewFrame)
+		public static nfloat GetCenterY (this CoreGraphics.CGRect viewFrame)
 		{
 			return viewFrame.Y + viewFrame.Height / 2;
 		}

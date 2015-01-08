@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
-using MonoTouch.UIKit;
+using UIKit;
 using System.IO;
 using System.Text;
 using System.Diagnostics;
@@ -111,7 +111,7 @@ namespace Praeclarum.IO
 				throw new Exception ("Failed to create file");
 
 			if (contents != null) {
-				var r = await file.WriteDataAsync (MonoTouch.Foundation.NSData.FromArray (contents));
+				var r = await file.WriteDataAsync (Foundation.NSData.FromArray (contents));
 				if (!r)
 					throw new Exception ("Failed to write contents of new file");
 			}
@@ -181,7 +181,7 @@ namespace Praeclarum.IO
 		public bool IsSyncd {
 			get {
 				var s = filesystem.Status;
-				return filesystem.CompletedFirstSync && (s == DBSyncStatus.Active);
+				return filesystem.CompletedFirstSync && (s.IsActive);
 			}
 		}
 		public string SyncStatus { get { return "Syncing"; } }
@@ -228,7 +228,7 @@ namespace Praeclarum.IO
 		Dictionary<string, DropboxDirectoryObserver> dbObservers =
 			new Dictionary<string, DropboxDirectoryObserver> ();
 
-		class DropboxDirectoryObserver : MonoTouch.Foundation.NSObject
+		class DropboxDirectoryObserver : Foundation.NSObject
 		{
 		}
 
@@ -373,7 +373,7 @@ namespace Praeclarum.IO
 
 		public DateTime ModifiedTime {
 			get {
-				return fileInfo.ModifiedTime;
+				return (DateTime)fileInfo.ModifiedTime;
 			}
 		}
 

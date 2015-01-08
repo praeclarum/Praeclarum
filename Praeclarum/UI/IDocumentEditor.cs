@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Praeclarum.App;
 
 namespace Praeclarum.UI

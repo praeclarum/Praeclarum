@@ -4,12 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using MonoTouch.Foundation;
-using MonoTouch.UIKit;
+using Foundation;
+using UIKit;
 using Praeclarum.App;
 using Praeclarum.IO;
-using System.Drawing;
-using MonoTouch.CoreGraphics;
+using CoreGraphics;
 using System.Collections.ObjectModel;
 
 namespace Praeclarum.UI
@@ -40,7 +39,7 @@ namespace Praeclarum.UI
 
 		public static readonly UIColor DefaultBackgroundColor = UIColor.FromRGB (222, 222, 222);
 
-		public DocumentThumbnailsView (RectangleF frame)
+		public DocumentThumbnailsView (CGRect frame)
 			: base (frame, new UICollectionViewFlowLayout ())
 		{
 			Items = new List<DocumentsViewItem> ();
@@ -68,7 +67,7 @@ namespace Praeclarum.UI
 
 			thumbHeight = (int)(thumbHeight + 0.5f);
 
-			ThumbnailSize = new Praeclarum.Graphics.SizeF (thumbWidth, thumbHeight);
+			ThumbnailSize = new Praeclarum.Graphics.SizeF ((float)thumbWidth, (float)thumbHeight);
 
 //			Console.WriteLine ("THUMB SIZE = {0}", ThumbnailSize);
 		}
@@ -261,9 +260,9 @@ namespace Praeclarum.UI
 
 	class DocumentThumbnailsViewDelegate : UICollectionViewDelegateFlowLayout
 	{
-		static readonly SizeF sortSize = new SizeF (SortThumbnailCell.Width, 33);
+		static readonly CGSize sortSize = new CGSize (SortThumbnailCell.Width, 33);
 
-		public override SizeF GetSizeForItem (UICollectionView collectionView, UICollectionViewLayout layout, NSIndexPath indexPath)
+		public override CGSize GetSizeForItem (UICollectionView collectionView, UICollectionViewLayout layout, NSIndexPath indexPath)
 		{
 			if (indexPath.Section == 0)
 				return sortSize;
@@ -271,14 +270,14 @@ namespace Praeclarum.UI
 			var controller = (DocumentThumbnailsView)collectionView;
 
 			var s = controller.ThumbnailSize;
-			var itemSize = new SizeF (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
+			var itemSize = new CGSize (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
 //			Console.WriteLine ("item size = {0}", itemSize);
 			return itemSize;
 		}
 
-		public override UIEdgeInsets GetInsetForSection (UICollectionView collectionView, UICollectionViewLayout layout, int section)
+		public override UIEdgeInsets GetInsetForSection (UICollectionView collectionView, UICollectionViewLayout layout, nint section)
 		{
-			var h = 0.0f;
+			nfloat h = 0.0f;
 			var t = DocumentThumbnailsView.Margin/2;
 			var b = 0.0f;
 
@@ -297,7 +296,7 @@ namespace Praeclarum.UI
 			return new UIEdgeInsets (t, h, b, h);
 		}
 
-		public override float GetMinimumInteritemSpacingForSection (UICollectionView collectionView, UICollectionViewLayout layout, int section)
+		public override nfloat GetMinimumInteritemSpacingForSection (UICollectionView collectionView, UICollectionViewLayout layout, nint section)
 		{
 			if (section == 0)
 				return 0;
@@ -370,14 +369,14 @@ namespace Praeclarum.UI
 			BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.ThumbnailBackgroundColor);
 		}
 
-		public override void Draw (RectangleF rect)
+		public override void Draw (CGRect rect)
 		{
 			var c = UIGraphics.GetCurrentContext ();
 
 			var b = Bounds;
 			c.SetLineWidth (1.0f);
 
-			c.SetRGBStrokeColor (202/255.0f, 202/255.0f, 202/255.0f, 1);
+			c.SetStrokeColor (202/255.0f, 202/255.0f, 202/255.0f, 1);
 //			UIColor.Red.SetStroke ();
 
 			c.MoveTo (0, 0);
@@ -388,7 +387,7 @@ namespace Praeclarum.UI
 			c.AddLineToPoint (b.Width, b.Height);
 			c.StrokePath ();
 
-			c.SetRGBStrokeColor (176/255.0f, 176/255.0f, 176/255.0f, 1);
+			c.SetStrokeColor (176/255.0f, 176/255.0f, 176/255.0f, 1);
 //			UIColor.Green.SetStroke ();
 
 			c.MoveTo (0, b.Height);
@@ -473,9 +472,9 @@ namespace Praeclarum.UI
 
 		protected UILabel label;
 
-		static readonly float screenScale = UIScreen.MainScreen.Scale;
+		static readonly nfloat screenScale = UIScreen.MainScreen.Scale;
 
-		protected RectangleF ThumbnailFrame
+		protected CGRect ThumbnailFrame
 		{
 			get {
 				var b = Bounds;
@@ -486,7 +485,7 @@ namespace Praeclarum.UI
 				var w = tw + (screenScale > 1 ? 1 : 2);
 				var h = th + (screenScale > 1 ? 0.5f : 1);
 
-				return new RectangleF ((b.Width - w)/2, 0, w, h);
+				return new CGRect ((b.Width - w)/2, 0, w, h);
 			}
 		}
 
@@ -528,7 +527,7 @@ namespace Praeclarum.UI
 			var b = Bounds;
 
 
-			label = new UILabel (new RectangleF (0, b.Bottom - DocumentThumbnailsView.LabelHeight+1, b.Width, DocumentThumbnailsView.LabelHeight-1)) {
+			label = new UILabel (new CGRect (0, b.Bottom - DocumentThumbnailsView.LabelHeight+1, b.Width, DocumentThumbnailsView.LabelHeight-1)) {
 				Text = "",
 				TextColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor),
 				Font = ios7 ? UIFont.PreferredCaption2 : UIFont.SystemFontOfSize (10),
@@ -597,7 +596,7 @@ namespace Praeclarum.UI
 				BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.ThumbnailBackgroundColor);
 			}
 
-			public override void Draw (RectangleF rect)
+			public override void Draw (CGRect rect)
 			{
 				base.Draw (rect);
 
@@ -611,8 +610,8 @@ namespace Praeclarum.UI
 
 				color.SetStroke ();
 
-				var size = Math.Min (b.Width, b.Height) * 0.5f;
-				var f = new RectangleF ((b.Width - size) / 2, (b.Height - size) / 2, size, size);
+				var size = (nfloat)(Math.Min (b.Width, b.Height) * 0.5);
+				var f = new CGRect ((b.Width - size) / 2, (b.Height - size) / 2, size, size);
 				f.X = (int)f.X;
 				f.Y = (int)f.Y;
 
@@ -712,7 +711,7 @@ namespace Praeclarum.UI
 				BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor).ColorWithAlpha (0.1f);
 			}
 
-			public override void Draw (RectangleF dirtyRect)
+			public override void Draw (CGRect dirtyRect)
 			{
 				var c = UIGraphics.GetCurrentContext ();
 
@@ -811,11 +810,11 @@ namespace Praeclarum.UI
 			var w = tw + 1;
 			var h = th + 0.5f;
 
-			var f = new RectangleF ((b.Width - w)/2, 0, w, h);
+			var f = new CGRect ((b.Width - w)/2, 0, w, h);
 
 			frameView.Frame = f;
 
-			imageView.Frame = new RectangleF (0.5f, 0, tw, th);
+			imageView.Frame = new CGRect (0.5f, 0, tw, th);
 			imageView.Image = thumbImage;
 
 			if (thumbImage == null) {
@@ -850,7 +849,7 @@ namespace Praeclarum.UI
 				ClipsToBounds = true,
 				BackgroundColor = imageView.BackgroundColor,
 				Image = imageView.Image,
-				Frame = new RectangleF (0.5f, 0, ThumbnailSize.Width, ThumbnailSize.Height),
+				Frame = new CGRect (0.5f, 0, ThumbnailSize.Width, ThumbnailSize.Height),
 			};
 			fr.AddSubview (im);
 
@@ -939,7 +938,7 @@ namespace Praeclarum.UI
 					var r = i / NumCols;
 					var c = i % NumCols;
 
-					tv.Frame = new RectangleF (
+					tv.Frame = new CGRect (
 						c * (g + w) + gg,
 						r * (g + h) + vg,
 						w,
@@ -1031,7 +1030,7 @@ namespace Praeclarum.UI
 				ContentMode = UIViewContentMode.Redraw;
 			}
 
-			public override void Draw (RectangleF rect)
+			public override void Draw (CGRect rect)
 			{
 				base.Draw (rect);
 
@@ -1063,7 +1062,7 @@ namespace Praeclarum.UI
 			var text = "Syncing...";
 			var font = ios7 ? UIFont.PreferredBody : UIFont.SystemFontOfSize (UIFont.SystemFontSize);
 
-			var size = StringSize (text, font);
+			var size = text.StringSize (font);
 
 			activity = new UIActivityIndicatorView (UIActivityIndicatorViewStyle.Gray) {
 			};
@@ -1089,12 +1088,12 @@ namespace Praeclarum.UI
 
 	class DocumentThumbnailsViewDataSource : UICollectionViewDataSource
 	{
-		public override int NumberOfSections (UICollectionView collectionView)
+		public override nint NumberOfSections (UICollectionView collectionView)
 		{
 			return 2;
 		}
 
-		public override int GetItemsCount (UICollectionView collectionView, int section)
+		public override nint GetItemsCount (UICollectionView collectionView, nint section)
 		{
 			var controller = (DocumentThumbnailsView)collectionView;
 

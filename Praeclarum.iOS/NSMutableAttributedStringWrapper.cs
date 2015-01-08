@@ -3,12 +3,12 @@ using Praeclarum.Graphics;
 using System.Runtime.InteropServices;
 
 #if MONOTOUCH
-using MonoTouch.Foundation;
-using MonoTouch.ObjCRuntime;
-using NativeNSMutableAttributedString = MonoTouch.Foundation.NSMutableAttributedString;
-using NativeCTStringAttributes = MonoTouch.CoreText.CTStringAttributes;
-using NativeColor = MonoTouch.UIKit.UIColor;
-using CGColor = MonoTouch.CoreGraphics.CGColor;
+using Foundation;
+using ObjCRuntime;
+using NativeNSMutableAttributedString = Foundation.NSMutableAttributedString;
+using NativeCTStringAttributes = CoreText.CTStringAttributes;
+using NativeColor = UIKit.UIColor;
+using CGColor = CoreGraphics.CGColor;
 #elif MONOMAC
 using MonoMac.CoreText;
 using MonoMac.Foundation;
@@ -78,7 +78,7 @@ namespace Praeclarum
 				return;
 
 			#if MONOTOUCH
-			attrs.Dictionary.SetValue (FontAttributeName, MonoTouch.UIKit.UIFont.FromName (fontName, size));
+			attrs.Dictionary.SetValue (FontAttributeName, UIKit.UIFont.FromName (fontName, size));
 			#elif MONOMAC
 			attrs.Font = new CTFont (fontName, size);
 			#endif
@@ -157,7 +157,7 @@ namespace Praeclarum
 		void SetUnderline ()
 		{
 			#if MONOTOUCH
-			var color = MonoTouch.UIKit.UIColor.FromRGBA (
+			var color = UIKit.UIColor.FromRGBA (
 				underlineColor.Red,
 				underlineColor.Green,
 				underlineColor.Blue,
@@ -165,8 +165,8 @@ namespace Praeclarum
 			attrs.UnderlineColor = color.CGColor;
 			attrs.Dictionary.SetValue (UnderlineColorAttributeName, color);
 			attrs.UnderlineStyle = underlineStyle == UnderlineStyle.None ? 
-				MonoTouch.CoreText.CTUnderlineStyle.None : 
-			                       MonoTouch.CoreText.CTUnderlineStyle.Single;
+				CoreText.CTUnderlineStyle.None : 
+			                       CoreText.CTUnderlineStyle.Single;
 			#elif MONOMAC
 			attrs.Dictionary.SetValue (NSAttributedString.UnderlineColorAttributeName, ToNativeColor (underlineColor));
 			var ns = underlineStyle == UnderlineStyle.None ? 0 :
@@ -232,7 +232,7 @@ namespace Praeclarum
 	{
 		public static StringRange ToStringRange (this NSRange range)
 		{
-			return new StringRange (range.Location, range.Length);
+			return new StringRange ((int)range.Location, (int)range.Length);
 		}
 
 		public static NSRange ToNSRange (this StringRange r)

@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
+using UIKit;
+using Foundation;
 using Praeclarum.IO;
 using Praeclarum.UI;
 using System.IO;
 using System.Diagnostics;
-using System.Drawing;
+using CoreGraphics;
 using Praeclarum.App;
 using System.Collections.ObjectModel;
 
@@ -25,7 +25,7 @@ namespace Praeclarum.UI
 
 		public ObservableCollection<IFile> SelectedDocuments { get; private set; }
 
-		public DocumentListView (RectangleF frame)
+		public DocumentListView (CGRect frame)
 			: base (frame)
 		{
 			Items = new List<DocumentsViewItem> ();
@@ -129,7 +129,7 @@ namespace Praeclarum.UI
 			this.controller = controller;
 		}
 
-		public override int NumberOfSections (UITableView tableView)
+		public override nint NumberOfSections (UITableView tableView)
 		{
 			return 1;
 		}
@@ -151,7 +151,7 @@ namespace Praeclarum.UI
 //				return UITableViewCellEditingStyle.Delete;
 //			}
 
-		public override int RowsInSection (UITableView tableview, int section)
+		public override nint RowsInSection (UITableView tableview, nint section)
 		{
 			var c = controller.Items.Count;
 			if (controller.IsSyncing)
@@ -176,7 +176,7 @@ namespace Praeclarum.UI
 				c.Accessory = UITableViewCellAccessory.None;
 
 				var activity = new UIActivityIndicatorView (UIActivityIndicatorViewStyle.Gray) {
-					Frame = new RectangleF (100, 12, 21, 21),
+					Frame = new CGRect (100, 12, 21, 21),
 					Tag = 42,
 				};
 				c.ContentView.AddSubview (activity);

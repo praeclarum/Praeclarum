@@ -1,6 +1,6 @@
 using System;
-using MonoTouch.UIKit;
-using System.Drawing;
+using UIKit;
+using CoreGraphics;
 
 namespace Praeclarum.UI
 {
@@ -384,7 +384,7 @@ namespace Praeclarum.UI
 			var sz = image.Size;
 			sz.Width = Math.Max (44, 44);
 			sz.Height = 44;
-			button.Frame = new RectangleF (PointF.Empty, sz);
+			button.Frame = new CGRect (CGPoint.Empty, sz);
 			button.SetImage (image, UIControlState.Normal);
 			button.ShowsTouchWhenHighlighted = true;
 			button.TouchUpInside += handler;

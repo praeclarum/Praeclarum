@@ -1,5 +1,5 @@
-﻿using System;
-using MonoTouch.UIKit;
+using System;
+using UIKit;
 using Praeclarum.Graphics;
 
 namespace Praeclarum.UI
@@ -63,7 +63,7 @@ namespace Praeclarum.UI
 			SetNeedsDisplayInRect (frame.ToRectangleF ());
 		}
 
-		public override void Draw (System.Drawing.RectangleF rect)
+		public override void Draw (CoreGraphics.CGRect rect)
 		{
 			base.Draw (rect);
 
@@ -77,7 +77,7 @@ namespace Praeclarum.UI
 			Drawing (this, e);
 		}
 
-		public override void TouchesBegan (MonoTouch.Foundation.NSSet touches, UIEvent evt)
+		public override void TouchesBegan (Foundation.NSSet touches, UIEvent evt)
 		{
 			foreach (UITouch t in touches) {
 				TouchBegan (this, new CanvasTouchEventArgs {
@@ -87,7 +87,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public override void TouchesMoved (MonoTouch.Foundation.NSSet touches, UIEvent evt)
+		public override void TouchesMoved (Foundation.NSSet touches, UIEvent evt)
 		{
 			foreach (UITouch t in touches) {
 				TouchMoved (this, new CanvasTouchEventArgs {
@@ -97,7 +97,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public override void TouchesEnded (MonoTouch.Foundation.NSSet touches, UIEvent evt)
+		public override void TouchesEnded (Foundation.NSSet touches, UIEvent evt)
 		{
 			foreach (UITouch t in touches) {
 				TouchEnded (this, new CanvasTouchEventArgs {
@@ -107,7 +107,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public override void TouchesCancelled (MonoTouch.Foundation.NSSet touches, UIEvent evt)
+		public override void TouchesCancelled (Foundation.NSSet touches, UIEvent evt)
 		{
 			foreach (UITouch t in touches) {
 				TouchCancelled (this, new CanvasTouchEventArgs {

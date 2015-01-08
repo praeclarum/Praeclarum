@@ -1,5 +1,5 @@
-﻿using System;
-using MonoTouch.UIKit;
+using System;
+using UIKit;
 
 namespace Praeclarum.UI
 {
@@ -25,7 +25,7 @@ namespace Praeclarum.UI
 			if (ios7) {
 				button = UIButton.FromType (UIButtonType.RoundedRect);
 				button.SetImage (image, UIControlState.Normal);
-				button.Frame = new System.Drawing.RectangleF (0, 0, 44, 44);
+				button.Frame = new CoreGraphics.CGRect (0, 0, 44, 44);
 				button.TouchUpInside += handler;
 				Item = new UIBarButtonItem (button);
 			} else {

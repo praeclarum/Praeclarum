@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2012 Frank A. Krueger
+// Copyright (c) 2010-2015 Frank A. Krueger
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -81,6 +81,11 @@ namespace Praeclarum.Graphics
 			else {
 				_paints = (ColPaints)c.Tag;
 			}
+		}
+
+		public void SetGradient (Gradient g)
+		{
+			throw new NotImplementedException ();
 		}
 
 		Path GetPolyPath (Polygon poly)

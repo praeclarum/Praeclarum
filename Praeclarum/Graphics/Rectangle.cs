@@ -1,5 +1,15 @@
 using System;
 
+#if UNIFIED
+using NativeSize = CoreGraphics.CGSize;
+using NativePoint = CoreGraphics.CGPoint;
+using NativeRect = CoreGraphics.CGRect;
+#else
+using NativeSize = System.Drawing.SizeF;
+using NativePoint = System.Drawing.PointF;
+using NativeRect = System.Drawing.RectangleF;
+#endif
+
 namespace Praeclarum.Graphics
 {
 	public struct RectangleF
@@ -145,12 +155,12 @@ namespace Praeclarum.Graphics
 	public static class RectangleEx
 	{
 #if !PORTABLE
-		public static CoreGraphics.CGRect ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
+		public static NativeRect ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
 		{
-			return new CoreGraphics.CGRect (rect.Left, rect.Top, rect.Width, rect.Height);
+			return new NativeRect (rect.Left, rect.Top, rect.Width, rect.Height);
 		}
 
-		public static Praeclarum.Graphics.RectangleF ToRectangleF (this CoreGraphics.CGRect rect)
+		public static Praeclarum.Graphics.RectangleF ToRectangleF (this NativeRect rect)
 		{
 			return new Praeclarum.Graphics.RectangleF ((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
 		}
@@ -160,29 +170,29 @@ namespace Praeclarum.Graphics
 //            return new Praeclarum.Graphics.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
 //        }
 
-		public static Praeclarum.Graphics.SizeF ToSizeF (this CoreGraphics.CGSize size)
+		public static Praeclarum.Graphics.SizeF ToSizeF (this NativeSize size)
 		{
 			return new Praeclarum.Graphics.SizeF ((float)size.Width, (float)size.Height);
 		}
 
-		public static CoreGraphics.CGSize ToSizeF (this Praeclarum.Graphics.SizeF size)
+		public static NativeSize ToSizeF (this Praeclarum.Graphics.SizeF size)
 		{
-			return new CoreGraphics.CGSize (size.Width, size.Height);
+			return new NativeSize (size.Width, size.Height);
 		}
 
-		public static CoreGraphics.CGPoint ToPointF (this Praeclarum.Graphics.PointF point)
+		public static NativePoint ToPointF (this Praeclarum.Graphics.PointF point)
 		{
-			return new CoreGraphics.CGPoint (point.X, point.Y);
+			return new NativePoint (point.X, point.Y);
 		}
 
-		public static Praeclarum.Graphics.PointF ToPointF (this CoreGraphics.CGPoint point)
+		public static Praeclarum.Graphics.PointF ToPointF (this NativePoint point)
 		{
 			return new Praeclarum.Graphics.PointF ((float)point.X, (float)point.Y);
 		}
 
-		public static CoreGraphics.CGPoint GetCenter (this CoreGraphics.CGRect r)
+		public static NativePoint GetCenter (this NativeRect r)
 		{
-			return new CoreGraphics.CGPoint (
+			return new NativePoint (
 				r.Left + r.Width / 2,
 				r.Top + r.Height / 2);
 		}

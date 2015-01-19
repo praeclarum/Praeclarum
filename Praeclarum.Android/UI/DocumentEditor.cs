@@ -35,7 +35,11 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public virtual void Created ()
+		public virtual void OnCreated ()
+		{
+		}
+
+		public virtual void DidEnterBackground ()
 		{
 		}
 

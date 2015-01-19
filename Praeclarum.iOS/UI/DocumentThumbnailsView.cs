@@ -56,6 +56,8 @@ namespace Praeclarum.UI
 			RegisterClassForCell (typeof(NotReadyThumbnailCell), NotReadyId);
 			RegisterClassForCell (typeof(SortThumbnailCell), SortId);
 
+			Console.WriteLine ("SORT REF");
+
 			Delegate = new DocumentThumbnailsViewDelegate ();
 			DataSource = new DocumentThumbnailsViewDataSource ();
 
@@ -397,6 +399,7 @@ namespace Praeclarum.UI
 		}
 	}
 
+	[Preserve]
 	class SortThumbnailCell : UICollectionViewCell
 	{
 		public const float Width = 160.0f;
@@ -415,8 +418,20 @@ namespace Praeclarum.UI
 		}
 		public DocumentThumbnailsView Controller;
 
+		[Preserve]
 		public SortThumbnailCell (IntPtr handle)
 			: base (handle)
+		{
+			Initialize ();
+		}
+
+		[Preserve]
+		public SortThumbnailCell ()
+		{
+			Initialize ();
+		}
+
+		void Initialize ()
 		{
 			BackgroundColor = UIColor.FromRGB (222, 222, 222);
 

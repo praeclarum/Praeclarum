@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2010-2014 Frank A. Krueger
+// Copyright (c) 2010-2015 Frank A. Krueger
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,15 +28,20 @@ using MonoMac.AppKit;
 using MonoMac.CoreGraphics;
 using MonoMac.CoreText;
 using MonoMac.Foundation;
+using NativeSize = System.Drawing.SizeF;
+using NativePoint = System.Drawing.PointF;
+using NativeRect = System.Drawing.RectangleF;
+using NativeValue = System.Single;
 #else
 using CoreGraphics;
 using CoreText;
 using Foundation;
 using UIKit;
+using NativeSize = CoreGraphics.CGSize;
+using NativePoint = CoreGraphics.CGPoint;
+using NativeRect = CoreGraphics.CGRect;
+using NativeValue = System.nfloat;
 #endif
-
-using DPointF = CoreGraphics.CGPoint;
-using DRectangleF = CoreGraphics.CGRect;
 
 namespace Praeclarum.Graphics
 {
@@ -130,7 +135,7 @@ namespace Praeclarum.Graphics
 
 		void FillPathWithGradient ()
 		{
-			var gr = new CGGradient (CGColorSpace.CreateDeviceRGB (), _g.Colors.Select (c => c.GetCGColor ()).ToArray (), _g.Locations.Select (g => (nfloat)g).ToArray ());
+			var gr = new CGGradient (CGColorSpace.CreateDeviceRGB (), _g.Colors.Select (c => c.GetCGColor ()).ToArray (), _g.Locations.Select (g => (NativeValue)g).ToArray ());
 			_c.SaveState ();
 			_c.Clip ();
 			_c.DrawLinearGradient (gr, _g.Start.ToPointF (), _g.End.ToPointF (), CGGradientDrawingOptions.DrawsAfterEndLocation | CGGradientDrawingOptions.DrawsBeforeStartLocation);
@@ -165,33 +170,33 @@ namespace Praeclarum.Graphics
 		public void FillRect (float x, float y, float width, float height)
 		{
 			if (_g != null) {
-				_c.AddRect (new CGRect (x, y, width, height));
+				_c.AddRect (new NativeRect (x, y, width, height));
 				FillPath ();
 			} else {
-				_c.FillRect (new CGRect (x, y, width, height));
+				_c.FillRect (new NativeRect (x, y, width, height));
 			}
 		}
 
 		public void FillOval (float x, float y, float width, float height)
 		{
 			if (_g != null) {
-				_c.AddEllipseInRect (new CGRect (x, y, width, height));
+				_c.AddEllipseInRect (new NativeRect (x, y, width, height));
 				FillPath ();
 			} else {
-				_c.FillEllipseInRect (new CGRect (x, y, width, height));
+				_c.FillEllipseInRect (new NativeRect (x, y, width, height));
 			}
 		}
 
 		public void DrawOval (float x, float y, float width, float height, float w)
 		{
 			_c.SetLineWidth (w);
-			_c.StrokeEllipseInRect (new CGRect (x, y, width, height));
+			_c.StrokeEllipseInRect (new NativeRect (x, y, width, height));
 		}
 
 		public void DrawRect (float x, float y, float width, float height, float w)
 		{
 			_c.SetLineWidth (w);
-			_c.StrokeRect (new CGRect (x, y, width, height));
+			_c.StrokeRect (new NativeRect (x, y, width, height));
 		}
 		
 		public void DrawArc (float cx, float cy, float radius, float startAngle, float endAngle, float w)
@@ -305,7 +310,7 @@ namespace Praeclarum.Graphics
 		
 		public void SetClippingRect (float x, float y, float width, float height)
 		{
-			_c.ClipToRect (new CGRect (x, y, width, height));
+			_c.ClipToRect (new NativeRect (x, y, width, height));
 		}
 
 		public void DrawString (string s, float x, float y)
@@ -315,10 +320,10 @@ namespace Praeclarum.Graphics
 				using (var fs = new CTFramesetter (astr)) {
 					using (var path = new CGPath ()) {
 						var h = _lastFont.Size * 2;
-						path.AddRect (new CGRect (0, 0, s.Length * h, h));
+						path.AddRect (new NativeRect (0, 0, s.Length * h, h));
 						using (var f = fs.GetFrame (new NSRange (0, 0), path, null)) {
 							var line = f.GetLines () [0];
-							nfloat a, d, l;
+							NativeValue a, d, l;
 							line.GetTypographicBounds (out a, out d, out l);
 
 							_c.SaveState ();
@@ -373,7 +378,7 @@ namespace Praeclarum.Graphics
 		{
 			if (img is UIKitImage) {
 				var uiImg = ((UIKitImage)img).Image;
-				_c.DrawImage (new CGRect (x, y, width, height), uiImg);
+				_c.DrawImage (new NativeRect (x, y, width, height), uiImg);
 			}
 		}
 
@@ -404,7 +409,7 @@ namespace Praeclarum.Graphics
 		{
 #if MONOMAC
 			var img = new NSImage ("Images/" + filename);
-			var rect = new DRectangleF (DPointF.Empty, img.Size);
+			var rect = new NativeRect (NativePoint.Empty, img.Size);
 			return new UIKitImage (img.AsCGImage (ref rect, NSGraphicsContext.CurrentContext, new MonoMac.Foundation.NSDictionary ()));
 #else
 			return new UIKitImage (UIImage.FromFile ("Images/" + filename).CGImage);
@@ -542,20 +547,20 @@ namespace Praeclarum.Graphics
 			return (int)(StringSize (str, startIndex, length).Width + 0.5f);
 		}
 
-		CGSize StringSize (string str, int startIndex, int length)
+		NativeSize StringSize (string str, int startIndex, int length)
 		{
-			if (str == null || length <= 0) return CGSize.Empty;
+			if (str == null || length <= 0) return NativeSize.Empty;
 
 			using (var astr = new NSMutableAttributedString (str)) {
 				astr.AddAttributes (attrs, new NSRange (startIndex, length));
 				using (var fs = new CTFramesetter (astr)) {
 					using (var path = new CGPath ()) {
-						path.AddRect (new CGRect (0, 0, 30000, attrs.Font.XHeightMetric * 10));
+						path.AddRect (new NativeRect (0, 0, 30000, attrs.Font.XHeightMetric * 10));
 						using (var f = fs.GetFrame (new NSRange (startIndex, length), path, null)) {
 							var line = f.GetLines () [0];
-							nfloat a, d, l;
+							NativeValue a, d, l;
 							var tw = line.GetTypographicBounds (out a, out d, out l);
-							return new CGSize ((float)tw, (a + d) * 1.2f);
+							return new NativeSize ((float)tw, (a + d) * 1.2f);
 						}
 					}
 				}

@@ -213,16 +213,25 @@ namespace Praeclarum.UI
 		/// </summary>
 		public override UIEdgeInsets ContentInset {
 			get {
-				return base.ContentInset;
+				try {
+					return base.ContentInset;
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return new UIEdgeInsets ();
+				}
 			}
 			set {
-				if (Tracking) {
-					var diff = value.Top - base.ContentInset.Top;
-					var translation = PanGestureRecognizer.TranslationInView(this);
-					translation.Y -= diff * 3.0f / 2.0f;
-					PanGestureRecognizer.SetTranslation (translation, this);
+				try {
+					if (Tracking) {
+						var diff = value.Top - base.ContentInset.Top;
+						var translation = PanGestureRecognizer.TranslationInView (this);
+						translation.Y -= diff * 3.0f / 2.0f;
+						PanGestureRecognizer.SetTranslation (translation, this);
+					}
+					base.ContentInset = value;
+				} catch (Exception ex) {
+					Log.Error (ex);					
 				}
-				base.ContentInset = value;
 			}
 		}
 
@@ -266,36 +275,46 @@ namespace Praeclarum.UI
 
 		public override CGSize GetSizeForItem (UICollectionView collectionView, UICollectionViewLayout layout, NSIndexPath indexPath)
 		{
-			if (indexPath.Section == 0)
-				return sortSize;
-
-			var controller = (DocumentThumbnailsView)collectionView;
-
-			var s = controller.ThumbnailSize;
-			var itemSize = new CGSize (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
-//			Console.WriteLine ("item size = {0}", itemSize);
-			return itemSize;
+			try {
+				if (indexPath.Section == 0)
+					return sortSize;
+				
+				var controller = (DocumentThumbnailsView)collectionView;
+				
+				var s = controller.ThumbnailSize;
+				var itemSize = new CGSize (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
+				//			Console.WriteLine ("item size = {0}", itemSize);
+				return itemSize;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return new CGSize (44, 44);
+			}
 		}
 
 		public override UIEdgeInsets GetInsetForSection (UICollectionView collectionView, UICollectionViewLayout layout, nint section)
 		{
-			nfloat h = 0.0f;
-			var t = DocumentThumbnailsView.Margin/2;
-			var b = 0.0f;
-
-			var controller = (DocumentThumbnailsView)collectionView;
-
-			var frameW = collectionView.Frame.Width;
-
-			if (section == 0) {
-				h = (frameW - sortSize.Width) / 2;
-				t = 15;
-				b = 11;
-			} else {
-				h = controller.IsSyncing ? (frameW - controller.ThumbnailSize.Width)/2 : DocumentThumbnailsView.Margin;
-			} 
-
-			return new UIEdgeInsets (t, h, b, h);
+			try {
+				nfloat h = 0.0f;
+				var t = DocumentThumbnailsView.Margin / 2;
+				var b = 0.0f;
+				
+				var controller = (DocumentThumbnailsView)collectionView;
+				
+				var frameW = collectionView.Frame.Width;
+				
+				if (section == 0) {
+					h = (frameW - sortSize.Width) / 2;
+					t = 15;
+					b = 11;
+				} else {
+					h = controller.IsSyncing ? (frameW - controller.ThumbnailSize.Width) / 2 : DocumentThumbnailsView.Margin;
+				} 
+				
+				return new UIEdgeInsets (t, h, b, h);
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return new UIEdgeInsets ();
+			}
 		}
 
 		public override nfloat GetMinimumInteritemSpacingForSection (UICollectionView collectionView, UICollectionViewLayout layout, nint section)
@@ -373,29 +392,32 @@ namespace Praeclarum.UI
 
 		public override void Draw (CGRect rect)
 		{
-			var c = UIGraphics.GetCurrentContext ();
-
-			var b = Bounds;
-			c.SetLineWidth (1.0f);
-
-			c.SetStrokeColor (202/255.0f, 202/255.0f, 202/255.0f, 1);
-//			UIColor.Red.SetStroke ();
-
-			c.MoveTo (0, 0);
-			c.AddLineToPoint (0, b.Height);
-			c.StrokePath ();
-
-			c.MoveTo (b.Width, 0);
-			c.AddLineToPoint (b.Width, b.Height);
-			c.StrokePath ();
-
-			c.SetStrokeColor (176/255.0f, 176/255.0f, 176/255.0f, 1);
-//			UIColor.Green.SetStroke ();
-
-			c.MoveTo (0, b.Height);
-			c.AddLineToPoint (b.Width, b.Height);
-			c.StrokePath ();
-
+			try {
+				var c = UIGraphics.GetCurrentContext ();
+				
+				var b = Bounds;
+				c.SetLineWidth (1.0f);
+				
+				c.SetStrokeColor (202 / 255.0f, 202 / 255.0f, 202 / 255.0f, 1);
+				//			UIColor.Red.SetStroke ();
+				
+				c.MoveTo (0, 0);
+				c.AddLineToPoint (0, b.Height);
+				c.StrokePath ();
+				
+				c.MoveTo (b.Width, 0);
+				c.AddLineToPoint (b.Width, b.Height);
+				c.StrokePath ();
+				
+				c.SetStrokeColor (176 / 255.0f, 176 / 255.0f, 176 / 255.0f, 1);
+				//			UIColor.Green.SetStroke ();
+				
+				c.MoveTo (0, b.Height);
+				c.AddLineToPoint (b.Width, b.Height);
+				c.StrokePath ();
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 		}
 	}
 
@@ -728,16 +750,20 @@ namespace Praeclarum.UI
 
 			public override void Draw (CGRect dirtyRect)
 			{
-				var c = UIGraphics.GetCurrentContext ();
-
-				var rect = Bounds;
-
-				rect.Inflate (-borderThickness/2, -borderThickness/2);
-
-				SelectionColor.SetStroke ();
-
-				c.SetLineWidth (borderThickness);
-				c.StrokeRect (rect);
+				try {
+					var c = UIGraphics.GetCurrentContext ();
+					
+					var rect = Bounds;
+					
+					rect.Inflate (-borderThickness / 2, -borderThickness / 2);
+					
+					SelectionColor.SetStroke ();
+					
+					c.SetLineWidth (borderThickness);
+					c.StrokeRect (rect);
+				} catch (Exception ex) {
+					Log.Error (ex);					
+				}
 			}
 		}
 
@@ -1049,8 +1075,12 @@ namespace Praeclarum.UI
 			{
 				base.Draw (rect);
 
-				GrayColor.SetFill ();
-				UIBezierPath.FromRoundedRect (Bounds, 10).Fill ();
+				try {
+					GrayColor.SetFill ();
+					UIBezierPath.FromRoundedRect (Bounds, 10).Fill ();
+				} catch (Exception ex) {
+					Log.Error (ex);					
+				}
 			}
 		}
 
@@ -1128,47 +1158,60 @@ namespace Praeclarum.UI
 
 		public override UICollectionViewCell GetCell (UICollectionView collectionView, NSIndexPath indexPath)
 		{
-			var controller = (DocumentThumbnailsView)collectionView;
+			var controller = collectionView as DocumentThumbnailsView;
+			var isDir = false;
+			var id = DocumentThumbnailsView.FileId;
+			DocumentsViewItem item = null;
+			DocumentReference d = null;
 
-			if (indexPath.Section == 0) {
-				return GetSortCell (collectionView, indexPath);
+			try {
+				
+				if (indexPath.Section == 0) {
+					return GetSortCell (collectionView, indexPath);
+				}
+				
+				if (controller.IsSyncing) {
+					return GetNotReadyCell (collectionView, indexPath);
+				}
+				
+				var row = indexPath.Row;
+				if (row == 0) {
+					return GetAddCell (collectionView, indexPath);
+				}
+				
+				row--;
+				item = controller.Items [row];
+				d = item.Reference;
+				
+				isDir = d.File.IsDirectory;
+				
+				id = isDir ? DocumentThumbnailsView.DirId : DocumentThumbnailsView.FileId;
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
-
-			if (controller.IsSyncing) {
-				return GetNotReadyCell (collectionView, indexPath);
-			}
-
-			var row = indexPath.Row;
-			if (row == 0) {
-				return GetAddCell (collectionView, indexPath);
-			}
-
-			row--;
-			var item = controller.Items [row];
-			var d = item.Reference;
-
-			var isDir = d.File.IsDirectory;
-
-			var id = isDir ? DocumentThumbnailsView.DirId : DocumentThumbnailsView.FileId;
 
 			var c = (BaseDocumentThumbnailCell)collectionView.DequeueReusableCell (id, indexPath);
 
-			c.RenameRequested = controller.HandleRenameRequested;
-
-			if (isDir) {
-				var dirCell = ((DirectoryThumbnailCell)c);
-				dirCell.ThumbnailSize = controller.ThumbnailSize;
-				dirCell.Item = item;
-				dirCell.Editing = controller.Editing;
-				dirCell.Selecting = controller.Selecting;
-				dirCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
-			} else {
-				var docCell = ((DocumentThumbnailCell)c);
-				docCell.ThumbnailSize = controller.ThumbnailSize;
-				docCell.Document = d;
-				docCell.Editing = controller.Editing;
-				docCell.Selecting = controller.Selecting;
-				docCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
+			try {
+				c.RenameRequested = controller.HandleRenameRequested;
+				
+				if (isDir) {
+					var dirCell = ((DirectoryThumbnailCell)c);
+					dirCell.ThumbnailSize = controller.ThumbnailSize;
+					dirCell.Item = item;
+					dirCell.Editing = controller.Editing;
+					dirCell.Selecting = controller.Selecting;
+					dirCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
+				} else {
+					var docCell = ((DocumentThumbnailCell)c);
+					docCell.ThumbnailSize = controller.ThumbnailSize;
+					docCell.Document = d;
+					docCell.Editing = controller.Editing;
+					docCell.Selecting = controller.Selecting;
+					docCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 
 			return c;

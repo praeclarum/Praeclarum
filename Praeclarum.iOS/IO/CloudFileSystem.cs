@@ -67,8 +67,12 @@ namespace Praeclarum.IO
 			var tcs = new TaskCompletionSource<bool> ();
 
 			askCloudAlert.Clicked += (s, e) => {
-				var useCloud = e.ButtonIndex == 1;
-				tcs.SetResult (useCloud);
+				try {
+					var useCloud = e.ButtonIndex == 1;
+					tcs.SetResult (useCloud);
+				} catch (Exception ex) {
+					Log.Error (ex);					
+				}
 			};
 
 			askCloudAlert.Show ();

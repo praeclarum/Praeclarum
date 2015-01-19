@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,9 +32,24 @@ namespace Praeclarum.UI
 		{
 		}
 
+		Color defaultBackgroundColor = Colors.Black;
+
 		public Color BackgroundColor {
-			get { return base.DrawingCacheBackgroundColor.ToColor (); }
-			set { base.SetBackgroundColor (value.ToColor ()); }
+			get {
+				try {
+					return base.DrawingCacheBackgroundColor.ToColor ();					
+				} catch (Exception ex) {
+					Debug.WriteLine (ex);
+					return defaultBackgroundColor;
+				}
+			}
+			set {
+				try {
+					base.SetBackgroundColor (value.ToColor ());					
+				} catch (Exception ex) {
+					Debug.WriteLine (ex);
+				}
+			}
 		}
 
 		RectangleF IView.Bounds {

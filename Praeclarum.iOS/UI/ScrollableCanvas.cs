@@ -161,7 +161,11 @@ namespace Praeclarum.UI
 
 		void HandleScrolled (object sender, EventArgs e)
 		{
-			SetVisibleArea ();
+			try {
+				SetVisibleArea ();
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 		}
 
 		public override void LayoutSubviews ()
@@ -210,11 +214,16 @@ namespace Praeclarum.UI
 
 			public override bool TouchesShouldBegin (Foundation.NSSet touches, UIEvent withEvent, UIView inContentView)
 			{
-				var s = Superview as ScrollableCanvas;
-				if (s == null)
-					return base.TouchesShouldBegin (touches, withEvent, inContentView);
-
-				return s.TouchEnabled;
+				try {
+					var s = Superview as ScrollableCanvas;
+					if (s == null)
+						return base.TouchesShouldBegin (touches, withEvent, inContentView);
+					
+					return s.TouchEnabled;
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return false;
+				}
 			}
 		}
 	}

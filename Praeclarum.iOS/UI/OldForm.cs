@@ -73,9 +73,13 @@ namespace Praeclarum.UI
 			ActionSheet.CancelButtonIndex = ActionSheet.ButtonCount - 1;
 
 			ActionSheet.Clicked += (ss, se) => {
-				var index = (int)se.ButtonIndex;
-				if (0 <= index && index < actions.Count) {
-					actions[index].Execute ();
+				try {
+					var index = (int)se.ButtonIndex;
+					if (0 <= index && index < actions.Count) {
+						actions[index].Execute ();
+					}
+				} catch (Exception ex) {
+					Log.Error (ex);					
 				}
 			};
 

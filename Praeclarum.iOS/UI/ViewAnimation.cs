@@ -8,7 +8,13 @@ namespace Praeclarum.UI
 		public static void Run (Action action, double duration, bool animated)
 		{
 			if (animated) {
-				UIView.Animate (duration, () => action());
+				UIView.Animate (duration, () => {
+					try {
+						action();
+					} catch (Exception ex) {
+						Log.Error (ex);						
+					}
+				});
 			} else {
 				action ();
 			}

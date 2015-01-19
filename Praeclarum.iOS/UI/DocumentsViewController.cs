@@ -264,60 +264,79 @@ namespace Praeclarum.UI
 			//
 			// Create the refresh control
 			//
-			refresh = new UIRefreshControl {
-				TintColor = UIColor.FromWhiteAlpha (59/255.0f, 1),
-			};
-			refresh.ValueChanged += async (sim, e) => {
-				try {
-					var fs = FileSystemManager.Shared.ActiveFileSystem;
-					await fs.Sync (SyncTimeout);
-					if (fs.IsSyncing)
-						ShowSyncError ();
-					else
-						await LoadDocs ();
-				} catch (Exception ex) {
-					Debug.WriteLine (ex);					
-				}
-				finally {
-					refresh.EndRefreshing ();
-				}
-			};
+			try {
+				refresh = new UIRefreshControl {
+					TintColor = UIColor.FromWhiteAlpha (59 / 255.0f, 1),
+				};
+				refresh.ValueChanged += async (sim, e) => {
+					try {
+						var fs = FileSystemManager.Shared.ActiveFileSystem;
+						await fs.Sync (SyncTimeout);
+						if (fs.IsSyncing)
+							ShowSyncError ();
+						else
+							await LoadDocs ();
+					} catch (Exception ex) {
+						Debug.WriteLine (ex);					
+					} finally {
+						refresh.EndRefreshing ();
+					}
+				};
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			//
 			// Create our view
 			//
-			SwitchToMode (false);
-			((UIView)docsView).AddSubview (refresh);
-
-			if (makingDefaultImage) {
-				View = new UIView {
-					BackgroundColor = DocumentThumbnailsView.DefaultBackgroundColor,
-				};
+			try {
+				SwitchToMode (false);
+				((UIView)docsView).AddSubview (refresh);
+				
+				if (makingDefaultImage) {
+					View = new UIView {
+						BackgroundColor = DocumentThumbnailsView.DefaultBackgroundColor,
+					};
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 
 			//
 			// Set the add button
 			//
-			SetNormalNavItems (false);
+			try {
+				SetNormalNavItems (false);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			//
 			// Set the toobar
 			//
-			if (!makingDefaultImage) {
-				SetToolbarItems (new[] { 
-					thereforeBtn,
-					new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
-					fileSystemsBtn
-				}, false);
+			try {
+				if (!makingDefaultImage) {
+					SetToolbarItems (new[] { 
+						thereforeBtn,
+						new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
+						fileSystemsBtn
+					}, false);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 
 			//
 			// Load the documents
 			//
-			LoadDocs ().ContinueWith (t => {
-				if (t.IsFaulted)
-					Debug.WriteLine (t.Exception);
-			});
+			try {
+				LoadDocs ().ContinueWith (t => {
+					if (t.IsFaulted)
+						Log.Error (t.Exception);
+				});
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 		}
 
 		const bool makingDefaultImage = false;
@@ -612,18 +631,26 @@ namespace Praeclarum.UI
 		{
 			base.ViewDidAppear (animated);
 
-			SetTitle ();
-
-			DocumentAppDelegate.Shared.Settings.SetWorkingDirectory (FileSystemManager.Shared.ActiveFileSystem, Directory);
+			try {
+				SetTitle ();
+				
+				DocumentAppDelegate.Shared.Settings.SetWorkingDirectory (FileSystemManager.Shared.ActiveFileSystem, Directory);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 		}
 
 		public override void ViewWillDisappear (bool animated)
 		{
 			base.ViewWillDisappear (animated);
 
-			if (refreshTimer != null) {
-				refreshTimer.Invalidate ();
-				refreshTimer = null;
+			try {
+				if (refreshTimer != null) {
+					refreshTimer.Invalidate ();
+					refreshTimer = null;
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 		}
 
@@ -631,7 +658,11 @@ namespace Praeclarum.UI
 		{
 			base.WillRotate (toInterfaceOrientation, duration);
 
-			docsView.UpdateLayout ();
+			try {
+				docsView.UpdateLayout ();
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 		}
 
 		static void ShowSyncError ()
@@ -712,7 +743,12 @@ namespace Praeclarum.UI
 
 		public override UIStatusBarStyle PreferredStatusBarStyle ()
 		{
-			return Editing ? UIStatusBarStyle.LightContent : UIStatusBarStyle.Default;
+			try {
+				return Editing ? UIStatusBarStyle.LightContent : UIStatusBarStyle.Default;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return UIStatusBarStyle.Default;
+			}
 		}
 
 		readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
@@ -780,24 +816,29 @@ namespace Praeclarum.UI
 		{
 			base.SetEditing (editing, animated);
 
-			if (editing) {
+			try {
+				if (editing) {
+				
+					SetSpecialNav (animated);
+				
+					SetTitle ();
+				
+					SetEditingNavItems (animated);
+				
+				} else {
+				
+					SetNormalNav (animated);
+				
+					SetTitle ();
+				
+					SetNormalNavItems (animated);
+				}
+				
+				docsView.SetEditing (editing, animated);
 
-				SetSpecialNav (animated);
-
-				SetTitle ();
-
-				SetEditingNavItems (animated);
-
-			} else {
-
-				SetNormalNav (animated);
-
-				SetTitle ();
-
-				SetNormalNavItems (animated);
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
-
-			docsView.SetEditing (editing, animated);
 		}
 
 		void HandleDone (object sender, EventArgs e)

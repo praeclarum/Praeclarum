@@ -94,14 +94,19 @@ namespace Praeclarum.UI
 			}
 
 			//
+			// Set View Controllers
 			// Throttle the animations
 			//
 			var now = DateTime.UtcNow;
 			if (animated && (now - lastOpenTime).TotalSeconds > 1) {
 				if (useTransition) {
 					UIView.Animate (0.5, () =>  {
-						UIView.SetAnimationTransition (transition, nc.View, true);
-						nc.SetViewControllers (vcs, false);
+						try {
+							UIView.SetAnimationTransition (transition, nc.View, true);
+							nc.SetViewControllers (vcs, false);
+						} catch (Exception ex) {
+							Log.Error (ex);							
+						}
 					});
 				}
 				else {
@@ -154,21 +159,30 @@ namespace Praeclarum.UI
 
 			public override void WillHideViewController (UISplitViewController svc, UIViewController aViewController, UIBarButtonItem barButtonItem, UIPopoverController pc)
 			{
-				Popover = pc;
-				var detailNav = (UINavigationController)svc.ViewControllers [1];
+				try {
+					Popover = pc;
+					var detailNav = (UINavigationController)svc.ViewControllers [1];
 
-				var newItem = new UIBarButtonItem (UIImage.FromBundle ("Hamburger.png"), UIBarButtonItemStyle.Plain, barButtonItem.Target, barButtonItem.Action);
+					var newItem = new UIBarButtonItem (UIImage.FromBundle ("Hamburger.png"), UIBarButtonItemStyle.Plain, barButtonItem.Target, barButtonItem.Action);
 
-				detailNav.TopViewController.NavigationItem.LeftBarButtonItem = newItem;
+					detailNav.TopViewController.NavigationItem.LeftBarButtonItem = newItem;
 
-				Button = newItem;
+					Button = newItem;
+
+				} catch (Exception ex) {
+					Log.Error (ex);					
+				}
 			}
 
 			public override void WillShowViewController (UISplitViewController svc, UIViewController aViewController, UIBarButtonItem button)
 			{
-				Popover = null;
-				var detailNav = (UINavigationController)svc.ViewControllers [1];
-				detailNav.TopViewController.NavigationItem.LeftBarButtonItem = null;
+				try {
+					Popover = null;
+					var detailNav = (UINavigationController)svc.ViewControllers [1];
+					detailNav.TopViewController.NavigationItem.LeftBarButtonItem = null;
+				} catch (Exception ex) {
+					Log.Error (ex);
+				}
 			}
 		}
 	}

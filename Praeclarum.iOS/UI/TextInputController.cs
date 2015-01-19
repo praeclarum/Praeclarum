@@ -138,23 +138,33 @@ namespace Praeclarum.UI
 
 			public override string TitleForFooter (UITableView tableView, nint section)
 			{
-				return controller.Hint;
+				try {
+					return controller.Hint;					
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return "";
+				}
 			}
 				
 			public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 			{
-				if (cell == null) {
-					cell = new TextInputCell (
-						"C", 
-						controller.LabelText, 
-						controller.ValidateAndNotify);
-					var i = cell.InputField;
-					i.Placeholder = controller.InputText;
-					i.AccessibilityLabel = controller.Title;
-					i.BecomeFirstResponder ();
+				try {
+					if (cell == null) {
+						cell = new TextInputCell (
+							"C", 
+							controller.LabelText, 
+							controller.ValidateAndNotify);
+						var i = cell.InputField;
+						i.Placeholder = controller.InputText;
+						i.AccessibilityLabel = controller.Title;
+						i.BecomeFirstResponder ();
+					}
+
+					return cell;
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return new UITableViewCell ();
 				}
-					
-				return cell;
 			}
 		}
 	}
@@ -197,21 +207,26 @@ namespace Praeclarum.UI
 		public override void LayoutSubviews ()
 		{
 			base.LayoutSubviews ();
-			
-			var b = ContentView.Bounds;
+		
+			try {
+				var b = ContentView.Bounds;
 
-			var text = TextLabel.Text;
-			if (!string.IsNullOrEmpty (text)) {
-				var lw = TextLabel.Text.StringSize (TextLabel.Font, nfloat.MaxValue, UILineBreakMode.TailTruncation).Width;
-			
-				b.Width -= lw + 33;
-				b.X += lw + 33;
-			} else {
-				b.Width -= 44;
-				b.X += 22;
+				var text = TextLabel.Text;
+				if (!string.IsNullOrEmpty (text)) {
+					var lw = TextLabel.Text.StringSize (TextLabel.Font, nfloat.MaxValue, UILineBreakMode.TailTruncation).Width;
+
+					b.Width -= lw + 33;
+					b.X += lw + 33;
+				} else {
+					b.Width -= 44;
+					b.X += 22;
+				}
+
+				InputField.Frame = b;
+
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
-			
-			InputField.Frame = b;
 		}
 	}
 }

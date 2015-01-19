@@ -29,39 +29,56 @@ namespace Praeclarum.App
 
 		public void UpdateChangeCount (DocumentChangeKind changeKind)
 		{
-			base.UpdateChangeCount (UIDocumentChangeKind.Done);
+			try {
+				base.UpdateChangeCount (UIDocumentChangeKind.Done);				
+			} catch {
+				throw;
+			}
 		}
 
 		public override NSObject ContentsForType (string typeName, out NSError outError)
 		{
-			outError = null;
+			try {
+				outError = null;
 
-			var text = TextData;
+				var text = TextData;
 
-			var data = NSData.FromString (text, NSStringEncoding.UTF8);
+				var data = NSData.FromString (text, NSStringEncoding.UTF8);
 
-			Debug.WriteLine ("SAVE " + LocalFilePath);
+				Debug.WriteLine ("SAVE " + LocalFilePath);
 
-			Saving (this, new SavingEventArgs {
-				TextData = text
-			});
+				Saving (this, new SavingEventArgs {
+					TextData = text
+				});
 
-			return data;
+				return data;
+
+			} catch (Exception ex) {
+				Log.Error (ex);
+				outError = new NSError (new NSString ("Praeclarum"), 334);
+				return new NSData ();
+			}
 		}
 
 		public override bool LoadFromContents (NSObject contents, string typeName, out NSError outError)
 		{
-			outError = null;
-			var data = contents as NSData;
-			if (data != null) {
-				TextData = data.ToString (NSStringEncoding.UTF8);
-			} else {
-				TextData = "";
+			try {				
+				outError = null;
+				var data = contents as NSData;
+				if (data != null) {
+					TextData = data.ToString (NSStringEncoding.UTF8);
+				} else {
+					TextData = "";
+				}
+
+				Loading (this, EventArgs.Empty);
+
+				return true;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				outError = new NSError (new NSString ("Praeclarum"), 335);
+				return false;
 			}
-
-			Loading (this, EventArgs.Empty);
-
-			return true;
 		}
 
 		#region IDocument implementation

@@ -19,9 +19,14 @@ namespace Praeclarum.UI
 		{
 			base.ViewDidLoad ();
 
-			View.BackgroundColor = UIColor.White;
+			try {
+				View.BackgroundColor = UIColor.White;
 
-			OnCreated ();
+				OnCreated ();
+
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 
 		IView editorView = null;
@@ -51,9 +56,13 @@ namespace Praeclarum.UI
 
 		public override async void DidMoveToParentViewController (UIViewController parent)
 		{
-			if (parent == null) {
-				DocumentListAppDelegate.Shared.OpenedDocIndex = -1;
-				await DocumentListAppDelegate.Shared.CloseDocumentEditor (this, unbindUI: true, deleteThumbnail: true, reloadThumbnail: true);
+			try {
+				if (parent == null) {
+					DocumentAppDelegate.Shared.OpenedDocIndex = -1;
+					await DocumentAppDelegate.Shared.CloseDocumentEditor (this, unbindUI: true, deleteThumbnail: true, reloadThumbnail: true);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 

@@ -55,6 +55,7 @@
     <Compile Include="Graphics\Stroke.cs" />
     <Compile Include="StringHelper.cs" />
     <Compile Include="HtmlRichText.cs" />
+    <Compile Include="Log.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

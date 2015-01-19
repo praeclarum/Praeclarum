@@ -6,9 +6,24 @@ namespace Praeclarum.UI
 {
 	public class View : UIView, IView
 	{
+		Color bgColor = Colors.Black;
 		public new virtual Color BackgroundColor {
-			get { return base.BackgroundColor.GetColor (); }
-			set { base.BackgroundColor = value.GetUIColor (); }
+			get {
+				try {
+					return base.BackgroundColor.GetColor ();
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return bgColor;
+				}
+			}
+			set {
+				try {
+					bgColor = value;
+					base.BackgroundColor = value.GetUIColor ();
+				} catch (Exception ex) {
+					Log.Error (ex);					
+				}
+			}
 		}
 
 		RectangleF IView.Bounds {

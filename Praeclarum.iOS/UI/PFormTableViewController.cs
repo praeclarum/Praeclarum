@@ -30,23 +30,29 @@ namespace Praeclarum.UI
 		{
 			base.ViewDidLoad ();
 
-			if (AutoCancelButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
-				NavigationItem.LeftBarButtonItem = new UIBarButtonItem (
-					UIBarButtonSystemItem.Cancel,
-					HandleCancel);
+			try {
+
+				TableView.Source = new FormSource (this);
+
+				if (AutoCancelButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
+					NavigationItem.LeftBarButtonItem = new UIBarButtonItem (
+						UIBarButtonSystemItem.Cancel,
+						HandleCancel);
+				}
+
+				if (AutoDoneButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
+					NavigationItem.RightBarButtonItem = new UIBarButtonItem (
+						UIBarButtonSystemItem.Done,
+						HandleDone);
+				}
+
+				var theme = DocumentAppDelegate.Shared.Theme;
+
+				theme.Apply (TableView);
 			}
-
-			if (AutoDoneButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
-				NavigationItem.RightBarButtonItem = new UIBarButtonItem (
-					UIBarButtonSystemItem.Done,
-					HandleDone);
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
-
-			var theme = DocumentAppDelegate.Shared.Theme;
-
-			theme.Apply (TableView);
-
-			TableView.Source = new FormSource (this);
 		}
 
 		protected virtual async void HandleCancel (object sender, EventArgs e)
@@ -158,44 +164,71 @@ namespace Praeclarum.UI
 
 			public override nint NumberOfSections (UITableView tableView)
 			{
-				return controller.Sections.Count;
+				try {
+					return controller.Sections.Count;					
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return 0;
+				}
 			}
 
 			public override nint RowsInSection (UITableView tableView, nint sectionIndex)
 			{
-				return controller.Sections [(int)sectionIndex].Items.Count;
+				try {
+					return controller.Sections [(int)sectionIndex].Items.Count;					
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return 0;
+				}
 			}
 
 			public override string TitleForHeader (UITableView tableView, nint sectionIndex)
 			{
-				return controller.Sections [(int)sectionIndex].Title;
+				try {
+					return controller.Sections [(int)sectionIndex].Title;					
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return "";
+				}
 			}
 
 			public override string TitleForFooter (UITableView tableView, nint sectionIndex)
 			{
-				return controller.Sections [(int)sectionIndex].Hint;
+				try {
+					return controller.Sections [(int)sectionIndex].Hint;					
+				} catch (Exception ex) {
+					Log.Error (ex);
+					return "";
+				}
 			}
 
 			public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 			{
-				var section = controller.Sections [indexPath.Section];
-				var item = section.Items [indexPath.Row];
-
-				var id = item.GetType ().Name;
-
-				var cell = tableView.DequeueReusableCell (id);
-
-				if (cell == null) {
-					cell = new UITableViewCell (UITableViewCellStyle.Default, id);
-				}
-
 				try {
-					FormatCell (cell, section, item);
+					
+					var section = controller.Sections [indexPath.Section];
+					var item = section.Items [indexPath.Row];
+
+					var id = item.GetType ().Name;
+
+					var cell = tableView.DequeueReusableCell (id);
+
+					if (cell == null) {
+						cell = new UITableViewCell (UITableViewCellStyle.Default, id);
+					}
+
+					try {
+						FormatCell (cell, section, item);
+					} catch (Exception ex) {
+						Debug.WriteLine (ex);
+					}
+
+					return cell;
 				} catch (Exception ex) {
-					Debug.WriteLine (ex);
+					Log.Error (ex);
+					return new UITableViewCell ();
 				}
 
-				return cell;
 			}
 
 			static readonly Dictionary<string, UIImage> imageCache = 

@@ -64,63 +64,97 @@ namespace Praeclarum.UI
 			//
 			// Initialize the caches
 			//
-			var docsDir = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
-			var cachesDir = Path.GetFullPath (Path.Combine (docsDir, "../Library/Caches"));
-			ThumbnailCache = new ImageCache (Path.Combine (cachesDir, "Thumbnails"));
-
+			try {
+				var docsDir = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+				var cachesDir = Path.GetFullPath (Path.Combine (docsDir, "../Library/Caches"));
+				ThumbnailCache = new ImageCache (Path.Combine (cachesDir, "Thumbnails"));
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 
 			//
 			// Pay attention to the culture
 			//
-			UpdateCurrentCulture ();
-			NSLocale.Notifications.ObserveCurrentLocaleDidChange ((s,e) => UpdateCurrentCulture ());
+			try {
+				UpdateCurrentCulture ();
+				NSLocale.Notifications.ObserveCurrentLocaleDidChange ((s, e) => UpdateCurrentCulture ());
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 
 			//
 			// Learn about the device
 			//
-			DeviceFileSystemProvider.DeviceName = UIDevice.CurrentDevice.Name;
-//			if (!UIDevice.CurrentDevice.CheckSystemVersion (7, 0)) {
-//				app.SetStatusBarStyle (UIStatusBarStyle.BlackOpaque, false);
-//			}
-			Settings = CreateSettings ();
-			Settings.RunCount++;
-//			Console.WriteLine ("RUN COUNT = " + Settings.RunCount);
+			try {
+				DeviceFileSystemProvider.DeviceName = UIDevice.CurrentDevice.Name;
+				//			if (!UIDevice.CurrentDevice.CheckSystemVersion (7, 0)) {
+				//				app.SetStatusBarStyle (UIStatusBarStyle.BlackOpaque, false);
+				//			}
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
+
+			//
+			// Load the settings
+			//
+			try {
+				Settings = CreateSettings ();
+				Settings.RunCount++;
+				//			Console.WriteLine ("RUN COUNT = " + Settings.RunCount);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			//
 			// Initialize the file system manager
 			//
-			if (Settings.IsFirstRun () && !string.IsNullOrEmpty (App.AutoOpenDocumentPath))
-				Settings.LastDocumentPath = App.AutoOpenDocumentPath;
-
-			OpenedDocIndex = -1;
-			FileSystemManager.Shared = new FileSystemManager ();
-			FileSystemManager.Shared.ActiveFileSystem = new EmptyFileSystem {
-				Description = "Loading Storage...",
-			};
-
+			try {
+				if (Settings.IsFirstRun () && !string.IsNullOrEmpty (App.AutoOpenDocumentPath))
+					Settings.LastDocumentPath = App.AutoOpenDocumentPath;
+				
+				OpenedDocIndex = -1;
+				FileSystemManager.Shared = new FileSystemManager ();
+				FileSystemManager.Shared.ActiveFileSystem = new EmptyFileSystem {
+					Description = "Loading Storage...",
+				};
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			//
 			// Apply the theme
 			//
-			WhiteTheme.IsModern = ios7;
-
-			Theme.Apply ();
-			UpdateFonts ();
+			try {
+				WhiteTheme.IsModern = ios7;
+				
+				Theme.Apply ();
+				UpdateFonts ();
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			//
 			// Construct the UI
 			//
-			var docList = CreateDirectoryViewController ("");
-			docListNav = new UINavigationController (docList);
-			docListNav.ToolbarHidden = false;
-			Theme.Apply (docListNav.Toolbar);
+			try {
+				var docList = CreateDirectoryViewController ("");
+				docListNav = new UINavigationController (docList);
+				docListNav.ToolbarHidden = false;
+				Theme.Apply (docListNav.Toolbar);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			window = new UIWindow (UIScreen.MainScreen.Bounds);
 
-			SetRootViewController ();
-
-			if (ios7) {
-				window.TintColor = Praeclarum.Graphics.ColorEx.GetUIColor (App.TintColor);
+			try {
+				SetRootViewController ();
+				
+				if (ios7) {
+					window.TintColor = Praeclarum.Graphics.ColorEx.GetUIColor (App.TintColor);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 
 			window.MakeKeyAndVisible ();
@@ -128,17 +162,20 @@ namespace Praeclarum.UI
 			//
 			// Init the file system
 			//
-			var uiSync = TaskScheduler.FromCurrentSynchronizationContext ();
-			initFileSystemTask = InitFileSystem ();
-				
-			initFileSystemTask.ContinueWith (t => {
-				if (!t.IsFaulted) {
-					App.OnFileSystemInitialized ();
-				}
-				else {
-					Debug.WriteLine (t.Exception);
-				}
-			}, uiSync);
+			try {
+				var uiSync = TaskScheduler.FromCurrentSynchronizationContext ();
+				initFileSystemTask = InitFileSystem ();
+					
+				initFileSystemTask.ContinueWith (t => {
+					if (!t.IsFaulted) {
+						App.OnFileSystemInitialized ();
+					} else {
+						Debug.WriteLine (t.Exception);
+					}
+				}, uiSync);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			return true;
 		}
@@ -192,69 +229,89 @@ namespace Praeclarum.UI
 
 		public override void DidEnterBackground (UIApplication application)
 		{
-			var ed = CurrentDocumentEditor;
-			if (ed != null) {
-				ed.DidEnterBackground ();
+			try {
+				var ed = CurrentDocumentEditor;
+				if (ed != null) {
+					ed.DidEnterBackground ();
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 		}
 
 		public override void WillEnterForeground (UIApplication application)
 		{
-			UpdateFonts ();
+			try {
+				UpdateFonts ();
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
-			var ed = CurrentDocumentEditor;
-			if (ed != null) {
-				ed.WillEnterForeground ();
+			try {
+				var ed = CurrentDocumentEditor;
+				if (ed != null) {
+					ed.WillEnterForeground ();
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 		}
 
-		public override bool OpenUrl (UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
+		bool HandleDropboxUrl (NSUrl url)
 		{
 			var account = DBAccountManager.SharedManager.HandleOpenURL (url);
 			if (account != null) {
-
 				var fman = FileSystemManager.Shared;
-
 				var fs = fman.FileSystems.OfType<DropboxFileSystem> ().FirstOrDefault (x => x.UserId == account.UserId);
-
 				if (fs != null) {
 					Debug.WriteLine ("Dropbox: Existing account detected!");
-				} else {
+				}
+				else {
 					var dbfs = new DBFilesystem (account);
 					DBFilesystem.SharedFilesystem = dbfs;
 					Debug.WriteLine ("Dropbox: App linked successfully!");
-
 					fs = new DropboxFileSystem (account, dbfs);
 					FileSystemManager.Shared.Add (fs);
 				}
-
 				if (DropboxFileSystemProvider.AddCompletionSource != null) {
 					DropboxFileSystemProvider.AddCompletionSource.SetResult (fs);
 					DropboxFileSystemProvider.AddCompletionSource = null;
 				}
-
 				if (fs.IsAvailable) {
-					SetFileSystemAsync (fs, true).ContinueWith (t => {});
+					SetFileSystemAsync (fs, true).ContinueWith (t =>  {
+					});
 				}
-
 				return true;
 			}
+			return false;
+		}
 
-			if (url.Scheme == App.UrlScheme || url.Scheme == "file") {
-				// Ignore pending operation
-				Settings.LastDocumentPath = "";
+		public override bool OpenUrl (UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
+		{
+			try {
+				if (HandleDropboxUrl (url))
+					return true;
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 
-				pendingUrl = url;
-				if (uiInitialized) {
-					OpenPendingUrl (null);
+			try {
+				if (url.Scheme == App.UrlScheme || url.Scheme == "file") {
+					// Ignore pending operation
+					Settings.LastDocumentPath = "";
+				
+					pendingUrl = url;
+					if (uiInitialized) {
+						OpenPendingUrl (null);
+					}
+					return true;
 				}
-				return true;
+			} catch (Exception ex) {
+				Log.Error (ex);				
 			}
 
 			return false;
 		}
-
-
 
 		protected string GetPathFromTitle (string rawTitle)
 		{
@@ -673,7 +730,7 @@ namespace Praeclarum.UI
 		void ShowErrorAndExit (Exception exception)
 		{
 			try {
-				Debug.WriteLine (exception);
+				Log.Error (exception);
 
 				Exception ex = exception;
 				while (ex.InnerException != null)
@@ -681,12 +738,16 @@ namespace Praeclarum.UI
 
 				openErrorAlert = new UIAlertView ("Cannot Open", ex.Message, null, "OK");
 				openErrorAlert.Clicked +=  async (sender, e) => {
-					await CloseOpenedDoc ();
+					try {
+						await CloseOpenedDoc ();
+					} catch (Exception ex2) {
+						Log.Error (ex2);						
+					}
 				};
 				openErrorAlert.Show ();
 
 			} catch (Exception exx) {
-				Debug.WriteLine (exx);				
+				Log.Error (exx);
 			}
 		}
 
@@ -1057,7 +1118,13 @@ namespace Praeclarum.UI
 			ActionSheet.AddButton (msg);
 			ActionSheet.AddButton ("Cancel");
 			ActionSheet.CancelButtonIndex = 1;
-			ActionSheet.Clicked += (ss, se) => tcs.SetResult ((int)se.ButtonIndex);
+			ActionSheet.Clicked += (ss, se) => {
+				try {
+					tcs.SetResult ((int)se.ButtonIndex);
+				} catch (Exception ex) {
+					Log.Error (ex);					
+				}
+			};
 
 			ActionSheet.ShowFrom (duplicateButton, true);
 
@@ -1114,7 +1181,13 @@ namespace Praeclarum.UI
 			ActionSheet.AddButton ("Cancel");
 			ActionSheet.DestructiveButtonIndex = 0;
 			ActionSheet.CancelButtonIndex = 1;
-			ActionSheet.Clicked += (ss, se) => tcs.SetResult ((int)se.ButtonIndex);
+			ActionSheet.Clicked += (ss, se) => {
+				try {
+					tcs.SetResult ((int)se.ButtonIndex);
+				} catch (Exception ex) {
+					Log.Error (ex);					
+				}
+			};
 
 			ActionSheet.ShowFrom (deleteButton, true);
 

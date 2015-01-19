@@ -153,10 +153,15 @@ namespace Praeclarum.UI
 
 		public override nint RowsInSection (UITableView tableview, nint section)
 		{
-			var c = controller.Items.Count;
-			if (controller.IsSyncing)
-				c = 1;
-			return c;
+			try {
+				var c = controller.Items.Count;
+				if (controller.IsSyncing)
+					c = 1;
+				return c;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return 0;
+			}
 		}
 
 		static readonly UIImage directoryImage = UIImage.FromBundle ("Folder");
@@ -192,44 +197,49 @@ namespace Praeclarum.UI
 
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
-			var row = indexPath.Row;
-			if (controller.IsSyncing)
-				return GetNotReadyCell (tableView);
-
-			var item = controller.Items[row];
-			var d = item.Reference;
-
-			var isDir = d.File.IsDirectory;
-
-			var id = isDir ? "D" : "F";
-
-			var c = tableView.DequeueReusableCell (id);
-
-			if (c == null) {
-				c = new UITableViewCell (UITableViewCellStyle.Value1, id);
-				theme.Apply (c);
-
-				c.Accessory = (isPhone||isDir) ? UITableViewCellAccessory.DisclosureIndicator : UITableViewCellAccessory.None;
-				c.Tag = row;
-
+			try {
+				var row = indexPath.Row;
+				if (controller.IsSyncing)
+					return GetNotReadyCell (tableView);
+				
+				var item = controller.Items [row];
+				var d = item.Reference;
+				
+				var isDir = d.File.IsDirectory;
+				
+				var id = isDir ? "D" : "F";
+				
+				var c = tableView.DequeueReusableCell (id);
+				
+				if (c == null) {
+					c = new UITableViewCell (UITableViewCellStyle.Value1, id);
+					theme.Apply (c);
+				
+					c.Accessory = (isPhone || isDir) ? UITableViewCellAccessory.DisclosureIndicator : UITableViewCellAccessory.None;
+					c.Tag = row;
+				
+				}
+				
+				if (isDir) {
+					c.ImageView.Image = directoryImage;
+				}
+				
+				c.TextLabel.Text = d.Name;
+				c.AccessibilityLabel = d.Name;
+				
+				if (d.File.IsDownloaded) {
+					c.DetailTextLabel.Text = d.File.IsDirectory ? "" : d.ModifiedAgo;
+					c.SelectionStyle = UITableViewCellSelectionStyle.Gray;
+				} else {
+					c.DetailTextLabel.Text = string.Format ("downloading {0:0}%...", d.File.DownloadProgress * 100);
+					c.SelectionStyle = UITableViewCellSelectionStyle.None;
+				}
+				
+				return c;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return new UITableViewCell ();
 			}
-
-			if (isDir) {
-				c.ImageView.Image = directoryImage;
-			}
-
-			c.TextLabel.Text = d.Name;
-			c.AccessibilityLabel = d.Name;
-
-			if (d.File.IsDownloaded) {
-				c.DetailTextLabel.Text = d.File.IsDirectory ? "" : d.ModifiedAgo;
-				c.SelectionStyle = UITableViewCellSelectionStyle.Gray;
-			} else {
-				c.DetailTextLabel.Text = string.Format ("downloading {0:0}%...", d.File.DownloadProgress*100);
-				c.SelectionStyle = UITableViewCellSelectionStyle.None;
-			}
-
-			return c;
 		}
 
 		public override async void RowSelected (UITableView tableView, NSIndexPath indexPath)

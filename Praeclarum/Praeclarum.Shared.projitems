@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{B8A8BCD4-7815-4994-A9AF-3E603C844835}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Praeclarum.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AsyncExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HtmlRichText.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ListDiff.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Log.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RichText.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StringHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StringRange.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\Application.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\Document.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\DocumentApplication.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\DocumentReference.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\IAppSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\IDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\Graphics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\NullGraphics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\Rectangle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\Stroke.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\SvgGraphics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\Vector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\WmfGraphics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\FileSystemManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\IConsole.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\IFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ICanvas.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\IDocumentEditor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\IDocumentsView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ITextEditor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ITimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\IView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\UserInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\Point.cs" />
+  </ItemGroup>
+</Project>

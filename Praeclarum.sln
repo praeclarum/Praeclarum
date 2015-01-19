@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum", "Praeclarum\Pr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Android", "Praeclarum.Android\Praeclarum.Android.csproj", "{1A598D1A-2E83-4387-8F57-15A42ED5549D}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.iOS.Shared", "Praeclarum.iOS\Praeclarum.iOS.Shared.shproj", "{97D7EEB3-E116-4790-824A-54A8BB53D102}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.Shared", "Praeclarum\Praeclarum.Shared.shproj", "{B8A8BCD4-7815-4994-A9AF-3E603C844835}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,8 +35,5 @@ Global
 		{BAEC0100-059C-4750-90E4-2D0392A76713}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAEC0100-059C-4750-90E4-2D0392A76713}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAEC0100-059C-4750-90E4-2D0392A76713}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = Praeclarum.Android\Praeclarum.Android.csproj
 	EndGlobalSection
 EndGlobal

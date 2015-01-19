@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{97D7EEB3-E116-4790-824A-54A8BB53D102}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Praeclarum.iOS.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)CTStringAttributesWrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NSMutableAttributedStringWrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)OpenUrlCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SingleThreadQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\DocumentAppSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\TextDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\CoreGraphicsGraphics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\CloudFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\DeviceFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\DropboxFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\EmptyFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ActivityIndicator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Canvas.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentAppDelegate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentEditor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentListAppDelegate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentListView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentThumbnailsAppDelegate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentThumbnailsView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentsViewController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Editor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ImageCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Layout.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\MoveDocumentsForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\OldForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\PForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\PFormTableViewController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ProceduralImage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ScrollableCanvas.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\SelectableButtonItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\StorageForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TextInputController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TitleView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ViewAnimation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\WhiteTheme.cs" />
+  </ItemGroup>
+</Project>

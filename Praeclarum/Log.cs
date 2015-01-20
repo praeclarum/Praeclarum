@@ -21,7 +21,7 @@ namespace Praeclarum
 				Android.Util.Log.Info (Domain, line);
 			}
 			#elif MONOMAC
-			if (_pendingType == "E") {
+			if (type == "E") {
 				Console.WriteLine ("ERROR: " + line);
 			}
 			else {

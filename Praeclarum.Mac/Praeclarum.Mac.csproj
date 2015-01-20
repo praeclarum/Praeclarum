@@ -170,6 +170,9 @@
     <Compile Include="..\Praeclarum\HtmlRichText.cs">
       <Link>HtmlRichText.cs</Link>
     </Compile>
+    <Compile Include="..\Praeclarum\Log.cs">
+      <Link>Log.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

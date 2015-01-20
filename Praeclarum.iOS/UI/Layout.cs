@@ -262,7 +262,11 @@ namespace Praeclarum.UI
 			if (expr.NodeType == ExpressionType.Convert) {
 				var cexpr = (UnaryExpression)expr;
 				var op = Eval (cexpr.Operand);
-				return Convert.ChangeType (op, cexpr.Type);
+				if (cexpr.Method != null) {
+					return cexpr.Method.Invoke (null, new[]{ op });
+				} else {
+					return Convert.ChangeType (op, cexpr.Type);
+				}
 			}
 
 			return Expression.Lambda (expr).Compile ().DynamicInvoke ();

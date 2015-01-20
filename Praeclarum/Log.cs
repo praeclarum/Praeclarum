@@ -8,7 +8,12 @@ namespace Praeclarum
 
 		public static void Error (Exception ex)
 		{
-			WriteLine ("E", ex.ToString ());
+			try {
+				if (ex == null)
+					return;
+				WriteLine ("E", ex.ToString ());
+			} catch {
+			}
 		}
 
 		static void WriteLine (string type, string line)
@@ -37,6 +42,65 @@ namespace Praeclarum
 			//Console.WriteLine (line);
 			#endif
 		}
+
+		public static string GetUserErrorMessage (Exception ex)
+		{
+			if (ex == null)
+				return "";
+
+			var i = ex;
+			while (i.InnerException != null) {
+				i = i.InnerException;
+			}
+			return i.Message;
+		}
+
+		#if __IOS__
+		public static void ShowError (this Foundation.NSObject obj, Exception ex, string format, params string[] args)
+		{
+			var title = format;
+			try {
+				title = string.Format (format, args);
+			} catch (Exception ex2) {
+				Log.Error (ex2);
+			}
+			ShowError (obj, ex, title);
+		}
+		public static void ShowError (this Foundation.NSObject obj, Exception ex, string title = "")
+		{
+			if (ex == null)
+				return;
+
+			Error (ex);
+
+			try {
+				if (string.IsNullOrEmpty (title)) {
+					title = "Error";
+				}
+				var message = GetUserErrorMessage (ex);
+				#if DEBUG
+				message += "\n\n" + ((ex.GetType () == typeof (Exception)) ? "" : ex.GetType ().Name);
+				message += " " + ex.StackTrace;
+				#endif
+				if (obj != null) {
+					obj.BeginInvokeOnMainThread (() => {
+						try {
+							var alert = new UIKit.UIAlertView (
+								title,
+								message,
+								null,
+								"OK");
+							alert.Show ();
+						} catch (Exception ex3) {
+							Error (ex3);
+						}
+					});
+				}
+			} catch (Exception ex2) {
+				Error (ex2);
+			}
+		}
+		#endif
 	}
 }
 

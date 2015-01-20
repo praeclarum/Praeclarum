@@ -44,5 +44,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\TitleView.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ViewAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\WhiteTheme.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Graphics\GLGraphics.cs" />
   </ItemGroup>
 </Project>

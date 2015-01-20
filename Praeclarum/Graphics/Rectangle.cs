@@ -1,6 +1,6 @@
 using System;
 
-#if MONOTOUCH
+#if __IOS__
 using NativeSize = CoreGraphics.CGSize;
 using NativePoint = CoreGraphics.CGPoint;
 using NativeRect = CoreGraphics.CGRect;

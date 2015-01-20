@@ -2,7 +2,7 @@ using System;
 using Praeclarum.Graphics;
 using System.Runtime.InteropServices;
 
-#if MONOTOUCH
+#if __IOS__
 using Foundation;
 using ObjCRuntime;
 using NativeNSMutableAttributedString = Foundation.NSMutableAttributedString;
@@ -33,7 +33,7 @@ namespace Praeclarum
 			ClassName = className;
 		}
 
-		#if MONOTOUCH
+		#if __IOS__
 		static readonly NSString FontAttributeName = new NSString ("NSFont");
 		static readonly NSString ForegroundColorAttributeName = new NSString ("NSColor");
 		static readonly NSString BackgroundColorAttributeName = new NSString ("NSBackgroundColor");
@@ -95,7 +95,7 @@ namespace Praeclarum
 					color.BlueValue,
 					color.AlphaValue);
 			}
-			#if MONOTOUCH
+			#if __IOS__
 			return NativeColor.FromRGBA (
 				color.Red,
 				color.Green,

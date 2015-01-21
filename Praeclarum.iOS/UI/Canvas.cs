@@ -80,55 +80,75 @@ namespace Praeclarum.UI
 
 		public override void Draw (CoreGraphics.CGRect rect)
 		{
-			base.Draw (rect);
-
-			var c = UIGraphics.GetCurrentContext ();
-
-			var e = new CanvasDrawingEventArgs (
-				new CoreGraphicsGraphics (c, true),
-				Bounds.ToRectangleF ()
-			);
-
-			Drawing (this, e);
+			try {
+				base.Draw (rect);
+				
+				var c = UIGraphics.GetCurrentContext ();
+				
+				var e = new CanvasDrawingEventArgs (
+					        new CoreGraphicsGraphics (c, true),
+					        Bounds.ToRectangleF ()
+				        );
+				
+				Drawing (this, e);
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 
 		public override void TouchesBegan (Foundation.NSSet touches, UIEvent evt)
 		{
-			foreach (UITouch t in touches) {
-				TouchBegan (this, new CanvasTouchEventArgs {
-					TouchId = t.Handle.ToInt32 (),
-					Location = t.LocationInView (this).ToPointF (),
-				});
+			try {
+				foreach (UITouch t in touches) {
+					TouchBegan (this, new CanvasTouchEventArgs {
+						TouchId = t.Handle.ToInt32 (),
+						Location = t.LocationInView (this).ToPointF (),
+					});
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
 		public override void TouchesMoved (Foundation.NSSet touches, UIEvent evt)
 		{
-			foreach (UITouch t in touches) {
-				TouchMoved (this, new CanvasTouchEventArgs {
-					TouchId = t.Handle.ToInt32 (),
-					Location = t.LocationInView (this).ToPointF (),
-				});
+			try {
+				foreach (UITouch t in touches) {
+					TouchMoved (this, new CanvasTouchEventArgs {
+						TouchId = t.Handle.ToInt32 (),
+						Location = t.LocationInView (this).ToPointF (),
+					});
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
 		public override void TouchesEnded (Foundation.NSSet touches, UIEvent evt)
 		{
-			foreach (UITouch t in touches) {
-				TouchEnded (this, new CanvasTouchEventArgs {
-					TouchId = t.Handle.ToInt32 (),
-					Location = t.LocationInView (this).ToPointF (),
-				});
+			try {
+				foreach (UITouch t in touches) {
+					TouchEnded (this, new CanvasTouchEventArgs {
+						TouchId = t.Handle.ToInt32 (),
+						Location = t.LocationInView (this).ToPointF (),
+					});
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
 		public override void TouchesCancelled (Foundation.NSSet touches, UIEvent evt)
 		{
-			foreach (UITouch t in touches) {
-				TouchCancelled (this, new CanvasTouchEventArgs {
-					TouchId = t.Handle.ToInt32 (),
-					Location = t.LocationInView (this).ToPointF (),
-				});
+			try {
+				foreach (UITouch t in touches) {
+					TouchCancelled (this, new CanvasTouchEventArgs {
+						TouchId = t.Handle.ToInt32 (),
+						Location = t.LocationInView (this).ToPointF (),
+					});
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 	}

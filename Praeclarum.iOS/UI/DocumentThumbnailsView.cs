@@ -635,34 +635,38 @@ namespace Praeclarum.UI
 
 			public override void Draw (CGRect rect)
 			{
-				base.Draw (rect);
-
-				var c = UIGraphics.GetCurrentContext ();
-
-				var b = Bounds;
-
-				c.SetLineWidth (2.0f);
-
-				var color = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor);
-
-				color.SetStroke ();
-
-				var size = (nfloat)(Math.Min (b.Width, b.Height) * 0.5);
-				var f = new CGRect ((b.Width - size) / 2, (b.Height - size) / 2, size, size);
-				f.X = (int)f.X;
-				f.Y = (int)f.Y;
-
-				c.MoveTo (f.Left, f.GetMidY ());
-				c.AddLineToPoint (f.Right, f.GetMidY ());
-				c.StrokePath ();
-
-				c.MoveTo (f.GetMidX (), f.Top);
-				c.AddLineToPoint (f.GetMidX (), f.Bottom);
-				c.StrokePath ();
-
-				if (Editing) {
-					NotSelectableColor.SetFill ();
-					c.FillRect (b);
+				try {
+					base.Draw (rect);
+					
+					var c = UIGraphics.GetCurrentContext ();
+					
+					var b = Bounds;
+					
+					c.SetLineWidth (2.0f);
+					
+					var color = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor);
+					
+					color.SetStroke ();
+					
+					var size = (nfloat)(Math.Min (b.Width, b.Height) * 0.5);
+					var f = new CGRect ((b.Width - size) / 2, (b.Height - size) / 2, size, size);
+					f.X = (int)f.X;
+					f.Y = (int)f.Y;
+					
+					c.MoveTo (f.Left, f.GetMidY ());
+					c.AddLineToPoint (f.Right, f.GetMidY ());
+					c.StrokePath ();
+					
+					c.MoveTo (f.GetMidX (), f.Top);
+					c.AddLineToPoint (f.GetMidX (), f.Bottom);
+					c.StrokePath ();
+					
+					if (Editing) {
+						NotSelectableColor.SetFill ();
+						c.FillRect (b);
+					}
+				} catch (Exception ex) {
+					Log.Error (ex);
 				}
 			}
 		}

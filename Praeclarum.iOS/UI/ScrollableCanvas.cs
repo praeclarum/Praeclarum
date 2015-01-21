@@ -170,8 +170,12 @@ namespace Praeclarum.UI
 
 		public override void LayoutSubviews ()
 		{
-			base.LayoutSubviews ();
-			SetVisibleArea ();
+			try {
+				base.LayoutSubviews ();
+				SetVisibleArea ();
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 
 		public void SetVisibleArea ()

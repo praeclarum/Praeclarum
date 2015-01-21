@@ -52,10 +52,14 @@ namespace Praeclarum.UI
 
 		public override void DrawRect (System.Drawing.RectangleF dirtyRect)
 		{
-			var c = NSGraphicsContext.CurrentContext.GraphicsPort;
-			var g = new CoreGraphicsGraphics (c, true);
-			var e = new CanvasDrawingEventArgs (g, Bounds.ToRectangleF ());
-			Drawing (this, e);
+			try {
+				var c = NSGraphicsContext.CurrentContext.GraphicsPort;
+				var g = new CoreGraphicsGraphics (c, true);
+				var e = new CanvasDrawingEventArgs (g, Bounds.ToRectangleF ());
+				Drawing (this, e);
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 	}
 }

@@ -23,24 +23,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-#if MONOMAC
-using MonoMac.AppKit;
-using MonoMac.CoreGraphics;
-using MonoMac.CoreText;
-using MonoMac.Foundation;
-using NativeSize = System.Drawing.SizeF;
-using NativePoint = System.Drawing.PointF;
-using NativeRect = System.Drawing.RectangleF;
-using NativeValue = System.Single;
-#else
 using CoreGraphics;
 using CoreText;
 using Foundation;
-using UIKit;
 using NativeSize = CoreGraphics.CGSize;
 using NativePoint = CoreGraphics.CGPoint;
 using NativeRect = CoreGraphics.CGRect;
 using NativeValue = System.nfloat;
+
+#if MONOMAC
+using AppKit;
+#else
+using UIKit;
 #endif
 
 namespace Praeclarum.Graphics
@@ -97,13 +91,8 @@ namespace Praeclarum.Graphics
 		{
 			_color = c;
 			var cgcol = c.GetCGColor ();
-#if MONOMAC
-			_c.SetFillColorWithColor (cgcol);
-			_c.SetStrokeColorWithColor (cgcol);
-#else
 			_c.SetFillColor (cgcol);
 			_c.SetStrokeColor (cgcol);
-#endif
 			_g = null;
 		}
 
@@ -410,7 +399,7 @@ namespace Praeclarum.Graphics
 #if MONOMAC
 			var img = new NSImage ("Images/" + filename);
 			var rect = new NativeRect (NativePoint.Empty, img.Size);
-			return new UIKitImage (img.AsCGImage (ref rect, NSGraphicsContext.CurrentContext, new MonoMac.Foundation.NSDictionary ()));
+			return new UIKitImage (img.AsCGImage (ref rect, NSGraphicsContext.CurrentContext, new Foundation.NSDictionary ()));
 #else
 			return new UIKitImage (UIImage.FromFile ("Images/" + filename).CGImage);
 #endif
@@ -447,7 +436,7 @@ namespace Praeclarum.Graphics
 		}
 		public static Color GetColor (this NSColor c)
 		{
-			float r, g, b, a;
+			nfloat r, g, b, a;
 			c.GetRgba (out r, out g, out b, out a);
 			return new Color ((int)(r * 255 + 0.5f), (int)(g * 255 + 0.5f), (int)(b * 255 + 0.5f), (int)(a * 255 + 0.5f));
 		}

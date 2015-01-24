@@ -2,21 +2,15 @@ using System;
 using Praeclarum.Graphics;
 using System.Runtime.InteropServices;
 
-#if __IOS__
 using Foundation;
 using ObjCRuntime;
 using NativeNSMutableAttributedString = Foundation.NSMutableAttributedString;
 using NativeCTStringAttributes = CoreText.CTStringAttributes;
-using NativeColor = UIKit.UIColor;
 using CGColor = CoreGraphics.CGColor;
+#if MONOTOUCH
+using NativeColor = UIKit.UIColor;
 #elif MONOMAC
-using MonoMac.CoreText;
-using MonoMac.Foundation;
-using MonoMac.ObjCRuntime;
-using NativeNSMutableAttributedString = MonoMac.Foundation.NSMutableAttributedString;
-using NativeCTStringAttributes = MonoMac.CoreText.CTStringAttributes;
-using NativeColor = MonoMac.AppKit.NSColor;
-using CGColor = MonoMac.CoreGraphics.CGColor;
+using NativeColor = AppKit.NSColor;
 #endif
 
 namespace Praeclarum
@@ -80,7 +74,7 @@ namespace Praeclarum
 			#if MONOTOUCH
 			attrs.Dictionary.SetValue (FontAttributeName, UIKit.UIFont.FromName (fontName, size));
 			#elif MONOMAC
-			attrs.Font = new CTFont (fontName, size);
+			attrs.Font = new CoreText.CTFont (fontName, size);
 			#endif
 		}
 

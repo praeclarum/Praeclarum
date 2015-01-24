@@ -1,13 +1,9 @@
 using System;
 
-#if __IOS__
+#if __UNIFIED__
 using NativeSize = CoreGraphics.CGSize;
 using NativePoint = CoreGraphics.CGPoint;
 using NativeRect = CoreGraphics.CGRect;
-#else
-using NativeSize = System.Drawing.SizeF;
-using NativePoint = System.Drawing.PointF;
-using NativeRect = System.Drawing.RectangleF;
 #endif
 
 namespace Praeclarum.Graphics

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>{4E4684C2-1942-4B53-B8D5-F8E715716A3D}</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Praeclarum.Mac.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)MainWindowController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Canvas.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Timer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\UserInterfaceWindow.cs" />
+  </ItemGroup>
+</Project>

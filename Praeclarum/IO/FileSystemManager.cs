@@ -39,7 +39,7 @@ namespace Praeclarum.IO
 		public IFileSystem ChooseFileSystem (string lastFileSystemId)
 		{
 			var fs = FileSystems.FirstOrDefault (x => x.IsAvailable && x.Id == lastFileSystemId);
-			#if MONOTOUCH
+			#if __IOS__
 			if (fs == null)
 				fs = FileSystems.OfType<DeviceFileSystem> ().First (x => x.IsAvailable);
 			#endif

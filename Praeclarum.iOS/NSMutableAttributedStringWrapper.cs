@@ -71,7 +71,7 @@ namespace Praeclarum
 			if (string.IsNullOrEmpty (fontName) || size <= 0.1f)
 				return;
 
-			#if MONOTOUCH
+			#if __IOS__
 			attrs.Dictionary.SetValue (FontAttributeName, UIKit.UIFont.FromName (fontName, size));
 			#elif MONOMAC
 			attrs.Font = new CoreText.CTFont (fontName, size);
@@ -150,7 +150,7 @@ namespace Praeclarum
 
 		void SetUnderline ()
 		{
-			#if MONOTOUCH
+			#if __IOS__
 			var color = UIKit.UIColor.FromRGBA (
 				underlineColor.Red,
 				underlineColor.Green,
@@ -177,7 +177,7 @@ namespace Praeclarum
 			set {
 				link = value;
 				if (!string.IsNullOrEmpty (link)) {
-					#if MONOTOUCH
+					#if __IOS__
 					attrs.Dictionary.SetValue (LinkAttributeName, new NSString (link));
 					#elif MONOMAC
 					attrs.Dictionary.SetValue (LinkAttributeName, new NSString (link));

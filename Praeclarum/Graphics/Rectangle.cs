@@ -151,27 +151,23 @@ namespace Praeclarum.Graphics
 	public static class RectangleEx
 	{
 #if !PORTABLE
-		public static NativeRect ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
-		{
-			return new NativeRect (rect.Left, rect.Top, rect.Width, rect.Height);
-		}
-
-		public static Praeclarum.Graphics.RectangleF ToRectangleF (this NativeRect rect)
-		{
-			return new Praeclarum.Graphics.RectangleF ((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
-		}
-
         public static Praeclarum.Graphics.RectangleF ToRectangleF (this System.Drawing.Rectangle rect)
         {
             return new Praeclarum.Graphics.RectangleF ((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
         }
+#endif
+#if __UNIFIED__
+        public static NativeRect ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
+        {
+            return new NativeRect (rect.Left, rect.Top, rect.Width, rect.Height);
+        }
 
-//        public static Praeclarum.Graphics.RectangleF ToRectangleF (this CoreGraphics.CGRect rect)
-//        {
-//            return new Praeclarum.Graphics.RectangleF (rect.Left, rect.Top, rect.Width, rect.Height);
-//        }
+        public static Praeclarum.Graphics.RectangleF ToRectangleF (this NativeRect rect)
+        {
+            return new Praeclarum.Graphics.RectangleF ((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
+        }
 
-		public static Praeclarum.Graphics.SizeF ToSizeF (this NativeSize size)
+        public static Praeclarum.Graphics.SizeF ToSizeF (this NativeSize size)
 		{
 			return new Praeclarum.Graphics.SizeF ((float)size.Width, (float)size.Height);
 		}

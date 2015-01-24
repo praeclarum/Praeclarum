@@ -7,7 +7,7 @@ using ObjCRuntime;
 using NativeNSMutableAttributedString = Foundation.NSMutableAttributedString;
 using NativeCTStringAttributes = CoreText.CTStringAttributes;
 using CGColor = CoreGraphics.CGColor;
-#if MONOTOUCH
+#if __IOS__
 using NativeColor = UIKit.UIColor;
 #elif MONOMAC
 using NativeColor = AppKit.NSColor;

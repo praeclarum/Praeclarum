@@ -54,6 +54,8 @@ namespace Praeclarum.UI
 		{
 //			Console.WriteLine ("GetImage: {0} {1}", key, oldestTime);
 
+			var scale = UIScreen.MainScreen.Scale;
+
 			key = key ?? "";
 
 			//
@@ -80,7 +82,7 @@ namespace Praeclarum.UI
 					var info = new FileInfo (cachePath);
 					if (info.Exists && info.LastWriteTimeUtc > oldestTime) {
 
-						var uiImage = UIImage.LoadFromData (NSData.FromFile (cachePath), 2);
+						var uiImage = UIImage.LoadFromData (NSData.FromFile (cachePath), scale);
 
 						if (uiImage != null) {
 							SetMemoryImage (key, uiImage, info.LastWriteTimeUtc);

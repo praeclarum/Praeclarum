@@ -1424,8 +1424,8 @@ namespace Praeclarum.UI
 
 		async Task<UIImage> GenerateDocumentThumbnailAsync (IDocument s, Praeclarum.Graphics.SizeF size)
 		{
+			var scale = UIScreen.MainScreen.Scale;
 			return await Task.Run (() => {
-				var scale = 2.0f;
 
 				var width = (int)(size.Width * scale);
 				var height = (int)(size.Height * scale);

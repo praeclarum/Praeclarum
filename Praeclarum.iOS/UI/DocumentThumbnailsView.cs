@@ -509,19 +509,12 @@ namespace Praeclarum.UI
 
 		protected UILabel label;
 
-		static readonly nfloat screenScale = UIScreen.MainScreen.Scale;
-
 		protected CGRect ThumbnailFrame
 		{
 			get {
 				var b = Bounds;
-
-				var tw = ThumbnailSize.Width;
-				var th = ThumbnailSize.Height;
-
-				var w = tw + (screenScale > 1 ? 1 : 2);
-				var h = th + (screenScale > 1 ? 0.5f : 1);
-
+				var w = ThumbnailSize.Width;
+				var h = ThumbnailSize.Height;
 				return new CGRect ((b.Width - w)/2, 0, w, h);
 			}
 		}

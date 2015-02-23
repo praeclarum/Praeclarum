@@ -156,6 +156,7 @@ namespace Praeclarum.UI
 							controller.ValidateAndNotify);
 						var i = cell.InputField;
 						i.Placeholder = controller.InputText;
+						i.Text = controller.InputText;
 						i.AccessibilityLabel = controller.Title;
 						i.BecomeFirstResponder ();
 					}

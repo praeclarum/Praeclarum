@@ -157,7 +157,7 @@ namespace Praeclarum.Graphics
 		}
 	}
 
-	class NullGraphicsFontMetrics : IFontMetrics
+	public class NullGraphicsFontMetrics : IFontMetrics
 	{
 		int _height;
 		int _charWidth;

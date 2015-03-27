@@ -392,7 +392,7 @@ namespace Praeclarum.Graphics
 		}
 	}
 
-	class SvgGraphicsFontMetrics : IFontMetrics
+	public class SvgGraphicsFontMetrics : IFontMetrics
 	{
 		int _height;
 		

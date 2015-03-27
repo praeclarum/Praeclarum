@@ -170,7 +170,7 @@ namespace Praeclarum.Graphics
 		}
 	}
 
-	class GdipGraphicsFontMetrics : IFontMetrics
+	public class GdipGraphicsFontMetrics : IFontMetrics
 	{
 		int _height;
 		int _charWidth;

@@ -507,7 +507,7 @@ namespace Praeclarum.Graphics
 		}
 	}
 
-	class WmfGraphicsFontMetrics : IFontMetrics
+	public class WmfGraphicsFontMetrics : IFontMetrics
 	{
 		int _height;
 

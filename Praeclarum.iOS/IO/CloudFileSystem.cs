@@ -340,6 +340,15 @@ namespace Praeclarum.IO
 
 		void HandleQueryFileListReceived (object sender, NSNotificationEventArgs e)
 		{
+			try {
+				ReadQueryResults ();
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
+		void ReadQueryResults ()
+		{
 			var fm = new NSFileManager ();
 
 			var deadIndex = new HashSet<string> (fileIndex.Keys);
@@ -464,11 +473,24 @@ namespace Praeclarum.IO
 
 			LocalUrl = NSUrl.FromFilename (LocalPath);
 
-			var t = (NSDate)item.ValueForKey (NSMetadataQuery.ItemFSContentChangeDateKey);
-			ModifiedTime = new DateTime (2001, 1, 1).AddSeconds (t.SecondsSinceReferenceDate);
-			IsDownloaded = ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsDownloadedKey)).BoolValue;
-			var isDownloading = ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsDownloadingKey)).BoolValue;
-			DownloadProgress = isDownloading ? ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemPercentDownloadedKey)).DoubleValue/100 : 1;
+			var t = item.FileSystemContentChangeDate;
+			if (t != null) {
+				ModifiedTime = new DateTime (2001, 1, 1).AddSeconds (t.SecondsSinceReferenceDate);
+			} else {
+				ModifiedTime = DateTime.MinValue;
+			}
+
+			var isDownloading = item.UbiquitousItemIsDownloading;
+			if (UIDevice.CurrentDevice.CheckSystemVersion (7, 0)) {
+				IsDownloaded = item.DownloadingStatus == NSItemDownloadingStatus.Downloaded;
+			} else {
+				try {
+					IsDownloaded = ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsDownloadedKey)).BoolValue;
+				} catch (Exception) {
+					IsDownloaded = false;
+				}
+			}
+			DownloadProgress = isDownloading ? item.UbiquitousItemPercentDownloaded / 100.0 : 1;
 		}
 
 //		public bool IsUploaded { get { return ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsUploadedKey)).BoolValue; } }

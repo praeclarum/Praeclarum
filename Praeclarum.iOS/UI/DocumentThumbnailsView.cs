@@ -56,8 +56,6 @@ namespace Praeclarum.UI
 			RegisterClassForCell (typeof(NotReadyThumbnailCell), NotReadyId);
 			RegisterClassForCell (typeof(SortThumbnailCell), SortId);
 
-			Console.WriteLine ("SORT REF");
-
 			Delegate = new DocumentThumbnailsViewDelegate ();
 			DataSource = new DocumentThumbnailsViewDataSource ();
 

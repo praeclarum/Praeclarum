@@ -1497,6 +1497,14 @@ namespace Praeclarum.UI
 						tcs.SetResult (success);
 					};
 
+					if (UIDevice.CurrentDevice.CheckSystemVersion (8, 0)) {
+						try {
+							a.PopoverPresentationController.BarButtonItem = fromController.NavigationItem.LeftBarButtonItem;
+						} catch (Exception ex) {
+							a.PopoverPresentationController.SourceView = fromController.View;
+						}
+					}
+
 					fromController.PresentViewController (a, true, null);
 
 					await tcs.Task;

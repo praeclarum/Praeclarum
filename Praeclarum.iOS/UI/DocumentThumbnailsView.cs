@@ -466,9 +466,9 @@ namespace Praeclarum.UI
 			if (ios7) {
 				segs.TintColor = darkColor;
 			} else {
-				segs.TintColor = UIColor.FromWhiteAlpha (165/255.0f, 1);
+				segs.TintColor = UIColor.FromWhiteAlpha (165 / 255.0f, 1);
 				segs.SetTitleTextAttributes (new UITextAttributes {
-					TextColor = UIColor.FromWhiteAlpha (220/255.0f, 1),
+					TextColor = UIColor.FromWhiteAlpha (220 / 255.0f, 1),
 					TextShadowColor = UIColor.Gray,
 					TextShadowOffset = new UIOffset (0, -1),
 				}, UIControlState.Normal);
@@ -482,13 +482,23 @@ namespace Praeclarum.UI
 
 			segs.SelectedSegment = sort == DocumentsSort.Name ? 1 : 0;
 			segs.ValueChanged += HandleValueChanged;
+		}
 
-			ContentView.AddSubview (segs);
+		bool filledContent = false;
+		public void FillContentView ()
+		{
+			if (filledContent)
+				return;
+			if (ContentView != null) {
+				ContentView.AddSubview (segs);
 
-			ContentView.ConstrainLayout (() =>
-				segs.Frame.GetMidX () == ContentView.Frame.GetMidX () &&
-				segs.Frame.GetMidY () == ContentView.Frame.GetMidY () &&
-				segs.Frame.Width == Width);
+				ContentView.ConstrainLayout (() =>
+					segs.Frame.GetMidX () == ContentView.Frame.GetMidX () &&
+					segs.Frame.GetMidY () == ContentView.Frame.GetMidY () &&
+					segs.Frame.Width == Width);
+
+				filledContent = true;
+			}
 		}
 
 		void HandleValueChanged (object sender, EventArgs e)
@@ -566,9 +576,24 @@ namespace Praeclarum.UI
 				BackgroundColor = BackgroundColor,
 				Opaque = true,
 			};
-
-			ContentView.AddSubview (label);
 		}
+
+		bool filledContent = false;
+		public void FillContentView ()
+		{
+			if (filledContent)
+				return;
+
+			if (ContentView != null) {
+				filledContent = true;
+
+				ContentView.AddSubview (label);
+
+				OnFillContentView ();
+			}
+		}
+
+		protected abstract void OnFillContentView ();
 
 		protected virtual void BeginEditingStyle ()
 		{
@@ -593,12 +618,15 @@ namespace Praeclarum.UI
 		{
 			frameView = new AddFrameView ();
 
-			ContentView.AddSubviews (frameView);
-
 			label.Text = "Create New";
 			label.TextColor = UIColor.Black;
 
 			SetThumbnail ();
+		}
+
+		protected override void OnFillContentView ()
+		{
+			ContentView.AddSubviews (frameView);
 		}
 
 		protected override void BeginEditingStyle ()
@@ -870,7 +898,10 @@ namespace Praeclarum.UI
 			};
 
 			frameView.AddSubview (imageView);
+		}
 
+		protected override void OnFillContentView ()
+		{
 			ContentView.AddSubviews (frameView);
 		}
 
@@ -1042,9 +1073,12 @@ namespace Praeclarum.UI
 				BackgroundColor = BackgroundColor,
 			};
 
-			ContentView.AddSubviews (bg);
-
 			SetThumbnails (null);
+		}
+
+		protected override void OnFillContentView ()
+		{
+			ContentView.AddSubviews (bg);
 		}
 
 		public override UIView CreateThumbnailView ()
@@ -1097,7 +1131,7 @@ namespace Praeclarum.UI
 		{
 			BackgroundColor = UIColor.FromRGB (222, 222, 222);
 
-			var b = ContentView.Bounds;
+			var b = Bounds;
 
 			var text = "Syncing...";
 			var font = ios7 ? UIFont.PreferredBody : UIFont.SystemFontOfSize (UIFont.SystemFontSize);
@@ -1111,7 +1145,7 @@ namespace Praeclarum.UI
 			af.Y = (b.Height - size.Height)/2;
 			activity.Frame = af;
 
-			label = new UILabel (ContentView.Bounds) {
+			label = new UILabel (b) {
 				Text = text,
 				Font = font,
 				TextColor = UIColor.FromWhiteAlpha (137/255.0f, 1),
@@ -1120,9 +1154,23 @@ namespace Praeclarum.UI
 				TextAlignment = UITextAlignment.Center,
 			};
 
-			ContentView.AddSubviews (label, activity);
+			if (ContentView != null) {
+				ContentView.AddSubviews (label, activity);
+			}
 
 			activity.StartAnimating ();
+		}
+
+		bool filledContent = false;
+		public void FillContentView ()
+		{
+			if (filledContent)
+				return;
+			if (ContentView != null) {
+				ContentView.AddSubviews (label, activity);
+
+				filledContent = true;
+			}
 		}
 	}
 
@@ -1186,6 +1234,7 @@ namespace Praeclarum.UI
 			}
 
 			var c = (BaseDocumentThumbnailCell)collectionView.DequeueReusableCell (id, indexPath);
+			c.FillContentView ();
 
 			try {
 				c.RenameRequested = controller.HandleRenameRequested;
@@ -1217,6 +1266,7 @@ namespace Praeclarum.UI
 			var controller = (DocumentThumbnailsView)collectionView;
 
 			var c = (SortThumbnailCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.SortId, indexPath);
+			c.FillContentView ();
 			c.Controller = controller;
 			c.Sort = controller.Sort;
 			return c;
@@ -1227,6 +1277,7 @@ namespace Praeclarum.UI
 			var controller = (DocumentThumbnailsView)collectionView;
 
 			var c = (AddDocumentCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.AddId, indexPath);
+			c.FillContentView ();
 			c.ThumbnailSize = controller.ThumbnailSize;
 			c.Editing = controller.Editing;
 			c.Selecting = controller.Selecting;
@@ -1237,7 +1288,8 @@ namespace Praeclarum.UI
 
 		UICollectionViewCell GetNotReadyCell (UICollectionView collectionView, NSIndexPath indexPath)
 		{
-			var c = (UICollectionViewCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.NotReadyId, indexPath);
+			var c = (NotReadyThumbnailCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.NotReadyId, indexPath);
+			c.FillContentView ();
 			return c;
 		}
 	}

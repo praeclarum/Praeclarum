@@ -88,6 +88,10 @@ namespace Praeclarum.IO
 
 	public static class IFileSystemEx
 	{
+		public static bool HasExtension (this IFile f, string ext)
+		{
+			return f.Path.EndsWith (ext, StringComparison.InvariantCultureIgnoreCase);
+		}
 		public static Task<IFile> CreateFile (this IFileSystem fs, string path, string contents)
 		{
 			var bytes = System.Text.Encoding.UTF8.GetBytes (contents);

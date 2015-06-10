@@ -13,6 +13,10 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.iOS.Shared", "Pr
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.Shared", "Praeclarum\Praeclarum.Shared.shproj", "{B8A8BCD4-7815-4994-A9AF-3E603C844835}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Controls.Mac", "Praeclarum.Controls.Mac\Praeclarum.Controls.Mac.csproj", "{FA926E9F-A5B6-4F7B-A3A1-ED90BFF9A10B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Controls.iOS", "Praeclarum.Controls.iOS\Praeclarum.Controls.iOS.csproj", "{961DF89F-CDB2-48AB-BA17-0E9D4F341DD3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,9 +35,17 @@ Global
 		{8956A28C-EE46-4576-ADBC-CD26BD147CD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8956A28C-EE46-4576-ADBC-CD26BD147CD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8956A28C-EE46-4576-ADBC-CD26BD147CD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{961DF89F-CDB2-48AB-BA17-0E9D4F341DD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{961DF89F-CDB2-48AB-BA17-0E9D4F341DD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{961DF89F-CDB2-48AB-BA17-0E9D4F341DD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{961DF89F-CDB2-48AB-BA17-0E9D4F341DD3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BAEC0100-059C-4750-90E4-2D0392A76713}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BAEC0100-059C-4750-90E4-2D0392A76713}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAEC0100-059C-4750-90E4-2D0392A76713}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAEC0100-059C-4750-90E4-2D0392A76713}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA926E9F-A5B6-4F7B-A3A1-ED90BFF9A10B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA926E9F-A5B6-4F7B-A3A1-ED90BFF9A10B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA926E9F-A5B6-4F7B-A3A1-ED90BFF9A10B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA926E9F-A5B6-4F7B-A3A1-ED90BFF9A10B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

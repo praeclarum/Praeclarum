@@ -87,16 +87,28 @@ namespace Praeclarum.UI
 		public List<DocumentReference> Docs { get; private set; }
 		List<DocumentsViewItem> items = new List<DocumentsViewItem> ();
 
-		public void RemoveDocument (string path, bool animated)
+		public void RemoveDocuments (string[] paths, bool animated)
 		{
-			var docIndex = Docs.FindIndex (x => x.File.Path == path);
+			List<int> indices = new List<int> ();
+			foreach (var path in paths) {
+				var docIndex = Docs.FindIndex (x => x.File.Path == path);
 
-			if (docIndex < 0 || docIndex >= Docs.Count)
-				return;
+				if (docIndex < 0 || docIndex >= Docs.Count)
+					return;
 
-			Docs.RemoveAt (docIndex);
-			items.RemoveAt (docIndex);
-			docsView.DeleteItems (new[] { docIndex }, animated);
+				indices.Add (docIndex);
+			}
+
+			indices.Sort ();
+			var offset = 0;
+
+			foreach (var docIndex in indices) {
+				Docs.RemoveAt (docIndex - offset);
+				items.RemoveAt (docIndex - offset);
+				offset++;
+			}
+
+			docsView.DeleteItems (indices.ToArray(), animated);
 		}
 
 		public void UpdateDocument (int docIndex)

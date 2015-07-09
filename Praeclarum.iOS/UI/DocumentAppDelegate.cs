@@ -1090,7 +1090,7 @@ namespace Praeclarum.UI
 		async Task MoveDoc (IFile file, IFileSystem dest, string destDir, bool animated)
 		{
 			await ActiveFileSystem.MoveAsync (file, dest, destDir);
-			CurrentDocumentListController.RemoveDocument (file.Path, animated);
+			CurrentDocumentListController.RemoveDocuments (new[]{file.Path}, animated);
 		}
 
 		public async Task<bool> DuplicateDocuments (IFile[] files, UIBarButtonItem duplicateButton)
@@ -1201,9 +1201,9 @@ namespace Praeclarum.UI
 			// Perform the delete
 			//
 			try {
-				foreach (var p in files) {
-					await DeleteDoc (p.Path);
-					InvalidateThumbnail (p, deleteThumbnail:true, reloadThumbnail:false);
+				await DeleteDocs (files.Select(x => x.Path).ToArray());
+				foreach (var f in files) {
+					InvalidateThumbnail (f, deleteThumbnail: true, reloadThumbnail: false);
 				}	
 			} catch (Exception ex) {
 				Console.WriteLine (ex);	
@@ -1235,7 +1235,7 @@ namespace Praeclarum.UI
 					await CloseOpenedDoc (reloadThumbnail: false);
 				}
 
-				await DeleteDoc (docRef.File.Path);
+				await DeleteDocs (new[]{docRef.File.Path});
 
 				if (Docs.Count > 0) {
 					var newIndex = Math.Min (Docs.Count - 1, Math.Max (0, docIndex));
@@ -1264,27 +1264,32 @@ namespace Praeclarum.UI
 			}
 		}
 
-		async Task DeleteDoc (string path)
+		async Task DeleteDocs (string[] paths)
 		{
-			try {
+			List<string> delPaths = new List<string> ();
+			foreach (var path in paths) {
+				try {
 
-				var deleted = await FileSystem.DeleteFile (path);
+					var deleted = await FileSystem.DeleteFile (path);
 
-				if (deleted) {
-					CurrentDocumentListController.RemoveDocument (path, true);
-					Console.WriteLine ("DELETE {0}", path);
+					if (deleted) {
+						delPaths.Add(path);
+						Console.WriteLine ("DELETE {0}", path);
+					} else {
+						var alert = new UIAlertView (
+							           "Unable to Delete", 
+							           "An error occured while trying to delete. If the problem persists, try restarting " + App.Name + ".",
+							           null, "OK");
+						alert.Show ();
+					}
+
+				} catch (Exception ex) {
+					Console.WriteLine (ex);
 				}
-				else {
-					var alert = new UIAlertView (
-						"Unable to Delete", 
-						"An error occured while trying to delete. If the problem persists, try restarting " + App.Name + ".",
-						null, "OK");
-					alert.Show ();
-				}
-
-			} catch (Exception ex) {
-				Console.WriteLine (ex);
 			}
+
+			CurrentDocumentListController.RemoveDocuments (delPaths.ToArray(), true);
+
 		}
 
 		public void UpdateDocListName (int docIndex)

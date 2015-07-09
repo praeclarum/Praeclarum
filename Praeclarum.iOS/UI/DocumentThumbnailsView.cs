@@ -82,7 +82,7 @@ namespace Praeclarum.UI
 			var cells = VisibleCells.OfType<BaseDocumentThumbnailCell> ().ToList ();
 
 			foreach (var c in cells) {
-				c.SetDocumentSelected (SelectedDocuments.Contains (c.Document.File), true);
+				c.SetDocumentSelected (SelectedDocuments.Any (x => x.Path == c.Document.File.Path), true);
 			}
 		}
 
@@ -327,6 +327,8 @@ namespace Praeclarum.UI
 		{
 			if (indexPath.Section == 0)
 				return;
+
+			Console.WriteLine ("SELECT {0}", indexPath.Row);
 
 			var controller = (DocumentThumbnailsView)collectionView;
 

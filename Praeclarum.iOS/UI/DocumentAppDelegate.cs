@@ -1498,16 +1498,20 @@ namespace Praeclarum.UI
 				if (items.Length > 0) {
 					var tcs = new TaskCompletionSource<bool> ();
 					var a = new UIActivityViewController (items, aa);
+					a.ModalPresentationStyle = UIModalPresentationStyle.Popover;
+
 					a.CompletionHandler = (x,success) => {
 						Console.WriteLine ("COMPLETE {0} {1}", x, success);
 						tcs.SetResult (success);
 					};
 
 					if (UIDevice.CurrentDevice.CheckSystemVersion (8, 0)) {
-						try {
-							a.PopoverPresentationController.BarButtonItem = fromController.NavigationItem.LeftBarButtonItem;
-						} catch (Exception ex) {
-							a.PopoverPresentationController.SourceView = fromController.View;
+						if (a.PopoverPresentationController != null) {
+							try {
+								a.PopoverPresentationController.BarButtonItem = fromController.NavigationItem.LeftBarButtonItem;
+							} catch (Exception ex) {
+								a.PopoverPresentationController.SourceView = fromController.View;
+							}
 						}
 					}
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UIKit;
 using Praeclarum.App;
 
@@ -23,6 +24,12 @@ namespace Praeclarum.UI
 				View.BackgroundColor = UIColor.White;
 
 				OnCreated ();
+
+				viewLoaded = true;
+				foreach (var a in this.viewLoadedActions) {
+					a();
+				}
+				viewLoadedActions.Clear ();
 
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -63,6 +70,17 @@ namespace Praeclarum.UI
 				}
 			} catch (Exception ex) {
 				Log.Error (ex);
+			}
+		}
+
+		bool viewLoaded = false;
+
+		List<Action> viewLoadedActions = new List<Action>();
+		protected void WhenViewLoaded(Action action) {
+			if (viewLoaded) {
+				action ();
+			} else {
+				viewLoadedActions.Add (action);
 			}
 		}
 

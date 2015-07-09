@@ -76,7 +76,8 @@ namespace Praeclarum.UI
 				try {
 					var index = (int)se.ButtonIndex;
 					if (0 <= index && index < actions.Count) {
-						actions[index].Execute ();
+						Foundation.NSOperationQueue.MainQueue.AddOperation(() =>
+							actions[index].Execute ());
 					}
 				} catch (Exception ex) {
 					Log.Error (ex);					

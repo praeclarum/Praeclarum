@@ -922,7 +922,8 @@ namespace Praeclarum.UI
 		{
 			var c = new TextInputController {
 				Title = "Create Folder",
-				InputText = "Folder",
+				InputText = "",
+				Hint = "Enter the name of the new folder.",
 				ValidateFunc = n => ValidateNewName (n),
 			};
 

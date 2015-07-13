@@ -60,6 +60,6 @@ namespace Praeclarum.UI
 
 		void UpdateLayout ();
 
-		ObservableCollection<IFile> SelectedDocuments { get; }
+		ObservableCollection<string> SelectedDocuments { get; }
 	}
 }

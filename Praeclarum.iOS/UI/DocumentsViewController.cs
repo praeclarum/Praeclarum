@@ -555,7 +555,7 @@ namespace Praeclarum.UI
 					SetEditing (true, true);
 				}
 
-				docsView.SelectedDocuments.Add (item.Reference.File);
+				docsView.SelectedDocuments.Add (item.Reference.File.Path);
 			}
 //
 //			CGPoint p = [gestureRecognizer locationInView:self.collectionView];
@@ -579,7 +579,7 @@ namespace Praeclarum.UI
 			}
 			if (selecting) {
 				if (docsView.SelectedDocuments.Count == 1) {
-					await PerformActionOnDocument (docsView.SelectedDocuments [0].Path);
+					await PerformActionOnDocument (docsView.SelectedDocuments [0]);
 				}
 			}
 		}
@@ -744,7 +744,7 @@ namespace Praeclarum.UI
 		IFile[] GetSelectedFiles ()
 		{
 			var q = from path in docsView.SelectedDocuments
-				let dr = Docs.FirstOrDefault (x => x.File.Path == path.Path)
+				let dr = Docs.FirstOrDefault (x => x.File.Path == path)
 				        where dr != null
 			        select dr.File;
 			return q.ToArray ();

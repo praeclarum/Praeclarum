@@ -43,7 +43,7 @@ namespace Praeclarum.UI
 			: base (frame, new UICollectionViewFlowLayout ())
 		{
 			Items = new List<DocumentsViewItem> ();
-			SelectedDocuments = new ObservableCollection<IFile> ();
+			SelectedDocuments = new ObservableCollection<string> ();
 			SelectedDocuments.CollectionChanged += HandleSelectedDocumentsChanged;
 
 			AlwaysBounceVertical = true;
@@ -82,7 +82,7 @@ namespace Praeclarum.UI
 			var cells = VisibleCells.OfType<BaseDocumentThumbnailCell> ().ToList ();
 
 			foreach (var c in cells) {
-				c.SetDocumentSelected (SelectedDocuments.Any (x => x.Path == c.Document.File.Path), true);
+				c.SetDocumentSelected (SelectedDocuments.Any (x => x == c.Document.File.Path), true);
 			}
 		}
 
@@ -128,7 +128,7 @@ namespace Praeclarum.UI
 		bool selecting = false;
 		public bool Selecting { get { return selecting; } set { SetSelecting (value, false); } }
 
-		public ObservableCollection<IFile> SelectedDocuments { get; private set; }
+		public ObservableCollection<string> SelectedDocuments { get; private set; }
 
 		public void SetSelecting (bool selecting, bool animated)
 		{
@@ -348,13 +348,13 @@ namespace Praeclarum.UI
 
 					var d = item.Reference;
 
-					if (controller.SelectedDocuments.Contains (d.File)) {
+					if (controller.SelectedDocuments.Contains (d.File.Path)) {
 
-						controller.SelectedDocuments.Remove (d.File);
+						controller.SelectedDocuments.Remove (d.File.Path);
 
 					} else {
 
-						controller.SelectedDocuments.Add (d.File);
+						controller.SelectedDocuments.Add (d.File.Path);
 
 					}
 				}
@@ -1247,14 +1247,14 @@ namespace Praeclarum.UI
 					dirCell.Item = item;
 					dirCell.Editing = controller.Editing;
 					dirCell.Selecting = controller.Selecting;
-					dirCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
+					dirCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File.Path), false);
 				} else {
 					var docCell = ((DocumentThumbnailCell)c);
 					docCell.ThumbnailSize = controller.ThumbnailSize;
 					docCell.Document = d;
 					docCell.Editing = controller.Editing;
 					docCell.Selecting = controller.Selecting;
-					docCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File), false);
+					docCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File.Path), false);
 				}
 			} catch (Exception ex) {
 				Log.Error (ex);				

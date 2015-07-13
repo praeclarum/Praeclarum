@@ -106,14 +106,14 @@ namespace Praeclarum.UI
 				right.Item3, right.Item4);
 		}
 
-		static Tuple<UIView, NSLayoutAttribute, float, float> GetRight (Expression expr)
+		static Tuple<UIView, NSLayoutAttribute, nfloat, nfloat> GetRight (Expression expr)
 		{
 			var r = expr;
 
 			UIView view = null;
 			NSLayoutAttribute attr = NSLayoutAttribute.NoAttribute;
-			var mul = 1.0f;
-			var add = 0.0f;
+			nfloat mul = 1;
+			nfloat add = 0;
 			var pos = true;
 
 			if (r.NodeType == ExpressionType.Add || r.NodeType == ExpressionType.Subtract) {
@@ -153,7 +153,7 @@ namespace Praeclarum.UI
 			}
 
 			if (IsConstant (r)) {
-				add = Convert.ToSingle (Eval (r));
+				add = (nfloat)Convert.ToDouble (Eval (r));
 			} else if (r.NodeType == ExpressionType.MemberAccess || r.NodeType == ExpressionType.Call) {
 				var t = GetViewAndAttribute (r);
 				view = t.Item1;
@@ -276,7 +276,7 @@ namespace Praeclarum.UI
 				var m = mexpr.Member;
 				if (m.MemberType == MemberTypes.Field) {
 					var f = (FieldInfo)m;
-					var v = f.GetValue (Eval (mexpr.Expression));
+					var v = f.GetValue (mexpr.Expression != null ? Eval (mexpr.Expression) : null);
 					return v;
 				}
 			}

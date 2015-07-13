@@ -147,7 +147,12 @@ namespace Praeclarum.IO
 				await src.CopyAsync (f, dest, newPath);
 			}
 
-			return await dest.GetFile (newPath);
+			try {
+				return await dest.GetFile (newPath);
+
+			} catch (Exception ex) {
+				return null;
+			}
 		}
 
 		public static Task MoveAsync (this IFileSystem src, IFile file, IFileSystem dest, string destDir)

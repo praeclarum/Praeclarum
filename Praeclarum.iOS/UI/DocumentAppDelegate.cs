@@ -1075,22 +1075,23 @@ namespace Praeclarum.UI
 			//
 			// Perform the move
 			//
+			var list = CurrentDocumentListController;
 			foreach (var f in files) {
-				await MoveDoc (f, form.FileSystem, form.Directory, false);
+				await MoveDoc (f, list, form.FileSystem, form.Directory, false);
 			}
 
 			//
 			// Update the UI
 			//
-			await CurrentDocumentListController.LoadDocs ();
+			await list.LoadDocs ();
 
 			return true;
 		}
 
-		async Task MoveDoc (IFile file, IFileSystem dest, string destDir, bool animated)
+		async Task MoveDoc (IFile file, DocumentsViewController listC, IFileSystem dest, string destDir, bool animated)
 		{
 			await ActiveFileSystem.MoveAsync (file, dest, destDir);
-			CurrentDocumentListController.RemoveDocuments (new[]{file.Path}, animated);
+			listC.RemoveDocuments (new[]{file.Path}, animated);
 		}
 
 		public async Task<bool> DuplicateDocuments (IFile[] files, UIBarButtonItem duplicateButton)
@@ -1258,7 +1259,9 @@ namespace Praeclarum.UI
 		{
 			try {
 				var newFile = await ActiveFileSystem.DuplicateAsync (file);
-				AddDocRef (new DocumentReference (newFile, App.CreateDocument, isNew:false));
+				if (newFile != null) {
+					AddDocRef (new DocumentReference (newFile, App.CreateDocument, isNew:false));
+				}
 			} catch (Exception ex) {
 				Alert ("Failed to Duplicate " + file.Path, ex);
 			}

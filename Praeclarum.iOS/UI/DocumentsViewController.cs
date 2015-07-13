@@ -252,8 +252,21 @@ namespace Praeclarum.UI
 
 		public void SetOpenedDocument (int docIndex, bool animated)
 		{
-			docsView.SetOpenedDocument (docIndex, animated);
+			WhenViewLoaded (() =>
+				docsView.SetOpenedDocument (docIndex, animated));
 		}
+
+		bool viewLoaded = false;
+
+		List<Action> viewLoadedActions = new List<Action>();
+		protected void WhenViewLoaded(Action action) {
+			if (viewLoaded) {
+				action ();
+			} else {
+				viewLoadedActions.Add (action);
+			}
+		}
+
 
 		#endregion
 
@@ -345,10 +358,26 @@ namespace Praeclarum.UI
 				LoadDocs ().ContinueWith (t => {
 					if (t.IsFaulted)
 						Log.Error (t.Exception);
+
+					BeginInvokeOnMainThread(() => {
+						//
+						// Do delayed actions
+						//
+						try {
+							viewLoaded = true;
+							foreach (var a in viewLoadedActions) {
+								a();
+							}
+							viewLoadedActions.Clear();
+						} catch (Exception ex) {
+							Log.Error (ex);
+						}
+					});
 				});
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}
+
 		}
 
 		const bool makingDefaultImage = false;

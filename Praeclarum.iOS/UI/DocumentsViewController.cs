@@ -884,12 +884,20 @@ namespace Praeclarum.UI
 
 		void HandleDone (object sender, EventArgs e)
 		{
-			NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
+			try {
+				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 		}
 
 		void HandleAdd (object sender, EventArgs e)
 		{
-			DocumentAppDelegate.Shared.ShowAddUI (NavigationItem.RightBarButtonItem, dup: false, folder: true);
+			try {
+				DocumentAppDelegate.Shared.ShowAddUI (NavigationItem.RightBarButtonItem, dup: false, folder: true);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 		}
 
 		void HandleTitleTap (object sender, EventArgs e)

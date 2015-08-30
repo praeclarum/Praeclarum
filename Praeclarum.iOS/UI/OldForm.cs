@@ -65,10 +65,8 @@ namespace Praeclarum.UI
 		{
 			var actions = form.OfType<FormAction> ().ToList ();
 
-			var ActionSheet = new UIActionSheet (form.Title);
-			foreach (var a in actions) {
-				ActionSheet.Add (a.Title);
-			}
+			var ActionSheet = new UIActionSheet (form.Title,
+				null, null, null, actions.Select (x => x.Title).ToArray ());
 
 			ActionSheet.CancelButtonIndex = ActionSheet.ButtonCount - 1;
 

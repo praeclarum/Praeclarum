@@ -120,6 +120,10 @@ namespace Praeclarum.App
 
 		public IDocument Document { get; private set; }
 
+		public bool IsOpen {
+			get { return Document != null || local != null; }
+		}
+
 		public async Task<IDocument> Open ()
 		{
 			if (Document != null)

@@ -11,6 +11,8 @@ namespace Praeclarum.UI
 
 		public DocumentReference DocumentReference { get { return docRef; } }
 
+		public bool IsPreviewing { get; set; }
+
 		public DocumentEditor (DocumentReference docRef)
 		{
 			this.docRef = docRef;
@@ -31,6 +33,22 @@ namespace Praeclarum.UI
 				}
 				viewLoadedActions.Clear ();
 
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
+		public override async void ViewWillDisappear (bool animated)
+		{
+			base.ViewWillDisappear (animated);
+
+			try {
+				if (DocumentReference != null && DocumentReference.IsOpen && IsPreviewing) {
+					Console.WriteLine ("CLOSING PREVIEW DOCUMENT");
+					UnbindDocument ();
+					UnbindUI ();
+					await DocumentReference.Close ();
+				}
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}

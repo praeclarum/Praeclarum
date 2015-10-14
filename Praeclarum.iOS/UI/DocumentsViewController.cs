@@ -20,9 +20,10 @@ namespace Praeclarum.UI
 	}
 
 	[Register ("DocumentsViewController")]
-	public class DocumentsViewController : UIViewController
+	public class DocumentsViewController : UIViewController, IUIViewControllerPreviewingDelegate
 	{
 		IDocumentsView docsView;
+		IUIViewControllerPreviewing docsPreview;
 
 		DocumentsViewMode viewMode;
 		public DocumentsViewMode ViewMode {
@@ -146,7 +147,7 @@ namespace Praeclarum.UI
 		{
 			var FileSystem = FileSystemManager.Shared.ActiveFileSystem;
 
-			Title = (Editing || makingDefaultImage) ? "" : 
+			Title = (Editing) ? "" : 
 			        (selecting ? "Select a " + DocumentAppDelegate.Shared.App.DocumentBaseName : 
 			        (IsRoot ? DocumentAppDelegate.Shared.App.DocumentBaseNamePluralized : DirectoryName));
 
@@ -316,13 +317,7 @@ namespace Praeclarum.UI
 			//
 			try {
 				SwitchToMode (false);
-				((UIView)docsView).AddSubview (refresh);
-				
-				if (makingDefaultImage) {
-					View = new UIView {
-						BackgroundColor = DocumentThumbnailsView.DefaultBackgroundColor,
-					};
-				}
+				((UIView)docsView).AddSubview (refresh);				
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}
@@ -340,13 +335,11 @@ namespace Praeclarum.UI
 			// Set the toobar
 			//
 			try {
-				if (!makingDefaultImage) {
-					SetToolbarItems (new[] { 
-						thereforeBtn,
-						new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
-						fileSystemsBtn
-					}, false);
-				}
+				SetToolbarItems (new[] { 
+					thereforeBtn,
+					new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
+					fileSystemsBtn
+				}, false);
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}
@@ -380,8 +373,6 @@ namespace Praeclarum.UI
 
 		}
 
-		const bool makingDefaultImage = false;
-
 		void SetNormalNavItems (bool animated)
 		{
 			if (ios7) {
@@ -392,16 +383,14 @@ namespace Praeclarum.UI
 				EditButtonItem.TintColor = tint;
 			}
 
-			if (!makingDefaultImage) {
-				NavigationItem.LeftItemsSupplementBackButton = true;
-				NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
-					actionBtn,
-				}, animated);
-				NavigationItem.SetRightBarButtonItems (new UIBarButtonItem[] {
-					addBtn,
-					EditButtonItem,
-				}, animated);
-			}
+			NavigationItem.LeftItemsSupplementBackButton = true;
+			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
+				actionBtn,
+			}, animated);
+			NavigationItem.SetRightBarButtonItems (new UIBarButtonItem[] {
+				addBtn,
+				EditButtonItem,
+			}, animated);
 		}
 
 		void SetEditingNavItems (bool animated)
@@ -449,12 +438,15 @@ namespace Praeclarum.UI
 		{
 			var b = View.Bounds;
 
-
 			var oldView = docsView;
+			var oldPreview = docsPreview;
 			if (oldView != null) {
 				oldView.SortChanged -= HandleSortChanged;
 				oldView.SelectedDocuments.CollectionChanged -= HandleSelectedDocumentsChanged;
 				oldView.RenameRequested -= HandleRenameRequested;
+				if (ios9 && oldPreview != null) {
+					UnregisterForPreviewingWithContext (oldPreview);
+				}
 			}
 
 			var newView = viewMode == DocumentsViewMode.List ? 
@@ -477,6 +469,66 @@ namespace Praeclarum.UI
 
 			View = (UIView)newView;
 			View.AddGestureRecognizer (longPress);
+			if (ios9) {
+				docsPreview = RegisterForPreviewingWithDelegate (this, View);
+			}
+		}
+
+		public UIViewController GetViewControllerForPreview (IUIViewControllerPreviewing previewingContext, CoreGraphics.CGPoint location)
+		{
+			try {
+
+				if (docsView == null) return null;
+
+				var p = new Praeclarum.Graphics.PointF ((float)location.X, (float)location.Y);
+				var item = docsView.GetItemAtPoint (p);
+
+				if (item == null) return null;
+
+				var dref = item.Reference;
+				if (dref == null) return null;
+
+				var docIndex = Docs.FindIndex (x => x.File.Path == dref.File.Path);
+				if (docIndex < 0) return null;
+
+				var newEditor = DocumentAppDelegate.Shared.App.CreateDocumentEditor (docIndex, Docs);
+				if (newEditor == null) return null;
+
+				newEditor.IsPreviewing = true;
+
+				BindEditorAsync (newEditor).ContinueWith (t => {
+					if (t.IsFaulted) {
+						Log.Error(t.Exception);
+					}
+				});
+
+				return (UIViewController)newEditor;
+
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return null;
+			}
+		}
+
+		static async Task BindEditorAsync (IDocumentEditor newEditor)
+		{
+			var docRef = newEditor.DocumentReference;
+			if (!docRef.IsOpen) {
+				await docRef.Open ();
+			}
+			newEditor.BindDocument ();
+		}
+
+		public async void CommitViewController (IUIViewControllerPreviewing previewingContext, UIViewController viewControllerToCommit)
+		{
+			try {
+				var ed = viewControllerToCommit as IDocumentEditor;
+				if (ed != null) {
+					DocumentAppDelegate.Shared.OpenDocument (ed.DocumentReference.File.Path, false);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 
 		void HandleRenameRequested (DocumentReference docRef, object arg2)
@@ -793,6 +845,7 @@ namespace Praeclarum.UI
 		}
 
 		readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
+		readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
 
 		void SetSpecialNav (bool animated)
 		{

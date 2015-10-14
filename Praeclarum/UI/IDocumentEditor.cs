@@ -17,6 +17,8 @@ namespace Praeclarum.UI
 		void UnbindDocument ();
 
 		void UnbindUI ();
+
+		bool IsPreviewing { get; set; }
 	}
 }
 

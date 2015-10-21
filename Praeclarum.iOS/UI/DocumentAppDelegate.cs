@@ -17,8 +17,11 @@ namespace Praeclarum.UI
 	public class DocumentAppDelegate : UIApplicationDelegate
 	{
 		static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
+		static readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
 
 		protected UIWindow window;
+
+		protected readonly MRU mru = new MRU ();
 
 		public override UIWindow Window {
 			get {
@@ -122,6 +125,11 @@ namespace Praeclarum.UI
 			}
 
 			//
+			// Load the MRU
+			//
+			mru.InitializeMRU ();
+
+			//
 			// Apply the theme
 			//
 			try {
@@ -159,6 +167,17 @@ namespace Praeclarum.UI
 
 			window.MakeKeyAndVisible ();
 
+			var shouldPerformAdditionalDelegateHandling = true;
+
+			UIApplicationShortcutItem scitem = null;
+			if (ios9) {
+				var scitemKey = UIApplication.LaunchOptionsShortcutItemKey;
+				if (launchOptions != null && launchOptions.ContainsKey (scitemKey)) {
+					shouldPerformAdditionalDelegateHandling = false;
+					scitem = launchOptions [scitemKey] as UIApplicationShortcutItem;
+				}
+			}
+
 			//
 			// Init the file system
 			//
@@ -166,9 +185,16 @@ namespace Praeclarum.UI
 				var uiSync = TaskScheduler.FromCurrentSynchronizationContext ();
 				initFileSystemTask = InitFileSystem ();
 					
-				initFileSystemTask.ContinueWith (t => {
+				initFileSystemTask.ContinueWith (async t => {
 					if (!t.IsFaulted) {
 						App.OnFileSystemInitialized ();
+						try {
+							if (scitem != null) {
+								await HandleShortcutItemAsync (scitem);
+							}
+						} catch (Exception ex) {
+							Log.Error (ex);
+						}
 					} else {
 						Debug.WriteLine (t.Exception);
 					}
@@ -177,7 +203,7 @@ namespace Praeclarum.UI
 				Log.Error (ex);				
 			}
 
-			return true;
+			return shouldPerformAdditionalDelegateHandling;
 		}
 
 		Task initFileSystemTask;
@@ -199,6 +225,39 @@ namespace Praeclarum.UI
 		protected virtual Task OpenUrlAsync (NSUrl url)
 		{
 			return Task.FromResult (0);
+		}
+
+		public override async void PerformActionForShortcutItem (UIApplication application, UIApplicationShortcutItem shortcutItem, UIOperationHandler completionHandler)
+		{
+			try {
+				await HandleShortcutItemAsync (shortcutItem);
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+			try {
+				completionHandler (true);
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
+		async Task HandleShortcutItemAsync (UIApplicationShortcutItem scitem)
+		{
+			switch (scitem.Type) {
+			case "new":
+				break;
+			case "open":
+				{
+					var path = scitem.UserInfo ["path"].ToString ();
+					var fsId = scitem.UserInfo ["fsId"].ToString ();
+					if (FileSystem.Id != fsId) {
+						var fs = FileSystemManager.Shared.ChooseFileSystem (fsId);
+						await SetFileSystemAsync (fs, false);
+					}
+					await OpenDocument (path, false);
+				}
+				break;
+			}
 		}
 
 		void OpenPendingUrl (NSTimer obj)
@@ -718,6 +777,15 @@ namespace Praeclarum.UI
 				
 			} catch (Exception ex) {
 				ShowErrorAndExit (ex);
+			}
+
+			//
+			// Save it to the MRU
+			//
+			try {
+				mru.AddToMRU (FileSystem, docRef);
+			} catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
@@ -1528,6 +1596,62 @@ namespace Praeclarum.UI
 			}
 
 		
+		}
+
+		#endregion
+
+		#region MRU
+
+		protected class MRU
+		{
+			List<Tuple<string,string>> entries = new List<Tuple<string, string>> ();
+
+			public void InitializeMRU ()
+			{
+				if (ios9) {
+					entries =
+						UIApplication.SharedApplication.ShortcutItems
+							.Where (i => i.Type == "open" && i.UserInfo != null)
+							.Select (scitem => {
+								var path = scitem.UserInfo ["path"].ToString ();
+								var fsId = scitem.UserInfo ["fsId"].ToString ();
+								return Tuple.Create (fsId, path);
+						}).ToList ();
+				}
+			}
+
+			public void AddToMRU (IFileSystem fs, DocumentReference docRef)
+			{
+				var key = Tuple.Create (fs.Id, docRef.File.Path);
+
+				var i = entries.IndexOf (key);
+
+				if (i == 0) {
+					// OK
+					return;
+				} else if (i > 0) {
+					entries.RemoveAt (i);
+				}
+				entries.Insert (0, key);
+
+
+				Console.WriteLine ("SAVE MRU {0}", entries);
+
+				if (ios9) {
+					var icon = UIApplicationShortcutIcon.FromType (UIApplicationShortcutIconType.Compose);
+					var newItems = entries.Take (3).Select (e => {
+						var fsId = e.Item1;
+						var path = e.Item2;
+						var name = System.IO.Path.GetFileNameWithoutExtension (path);
+						var userInfo = new NSDictionary<NSString, NSObject> (
+							keys: new[] {new NSString("fsId"), new NSString("path")},
+							values: new NSObject[] {new NSString(fsId), new NSString(path)});						
+						var item = new UIMutableApplicationShortcutItem("open", "Open " + name, "", icon, userInfo);
+						return item;
+					}).ToArray ();
+					UIApplication.SharedApplication.ShortcutItems = newItems;
+				}
+			}
 		}
 
 		#endregion

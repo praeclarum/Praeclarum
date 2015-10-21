@@ -245,6 +245,9 @@ namespace Praeclarum.UI
 		{
 			switch (scitem.Type) {
 			case "new":
+				{
+					await AddAndOpenNewDocument ();
+				}
 				break;
 			case "open":
 				{

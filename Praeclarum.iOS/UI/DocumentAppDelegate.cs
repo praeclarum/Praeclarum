@@ -504,7 +504,7 @@ namespace Praeclarum.UI
 			var dl = CurrentDocumentListController;
 
 			if (dl.Directory != fileDir) {
-				await CreateDocListHierarchy (fileDir, true);
+				await CreateDocListHierarchy (fileDir, animated);
 				dl = CurrentDocumentListController;
 			}
 

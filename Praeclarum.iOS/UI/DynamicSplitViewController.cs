@@ -116,14 +116,22 @@ namespace Praeclarum.UI
 			}
 		}
 
-		protected void HandleSplitToggleButton (object sender, EventArgs e)
+		protected async void HandleSplitToggleButton (object sender, EventArgs e)
 		{
 //			Console.WriteLine ("TOGGLE");
 			var hclass = TraitCollection.HorizontalSizeClass;
+//			hclass = UIUserInterfaceSizeClass.Compact;
 
 			if (hclass == UIUserInterfaceSizeClass.Regular) {
 				secondVisible = !secondVisible;
 				ShowOrHideSecond (true);
+			} else {
+				var dismissButton = new UIBarButtonItem (UIBarButtonSystemItem.Done, (ss, ee) => this.DismissViewController (true, null));
+				Second.NavigationItem.RightBarButtonItem = dismissButton;
+				var nav = new UINavigationController (Second);
+				nav.ModalPresentationStyle = UIModalPresentationStyle.Popover;
+				nav.PopoverPresentationController.BarButtonItem = toggleButton;
+				await PresentViewControllerAsync (nav, true);
 			}
 		}
 
@@ -139,6 +147,7 @@ namespace Praeclarum.UI
 				return;
 			
 			var hclass = TraitCollection.HorizontalSizeClass;
+//			hclass = UIUserInterfaceSizeClass.Compact;
 
 			if (hclass == UIUserInterfaceSizeClass.Regular && secondVisible) {
 				ShowSecond (animated);
@@ -155,7 +164,7 @@ namespace Praeclarum.UI
 			containerView.OnlyFirst = true;
 			containerView.SetNeedsLayout ();
 			if (animated) {
-				await UIView.AnimateAsync (1.0, () => {
+				await UIView.AnimateAsync (0.5, () => {
 					Second.View.Alpha = 0.0f;
 					Splitter.Alpha = 0.0f;
 					containerView.LayoutIfNeeded ();
@@ -175,15 +184,18 @@ namespace Praeclarum.UI
 			if (ChildViewControllers.Contains (Second)) {
 				return;
 			}
+			if (PresentedViewController != null) {
+				await DismissViewControllerAsync (animated);
+			}
 			Second.View.Alpha = animated ? 0.0f : 1.0f;
 			Splitter.Alpha = animated ? 0.0f : 1.0f;
+			AddChildViewController (Second);
 			containerView.AddSubview (Second.View);
 			containerView.AddSubview (Splitter);
-			AddChildViewController (Second);
 			containerView.OnlyFirst = false;
 			containerView.SetNeedsLayout ();
 			if (animated) {
-				await UIView.AnimateAsync (1.0, () => {
+				await UIView.AnimateAsync (0.5, () => {
 					Second.View.Alpha = 1.0f;
 					Splitter.Alpha = 1.0f;
 					containerView.LayoutIfNeeded ();

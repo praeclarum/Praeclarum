@@ -10,7 +10,6 @@ namespace Praeclarum.UI
 		public string LabelText { get; set; }
 		public string InputText { get; set; }
 		public string Hint { get; set; }
-		public bool CancelOnBlank { get; set; }
 
 		public event EventHandler Cancelled = delegate {};
 		public event EventHandler Done = delegate {};
@@ -25,13 +24,10 @@ namespace Praeclarum.UI
 			LabelText = "";
 			InputText = "";
 			Hint = "";
-			CancelOnBlank = true;
 
-			if (!CancelOnBlank) {
-				NavigationItem.LeftBarButtonItem = new UIBarButtonItem (
-					UIBarButtonSystemItem.Cancel,
-					HandleCancel);
-			}
+			NavigationItem.LeftBarButtonItem = new UIBarButtonItem (
+				UIBarButtonSystemItem.Cancel,
+				HandleCancel);
 
 //			NavigationItem.RightBarButtonItem = new UIBarButtonItem (
 //				UIBarButtonSystemItem.Done,
@@ -77,14 +73,8 @@ namespace Praeclarum.UI
 
 			if (string.IsNullOrWhiteSpace (InputText)) {
 
-				if (CancelOnBlank) {
-					Cancelled (this, EventArgs.Empty);
-					return true;
-				} else {
-					noAlert = new UIAlertView ("Required", "You must enter some text to continue.", null, "OK");
-					noAlert.Show ();
-					return false;
-				}
+				Cancelled (this, EventArgs.Empty);
+				return true;
 
 			} else {
 
@@ -158,6 +148,7 @@ namespace Praeclarum.UI
 						i.Placeholder = controller.InputText;
 						i.Text = controller.InputText;
 						i.AccessibilityLabel = controller.Title;
+						i.AutocorrectionType = UITextAutocorrectionType.No;
 						i.BecomeFirstResponder ();
 					}
 

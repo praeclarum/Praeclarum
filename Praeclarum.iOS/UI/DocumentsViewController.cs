@@ -544,16 +544,18 @@ namespace Praeclarum.UI
 			var nc = new UINavigationController (c);
 			nc.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 
-			c.Cancelled += (ss, ee) => nc.DismissViewController (true, null);
+			var presenter = this;
+
+			c.Cancelled += (ss, ee) => presenter.DismissViewController (true, null);
 			c.Done += async (ss, ee) => {
-				nc.DismissViewController (true, null);
+				presenter.DismissViewController (true, null);
 
 				if (!string.IsNullOrWhiteSpace (c.InputText) && c.InputText != name) {
 					await Rename (docRef, c.InputText);
 				}
 			};
 
-			PresentViewController (nc, true, null);
+			presenter.PresentViewController (nc, true, null);
 		}
 
 		UIAlertView alert;

@@ -59,7 +59,12 @@ namespace Praeclarum.UI
 			Delegate = new DocumentThumbnailsViewDelegate ();
 			DataSource = new DocumentThumbnailsViewDataSource ();
 
-			var thumbWidth = UIScreen.MainScreen.Bounds.Width/NumHorizontalThumbnails - Margin - Margin/NumHorizontalThumbnails;
+			Console.WriteLine ("UI {0}", UIDevice.CurrentDevice.UserInterfaceIdiom);
+
+			var thumbWidth =
+				UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone ?
+				320.0f/3.0f - Margin - Margin/3.0f:
+				768.0f/5.0f - Margin - Margin/5.0f;
 
 			thumbWidth = (int)(thumbWidth + 0.5f);
 

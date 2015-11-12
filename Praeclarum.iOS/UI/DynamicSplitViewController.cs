@@ -17,7 +17,8 @@ namespace Praeclarum.UI
 		// Magic number to make second view 320pts
 		public double Ratio = 0.76401179941002;
 
-		public readonly nfloat SplitterWidth = 10.0f;
+		public readonly nfloat SplitterWidth = 44.0f;
+		public readonly nfloat SplitterVisibleWidth = 10.0f;
 
 		public DynamicSplitViewController ()
 			: this (new UITableViewController (UITableViewStyle.Grouped), new UITableViewController (UITableViewStyle.Plain))
@@ -88,7 +89,7 @@ namespace Praeclarum.UI
 			}
 			public SplitterView ()
 			{
-				BackgroundColor = UIColor.Red;
+				BackgroundColor = UIColor.Clear;
 			}
 
 			public override void Draw (CoreGraphics.CGRect rect)
@@ -108,7 +109,8 @@ namespace Praeclarum.UI
 					UIColor.FromRGB ((nfloat)229/255,(nfloat)229/255,(nfloat)238/255);
 
 				backColor.SetFill ();
-				c.FillRect (b);
+				var sw = (nfloat)10.0f;
+				c.FillRect (new CGRect ((b.Width-sw)/2, 0, sw, b.Height));
 
 				//
 				// Draw the button
@@ -131,7 +133,7 @@ namespace Praeclarum.UI
 			public ContainerView (DynamicSplitViewController c)
 			{
 				this.c = c;
-				BackgroundColor = UIColor.DarkGray;
+				BackgroundColor = UIColor.Red;
 			}
 
 			public override void LayoutSubviews ()
@@ -142,7 +144,7 @@ namespace Praeclarum.UI
 				var b = Bounds;
 				var w = (double)b.Width;
 
-				var splitW = c.SplitterWidth;
+				var splitW = c.SplitterVisibleWidth;
 				// w = (r)*a*w + (r-1)*a*w + sw
 				// a => -sw/w + 1
 				var a = -splitW/w + 1;
@@ -152,7 +154,7 @@ namespace Praeclarum.UI
 					var h = b.Height;
 					c.First.View.Frame = new CGRect(0, 0, (nfloat)fw, h);
 					c.Second.View.Frame = new CGRect((nfloat)(fw + splitW), 0, (nfloat)sw, h);
-					c.Splitter.Frame = new CGRect((nfloat)(fw), 0, (nfloat)splitW, h);
+					c.Splitter.Frame = new CGRect((nfloat)(fw - (c.SplitterWidth-splitW)/2), 0, (nfloat)c.SplitterWidth, h);
 //					Console.WriteLine ("SPLIT CONTAINER LAYOUT {0} {1} {2}", fw, sw, w);					
 				} catch (Exception ex) {
 					Console.WriteLine ("ERROR {0}", ex);

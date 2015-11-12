@@ -45,5 +45,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\ViewAnimation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\WhiteTheme.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\GLGraphics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DynamicSplitViewController.cs" />
   </ItemGroup>
 </Project>

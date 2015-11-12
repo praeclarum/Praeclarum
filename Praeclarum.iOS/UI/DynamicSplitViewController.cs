@@ -20,23 +20,59 @@ namespace Praeclarum.UI
 		public readonly nfloat SplitterWidth = 44.0f;
 		public readonly nfloat SplitterVisibleWidth = 10.0f;
 
+		bool secondVisible = true;
+
+		public bool SecondVisible {
+			get { return secondVisible; }
+			set {
+				if (secondVisible != value) {
+					secondVisible = value;
+					ShowOrHideSecond (false);
+				}
+			}
+		}
+
+		public void SetSecondVisible (bool value, bool animated)
+		{
+			if (secondVisible != value) {
+				secondVisible = value;
+				ShowOrHideSecond (animated);
+			}
+		}
+
+		UIBarButtonItem toggleButton;
+
 		public DynamicSplitViewController ()
-			: this (new UITableViewController (UITableViewStyle.Grouped), new UITableViewController (UITableViewStyle.Plain))
+			: this (new UITableViewController (UITableViewStyle.Plain), new UITableViewController (UITableViewStyle.Grouped))
 		{
 			
 		}
+
 		public DynamicSplitViewController (UIViewController first, UIViewController second)
 		{
 			this.First = first;
 			this.Second = second;
 			containerView = new ContainerView (this);
 			Splitter = new SplitterView ();
+
+			containerView.BackgroundColor = first.View.BackgroundColor;
+		}
+
+		protected virtual UIBarButtonItem CreateToggleButton ()
+		{
+			return new UIBarButtonItem ("Toggle", UIBarButtonItemStyle.Plain, HandleSplitToggleButton);
 		}
 
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
-			Console.WriteLine ("VDL");
+			Console.WriteLine ("DYNAMIC SPLIT VIEW DID LOAD");
+
+			toggleButton = CreateToggleButton ();
+			NavigationItem.RightBarButtonItems =
+				(NavigationItem.RightBarButtonItems ?? new UIBarButtonItem[0]{}).
+				Concat (new [] { toggleButton }).
+				ToArray ();
 
 			containerView.Frame = View.Bounds;
 			containerView.AutoresizingMask = UIViewAutoresizing.FlexibleDimensions;
@@ -77,6 +113,81 @@ namespace Praeclarum.UI
 
 			} catch (Exception ex) {
 				Console.WriteLine (ex);
+			}
+		}
+
+		protected void HandleSplitToggleButton (object sender, EventArgs e)
+		{
+//			Console.WriteLine ("TOGGLE");
+			var hclass = TraitCollection.HorizontalSizeClass;
+
+			if (hclass == UIUserInterfaceSizeClass.Regular) {
+				secondVisible = !secondVisible;
+				ShowOrHideSecond (true);
+			}
+		}
+
+		public override void TraitCollectionDidChange (UITraitCollection previousTraitCollection)
+		{
+			base.TraitCollectionDidChange (previousTraitCollection);
+			ShowOrHideSecond (false);
+		}
+
+		void ShowOrHideSecond (bool animated)
+		{
+			if (!this.IsViewLoaded)
+				return;
+			
+			var hclass = TraitCollection.HorizontalSizeClass;
+
+			if (hclass == UIUserInterfaceSizeClass.Regular && secondVisible) {
+				ShowSecond (animated);
+			} else {
+				HideSecond (animated);
+			}				
+		}
+
+		async void HideSecond (bool animated)
+		{
+			if (!ChildViewControllers.Contains (Second)) {
+				return;
+			}
+			containerView.OnlyFirst = true;
+			containerView.SetNeedsLayout ();
+			if (animated) {
+				await UIView.AnimateAsync (1.0, () => {
+					Second.View.Alpha = 0.0f;
+					Splitter.Alpha = 0.0f;
+					containerView.LayoutIfNeeded ();
+				});
+			} else {
+				Second.View.Alpha = 0.0f;
+				Splitter.Alpha = 0.0f;
+			}
+			Second.RemoveFromParentViewController ();
+			Second.View.RemoveFromSuperview ();
+			Splitter.RemoveFromSuperview ();
+			containerView.SetNeedsLayout ();
+		}
+
+		async void ShowSecond (bool animated)
+		{
+			if (ChildViewControllers.Contains (Second)) {
+				return;
+			}
+			Second.View.Alpha = animated ? 0.0f : 1.0f;
+			Splitter.Alpha = animated ? 0.0f : 1.0f;
+			containerView.AddSubview (Second.View);
+			containerView.AddSubview (Splitter);
+			AddChildViewController (Second);
+			containerView.OnlyFirst = false;
+			containerView.SetNeedsLayout ();
+			if (animated) {
+				await UIView.AnimateAsync (1.0, () => {
+					Second.View.Alpha = 1.0f;
+					Splitter.Alpha = 1.0f;
+					containerView.LayoutIfNeeded ();
+				});
 			}
 		}
 
@@ -129,6 +240,7 @@ namespace Praeclarum.UI
 
 		class ContainerView : UIView
 		{
+			public bool OnlyFirst = false;
 			readonly DynamicSplitViewController c;
 			public ContainerView (DynamicSplitViewController c)
 			{
@@ -144,18 +256,28 @@ namespace Praeclarum.UI
 				var b = Bounds;
 				var w = (double)b.Width;
 
-				var splitW = c.SplitterVisibleWidth;
-				// w = (r)*a*w + (r-1)*a*w + sw
-				// a => -sw/w + 1
-				var a = -splitW/w + 1;
+//				Console.WriteLine ("LAYOUT");
+
 				try {
-					var fw = a * r * w;
-					var sw = a * (1-r) * w;
-					var h = b.Height;
-					c.First.View.Frame = new CGRect(0, 0, (nfloat)fw, h);
-					c.Second.View.Frame = new CGRect((nfloat)(fw + splitW), 0, (nfloat)sw, h);
-					c.Splitter.Frame = new CGRect((nfloat)(fw - (c.SplitterWidth-splitW)/2), 0, (nfloat)c.SplitterWidth, h);
+
+					var isSplit = !OnlyFirst && Subviews.Length > 1;
+
+					if (isSplit) {
+						var splitW = c.SplitterVisibleWidth;
+						// w = (r)*a*w + (r-1)*a*w + sw
+						// a => -sw/w + 1
+						var a = -splitW/w + 1;
+						var fw = a * r * w;
+						var sw = a * (1-r) * w;
+						var h = b.Height;
+						c.First.View.Frame = new CGRect(0, 0, (nfloat)fw, h);
+						c.Second.View.Frame = new CGRect((nfloat)(fw + splitW), 0, (nfloat)sw, h);
+						c.Splitter.Frame = new CGRect((nfloat)(fw - (c.SplitterWidth-splitW)/2), 0, (nfloat)c.SplitterWidth, h);
 //					Console.WriteLine ("SPLIT CONTAINER LAYOUT {0} {1} {2}", fw, sw, w);					
+					}
+					else {
+						c.First.View.Frame = b;
+					}
 				} catch (Exception ex) {
 					Console.WriteLine ("ERROR {0}", ex);
 				}

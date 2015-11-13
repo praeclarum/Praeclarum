@@ -304,6 +304,8 @@ namespace Praeclarum.Graphics
 
 		public void DrawString (string s, float x, float y)
 		{
+			if (string.IsNullOrEmpty (s))
+				return;
 			using (var astr = new NSMutableAttributedString (s)) {
 				astr.AddAttributes (_attrs, new NSRange (0, s.Length));
 				using (var fs = new CTFramesetter (astr)) {

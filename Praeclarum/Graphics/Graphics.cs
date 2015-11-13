@@ -209,6 +209,8 @@ namespace Praeclarum.Graphics
 	{
 		public static int StringWidth (this IFontMetrics fm, string s)
 		{
+			if (string.IsNullOrEmpty (s))
+				return 0;
 			return fm.StringWidth (s, 0, s.Length);
 		}
 	}

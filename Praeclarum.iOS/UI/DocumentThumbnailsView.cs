@@ -24,7 +24,6 @@ namespace Praeclarum.UI
 
 		public static float LabelHeight = 33;
 		public static float Margin = 10;
-		static int NumHorizontalThumbnails = UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone ? 3 : 5;
 
 		public List<DocumentsViewItem> Items {
 			get;
@@ -285,8 +284,11 @@ namespace Praeclarum.UI
 				var controller = (DocumentThumbnailsView)collectionView;
 				
 				var s = controller.ThumbnailSize;
+
 				var itemSize = new CGSize (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
-				//			Console.WriteLine ("item size = {0}", itemSize);
+
+//				Console.WriteLine ("ITEM SIZE = {0}", itemSize);
+
 				return itemSize;
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -306,11 +308,11 @@ namespace Praeclarum.UI
 				var frameW = collectionView.Frame.Width;
 				
 				if (section == 0) {
-					h = (frameW - sortSize.Width) / 2;
+					h = (frameW - sortSize.Width) / 2 - 44; // - 44 because of insets
 					t = 15;
 					b = 11;
 				} else {
-					h = controller.IsSyncing ? (frameW - controller.ThumbnailSize.Width) / 2 : DocumentThumbnailsView.Margin;
+					h = controller.IsSyncing ? ((frameW - controller.ThumbnailSize.Width) / 2 - 44) : DocumentThumbnailsView.Margin;
 				} 
 				
 				return new UIEdgeInsets (t, h, b, h);

@@ -126,8 +126,10 @@ namespace Praeclarum.UI
 				secondVisible = !secondVisible;
 				ShowOrHideSecond (true);
 			} else {
+				HideSecond (false);
 				var dismissButton = new UIBarButtonItem (UIBarButtonSystemItem.Done, (ss, ee) => this.DismissViewController (true, null));
 				Second.NavigationItem.RightBarButtonItem = dismissButton;
+				Second.View.Alpha = 1.0f;
 				var nav = new UINavigationController (Second);
 				nav.ModalPresentationStyle = UIModalPresentationStyle.Popover;
 				nav.PopoverPresentationController.BarButtonItem = toggleButton;
@@ -161,6 +163,7 @@ namespace Praeclarum.UI
 			if (!ChildViewControllers.Contains (Second)) {
 				return;
 			}
+			Second.ViewWillDisappear (animated);
 			containerView.OnlyFirst = true;
 			containerView.SetNeedsLayout ();
 			if (animated) {
@@ -189,6 +192,7 @@ namespace Praeclarum.UI
 			}
 			Second.View.Alpha = animated ? 0.0f : 1.0f;
 			Splitter.Alpha = animated ? 0.0f : 1.0f;
+			Second.ViewWillAppear (animated);
 			AddChildViewController (Second);
 			containerView.AddSubview (Second.View);
 			containerView.AddSubview (Splitter);

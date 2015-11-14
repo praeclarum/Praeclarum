@@ -167,7 +167,7 @@ namespace Praeclarum.UI
 			containerView.OnlyFirst = true;
 			containerView.SetNeedsLayout ();
 			if (animated) {
-				await UIView.AnimateAsync (0.5, () => {
+				await UIView.AnimateAsync (0.333, () => {
 					Second.View.Alpha = 0.0f;
 					Splitter.Alpha = 0.0f;
 					containerView.LayoutIfNeeded ();
@@ -199,7 +199,7 @@ namespace Praeclarum.UI
 			containerView.OnlyFirst = false;
 			containerView.SetNeedsLayout ();
 			if (animated) {
-				await UIView.AnimateAsync (0.5, () => {
+				await UIView.AnimateAsync (0.333, () => {
 					Second.View.Alpha = 1.0f;
 					Splitter.Alpha = 1.0f;
 					containerView.LayoutIfNeeded ();

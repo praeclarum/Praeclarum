@@ -63,6 +63,20 @@ namespace Praeclarum.App
 			defs.SetInt (s, key);
 		}
 
+		protected double GetDouble (string key, double defaultValue)
+		{
+			var s = defs [key] as NSNumber;
+			if (s != null) {
+				return s.DoubleValue;
+			}
+			return defaultValue;
+		}
+
+		protected void SetDouble (string key, double value)
+		{
+			defs.SetDouble (value, key);
+		}
+
 		public string FileSystem {
 			get {
 				return defs.StringForKey ("FileSystem") ?? "";

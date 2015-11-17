@@ -189,6 +189,15 @@ namespace Praeclarum.UI
 					if (!t.IsFaulted) {
 						App.OnFileSystemInitialized ();
 						try {
+							CurrentDocumentListController.LoadDocs ().ContinueWith (tt => {
+								if (tt.IsFaulted) {
+									Debug.WriteLine (tt.Exception);
+								}
+							});
+						} catch (Exception ex) {
+							Log.Error (ex);
+						}
+						try {
 							if (scitem != null) {
 								await HandleShortcutItemAsync (scitem);
 							}
@@ -1364,6 +1373,11 @@ namespace Praeclarum.UI
 
 			CurrentDocumentListController.RemoveDocuments (delPaths.ToArray(), true);
 
+		}
+
+		public async Task UpdateDocListAsync ()
+		{
+			await CurrentDocumentListController.LoadDocs ();
 		}
 
 		public void UpdateDocListName (int docIndex)

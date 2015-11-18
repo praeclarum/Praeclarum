@@ -1216,7 +1216,7 @@ namespace Praeclarum.UI
 		}
 	}
 
-	class NotReadyThumbnailCell : UICollectionViewCell
+	class NotReadyThumbnailCell : UICollectionViewCell, IThemeAware
 	{
 		UIActivityIndicatorView activity;
 		UILabel label;
@@ -1226,7 +1226,8 @@ namespace Praeclarum.UI
 		public NotReadyThumbnailCell (IntPtr handle)
 			: base (handle)
 		{
-			BackgroundColor = UIColor.FromRGB (222, 222, 222);
+			var theme = DocumentAppDelegate.Shared.Theme;
+			BackgroundColor = theme.DocumentsBackgroundColor;
 
 			var b = Bounds;
 
@@ -1245,7 +1246,7 @@ namespace Praeclarum.UI
 			label = new UILabel (b) {
 				Text = text,
 				Font = font,
-				TextColor = UIColor.FromWhiteAlpha (137/255.0f, 1),
+				TextColor = theme.NavigationTextColor,
 				AutoresizingMask = UIViewAutoresizing.FlexibleDimensions,
 				Lines = 2,
 				TextAlignment = UITextAlignment.Center,
@@ -1257,6 +1258,17 @@ namespace Praeclarum.UI
 
 			activity.StartAnimating ();
 		}
+
+		#region IThemeAware implementation
+		public void ApplyTheme (Theme theme)
+		{
+			BackgroundColor = theme.DocumentsBackgroundColor;
+			if (label != null) {
+				label.TextColor = theme.NavigationTextColor;
+			}
+		}
+		#endregion
+
 
 		bool filledContent = false;
 		public void FillContentView ()

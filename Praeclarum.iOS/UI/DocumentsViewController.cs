@@ -542,6 +542,7 @@ namespace Praeclarum.UI
 			};
 
 			var nc = new UINavigationController (c);
+			nc.NavigationBar.BarStyle = DocumentAppDelegate.Shared.Theme.NavigationBarStyle;
 			nc.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 
 			var presenter = this;
@@ -954,6 +955,7 @@ namespace Praeclarum.UI
 			};
 
 			var nc = new UINavigationController (c);
+			nc.NavigationBar.BarStyle = DocumentAppDelegate.Shared.Theme.NavigationBarStyle;
 			nc.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 
 			c.Cancelled += (ss, ee) => nc.DismissViewController (true, null);

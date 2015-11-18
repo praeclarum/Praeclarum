@@ -919,6 +919,9 @@ namespace Praeclarum.UI
 			if (Cache == null)
 				return;
 
+			if (doc == null || doc.File == null)
+				return;
+
 			var path = doc.File.Path;
 
 			var theme = DocumentAppDelegate.Shared.Theme;

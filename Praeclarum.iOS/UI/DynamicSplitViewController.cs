@@ -137,6 +137,7 @@ namespace Praeclarum.UI
 				Second.NavigationItem.RightBarButtonItem = dismissButton;
 				Second.View.Alpha = 1.0f;
 				var nav = new UINavigationController (Second);
+				nav.NavigationBar.BarStyle = DocumentAppDelegate.Shared.Theme.NavigationBarStyle;
 				nav.ModalPresentationStyle = UIModalPresentationStyle.Popover;
 				nav.PopoverPresentationController.BarButtonItem = toggleButton;
 				await PresentViewControllerAsync (nav, true);

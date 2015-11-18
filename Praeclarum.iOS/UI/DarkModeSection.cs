@@ -1,4 +1,5 @@
 ﻿using System;
+using Foundation;
 
 namespace Praeclarum.UI
 {
@@ -16,9 +17,12 @@ namespace Praeclarum.UI
 
 		public override bool SelectItem (object item)
 		{
-			DocumentAppDelegate.Shared.Settings.DarkMode = !DocumentAppDelegate.Shared.Settings.DarkMode;
-			DocumentAppDelegate.Shared.UpdateTheme ();
-			SetNeedsFormat ();
+			var appdel = DocumentAppDelegate.Shared;
+			NSTimer.CreateScheduledTimer (0.1, t => {
+				appdel.Settings.DarkMode = !DocumentAppDelegate.Shared.Settings.DarkMode;
+				DocumentAppDelegate.Shared.UpdateTheme ();
+				SetNeedsFormat ();
+			});
 			return false;
 		}
 	}

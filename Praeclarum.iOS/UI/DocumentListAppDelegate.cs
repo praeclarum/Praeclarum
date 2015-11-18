@@ -30,6 +30,7 @@ namespace Praeclarum.UI
 				blankVC.View.BackgroundColor = UIColor.White;
 
 				detailNav = new UINavigationController (blankVC);
+				detailNav.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 				detailNav.ToolbarHidden = false;
 				Theme.Apply (detailNav.Toolbar);
 

@@ -148,6 +148,7 @@ namespace Praeclarum.UI
 			try {
 				var docList = CreateDirectoryViewController ("");
 				docListNav = new UINavigationController (docList);
+				docListNav.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 				docListNav.ToolbarHidden = false;
 				Theme.Apply (docListNav);
 			} catch (Exception ex) {
@@ -860,7 +861,7 @@ namespace Praeclarum.UI
 			var pform = CreateSettingsForm ();
 
 			var n = new UINavigationController (pform);
-
+			n.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 			n.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 			controller.PresentViewController (n, true, null);
 		}
@@ -874,7 +875,7 @@ namespace Praeclarum.UI
 			var pform = new StorageForm ();
 
 			var n = new UINavigationController (pform);
-
+			n.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 			n.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 			controller.PresentViewController (n, true, null);
 		}
@@ -1023,6 +1024,7 @@ namespace Praeclarum.UI
 			var presenter = docListNav.TopViewController;
 
 			var nc = new UINavigationController (c);
+			nc.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 			nc.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 
 			c.Cancelled += (sender, e) => nc.DismissViewController (true, null);
@@ -1142,6 +1144,7 @@ namespace Praeclarum.UI
 			var formNav = new UINavigationController (form) {
 				ModalPresentationStyle = UIModalPresentationStyle.FormSheet,
 			};
+			formNav.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 			await fromViewController.PresentViewControllerAsync (formNav, true);
 
 			var shouldMove = await tcs.Task;

@@ -91,18 +91,27 @@ namespace Praeclarum.UI
 			}
 
 			try {
-				ApplyToV (vc.View);
+				ApplyToV (vc.View, new HashSet<IntPtr> ());
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}
 		}
 
-		void ApplyToV (UIView view)
+		void ApplyToV (UIView view, HashSet<IntPtr> visited)
 		{
 			if (view == null)
 				return;
+			if (visited.Contains (view.Handle))
+				return;
+			visited.Add (view.Handle);
 
 			try {
+
+				var tv = view as UITableView;
+				if (tv != null) {
+					Apply (tv);
+				}
+
 				var ta = view as IThemeAware;
 				if (ta != null) {
 					ta.ApplyTheme (this);
@@ -114,7 +123,7 @@ namespace Praeclarum.UI
 
 			try {
 				foreach (var c in (view.Subviews??new UIView[0])) {
-					ApplyToV (c);
+					ApplyToV (c, visited);
 				}
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -172,9 +181,37 @@ namespace Praeclarum.UI
 				return UIColor.FromRGB ((nfloat)176 / 255.0f, (nfloat)176 / 255.0f, (nfloat)176 / 255.0f);
 			}
 		}
+		public virtual UIColor GroupedTableBackgroundColor {
+			get {
+				return UIColor.GroupTableViewBackgroundColor;
+			}
+		}
+		public virtual UIColor TableCellBackgroundColor {
+			get {
+				return UIColor.White;
+			}
+		}
+		public virtual UIColor TableCellTextColor {
+			get {
+				return UIColor.DarkTextColor;
+			}
+		}
+		public virtual UIColor TableSeparatorColor {
+			get {
+				return UIColor.FromWhiteAlpha (0.85f, 1.0f);
+			}
+		}
 
 		public virtual void Apply (UITableView tableView)
 		{
+			var c = GroupedTableBackgroundColor;
+			if (tableView.BackgroundView == null) {
+				tableView.BackgroundView = new UIView { BackgroundColor = c };
+			} else {
+				tableView.BackgroundView.BackgroundColor = c;
+			}
+			tableView.BackgroundColor = c;
+			tableView.SeparatorColor = TableSeparatorColor;
 		}
 
 		public virtual void Apply (UIToolbar toolbar)
@@ -183,7 +220,8 @@ namespace Praeclarum.UI
 
 		public virtual void Apply (UITableViewCell cell)
 		{
-			cell.TextLabel.TextColor = UIColor.DarkTextColor;
+			cell.BackgroundColor = TableCellBackgroundColor;
+			cell.TextLabel.TextColor = TableCellTextColor;
 		}
 
 		public virtual void ApplyCommand (UITableViewCell cell)
@@ -305,6 +343,26 @@ namespace Praeclarum.UI
 		public override UIBarStyle NavigationBarStyle {
 			get {
 				return UIBarStyle.Black;
+			}
+		}
+		public override UIColor GroupedTableBackgroundColor {
+			get {
+				return DocumentsBackgroundColor;
+			}
+		}
+		public override UIColor TableCellBackgroundColor {
+			get {
+				return UIColor.FromWhiteAlpha (0.15f, 1.0f);
+			}
+		}
+		public override UIColor TableCellTextColor {
+			get {
+				return UIColor.White;
+			}
+		}
+		public override UIColor TableSeparatorColor {
+			get {
+				return UIColor.FromWhiteAlpha (0.25f, 1.0f);
 			}
 		}
 	}

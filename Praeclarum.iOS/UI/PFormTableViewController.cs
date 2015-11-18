@@ -55,6 +55,11 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public override UIStatusBarStyle PreferredStatusBarStyle ()
+		{
+			return DocumentAppDelegate.Shared.Theme.StatusBarStyle;
+		}
+
 		protected virtual async void HandleCancel (object sender, EventArgs e)
 		{
 			await DismissAsync (false);
@@ -138,7 +143,7 @@ namespace Praeclarum.UI
 
 				for (int row = 0; row < section.Items.Count; row++) {
 					var item = section.Items [row];
-					var c = TableView.CellAt (NSIndexPath.FromRowSection (row, si));
+					var c = TableView.CellAt (NSIndexPath.FromRowSection (row, si)) as PFormCell;
 					if (c != null) {
 						try {
 							ds.FormatCell (c, section, item);
@@ -151,6 +156,25 @@ namespace Praeclarum.UI
 			} catch (Exception ex) {
 				Debug.WriteLine (ex);				
 			}
+		}
+
+		public class PFormCell : UITableViewCell, IThemeAware
+		{
+			public PFormCell (string reuseId)
+				: base (UITableViewCellStyle.Default, reuseId)
+			{
+				ApplyTheme (DocumentAppDelegate.Shared.Theme);
+			}
+
+			#region IThemeAware implementation
+
+			public void ApplyTheme (Theme theme)
+			{
+				BackgroundColor = theme.TableCellBackgroundColor;
+				TextLabel.TextColor = theme.TableCellTextColor;
+			}
+
+			#endregion
 		}
 
 		protected class FormSource : UITableViewSource
@@ -211,10 +235,10 @@ namespace Praeclarum.UI
 
 					var id = item.GetType ().Name;
 
-					var cell = tableView.DequeueReusableCell (id);
+					var cell = tableView.DequeueReusableCell (id) as PFormCell;
 
 					if (cell == null) {
-						cell = new UITableViewCell (UITableViewCellStyle.Default, id);
+						cell = new PFormCell (id);
 					}
 
 					try {
@@ -234,16 +258,15 @@ namespace Praeclarum.UI
 			static readonly Dictionary<string, UIImage> imageCache = 
 				new Dictionary<string, UIImage> ();
 
-			readonly Theme theme = DocumentAppDelegate.Shared.Theme;
-
-			public void FormatCell (UITableViewCell cell, PFormSection section, object item)
+			public void FormatCell (PFormCell cell, PFormSection section, object item)
 			{
+				var theme = DocumentAppDelegate.Shared.Theme;
 				theme.Apply (cell);
-
 
 				var itemTitle = section.GetItemTitle (item);
 				cell.TextLabel.Text = itemTitle;
 				cell.TextLabel.AccessibilityLabel = itemTitle;
+				cell.TextLabel.BackgroundColor = UIColor.Clear;
 
 				var imageUrl = section.GetItemImage (item);
 				if (string.IsNullOrEmpty (imageUrl)) {
@@ -324,7 +347,7 @@ namespace Praeclarum.UI
 						var sel = section.SelectItem (item);
 						if (!sel) {
 							tableView.DeselectRow (indexPath, true);
-							var cell = tableView.CellAt (indexPath);
+							var cell = tableView.CellAt (indexPath) as PFormCell;
 							var source = tableView.Source as FormSource;
 							if (source != null) {
 								source.FormatCell (cell, section, item);

@@ -897,6 +897,12 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public override void ApplyTheme (Theme theme)
+		{
+			base.ApplyTheme (theme);
+			RefreshThumbnail ();
+		}
+
 		public void RefreshThumbnail ()
 		{
 			RefreshThumbnailAsync ().ContinueWith (t => {

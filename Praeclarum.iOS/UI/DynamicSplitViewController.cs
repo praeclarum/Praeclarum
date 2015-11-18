@@ -58,6 +58,11 @@ namespace Praeclarum.UI
 			containerView.BackgroundColor = first.View.BackgroundColor;
 		}
 
+		public UIColor BackgroundColor { 
+			get { return containerView.BackgroundColor; }
+			set { containerView.BackgroundColor = value; }
+		}
+
 		protected virtual UIBarButtonItem CreateToggleButton ()
 		{
 			return new UIBarButtonItem ("Toggle", UIBarButtonItemStyle.Plain, HandleSplitToggleButton);

@@ -1187,6 +1187,16 @@ namespace Praeclarum.UI
 			return b;
 		}
 
+		public override void ApplyTheme (Theme theme)
+		{
+			base.ApplyTheme (theme);
+			RefreshThumbnails ().ContinueWith (t => {
+				if (t.IsFaulted) {
+					Console.WriteLine (t.Exception);
+				}
+			});
+		}
+
 		class DirectoryBackgroundView : UIView, IThemeAware
 		{
 			public DirectoryBackgroundView ()

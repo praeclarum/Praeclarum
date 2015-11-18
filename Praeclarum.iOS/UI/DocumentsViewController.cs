@@ -678,20 +678,6 @@ namespace Praeclarum.UI
 			// Style the navigation controller
 			//
 			if (NavigationController != null) {
-
-				var toolbar = NavigationController.Toolbar;
-				var navbar = NavigationController.NavigationBar;
-
-				toolbar.BarStyle = UIBarStyle.Default;
-				navbar.BarStyle = UIBarStyle.Default;
-				if (ios7) {
-					toolbar.BarTintColor = null;
-					navbar.BarTintColor = null;
-				} else {
-					toolbar.TintColor = null;
-					navbar.TintColor = null;
-				}
-
 				NavigationController.SetToolbarHidden (false, animated);
 			}
 
@@ -839,7 +825,7 @@ namespace Praeclarum.UI
 		public override UIStatusBarStyle PreferredStatusBarStyle ()
 		{
 			try {
-				return Editing ? UIStatusBarStyle.LightContent : UIStatusBarStyle.Default;
+				return Editing ? UIStatusBarStyle.LightContent : DocumentAppDelegate.Shared.Theme.StatusBarStyle;
 			} catch (Exception ex) {
 				Log.Error (ex);
 				return UIStatusBarStyle.Default;
@@ -852,13 +838,12 @@ namespace Praeclarum.UI
 		void SetSpecialNav (bool animated)
 		{
 			if (ios7) {
+//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 				NavigationController.NavigationBar.BarTintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
 				NavigationController.NavigationBar.TintColor = UIColor.White;
-				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 				SetNeedsStatusBarAppearanceUpdate ();
-				UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.LightContent;
 			} else {
-				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
+//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 			}
 			NavigationController.SetToolbarHidden (true, animated);
 			UpdateEditingForSelection ();
@@ -867,13 +852,13 @@ namespace Praeclarum.UI
 		void SetNormalNav (bool animated)
 		{
 			if (ios7) {
-				NavigationController.NavigationBar.BarTintColor = null;
+				var theme = DocumentAppDelegate.Shared.Theme;
+//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
+				NavigationController.NavigationBar.BarTintColor = theme.NavigationBackgroundColor;
 				NavigationController.NavigationBar.TintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
-				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
 				SetNeedsStatusBarAppearanceUpdate ();
-				UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.Default;
 			} else {
-				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
+//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
 			}
 
 			NavigationController.SetToolbarHidden (false, animated);

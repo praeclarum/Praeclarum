@@ -28,7 +28,7 @@ namespace Praeclarum.UI
 			Frame = new CGRect (titleX + 1, 6, isPhone ? 176 : 624, 30);
 			BackgroundColor = UIColor.Clear;
 			Opaque = false;
-//			TextColor = WhiteTheme.BarTextColor;
+			TextColor = DocumentAppDelegate.Shared.Theme.NavigationTextColor;
 //			ShadowColor = WhiteTheme.BarTextShadowColor;
 //			ShadowOffset = new SizeF (WhiteTheme.BarTextShadowOffset.Horizontal, WhiteTheme.BarTextShadowOffset.Vertical);
 			Font = UIFont.FromName (WhiteTheme.TitleFontName, WhiteTheme.BarTitleFontSize);

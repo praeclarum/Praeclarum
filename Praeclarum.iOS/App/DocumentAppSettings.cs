@@ -128,6 +128,15 @@ namespace Praeclarum.App
 				return RunCount == 1;
 			}
 		}
+
+		public bool DarkMode {
+			get {
+				return defs.BoolForKey ("DarkMode");
+			}
+			set {
+				defs.SetBool (value, "DarkMode");
+			}
+		}
 	}
 }
 

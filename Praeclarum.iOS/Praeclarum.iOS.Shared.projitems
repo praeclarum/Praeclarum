@@ -46,5 +46,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\WhiteTheme.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\GLGraphics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DynamicSplitViewController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DarkModeSection.cs" />
   </ItemGroup>
 </Project>

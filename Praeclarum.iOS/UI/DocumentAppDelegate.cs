@@ -108,6 +108,19 @@ namespace Praeclarum.UI
 				Log.Error (ex);				
 			}
 
+
+			//
+			// Apply the theme
+			//
+			try {
+				WhiteTheme.IsModern = ios7;
+
+				UpdateTheme ();
+
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
+
 			//
 			// Initialize the file system manager
 			//
@@ -130,25 +143,13 @@ namespace Praeclarum.UI
 			mru.InitializeMRU ();
 
 			//
-			// Apply the theme
-			//
-			try {
-				WhiteTheme.IsModern = ios7;
-				
-				Theme.Apply ();
-				UpdateFonts ();
-			} catch (Exception ex) {
-				Log.Error (ex);				
-			}
-
-			//
 			// Construct the UI
 			//
 			try {
 				var docList = CreateDirectoryViewController ("");
 				docListNav = new UINavigationController (docList);
 				docListNav.ToolbarHidden = false;
-				Theme.Apply (docListNav.Toolbar);
+				Theme.Apply (docListNav);
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}
@@ -217,8 +218,20 @@ namespace Praeclarum.UI
 
 		Task initFileSystemTask;
 
-		Theme theme = new Theme ();
-		public Theme Theme { get { return theme; } set { theme = value; } }
+		Theme theme = new LightTheme ();
+		public Theme Theme { get { return theme; } set { SetTheme (value); } }
+
+		public void UpdateTheme ()
+		{
+			SetTheme (Settings.DarkMode ? (Theme)new DarkTheme () : new LightTheme ());
+		}
+
+		void SetTheme (Theme newTheme)
+		{
+			this.theme = newTheme;
+			this.theme.Apply ();
+			UpdateFonts ();
+		}
 
 		protected UINavigationController docListNav;
 		protected UINavigationController detailNav;

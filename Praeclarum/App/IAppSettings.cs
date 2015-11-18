@@ -19,6 +19,8 @@ namespace Praeclarum.App
 		void SetWorkingDirectory (IFileSystem fileSystem, string path);
 
 		string DocumentationVersion { get; set; }
+
+		bool DarkMode { get; set; }
 	}
 
 	public interface IAppSettings

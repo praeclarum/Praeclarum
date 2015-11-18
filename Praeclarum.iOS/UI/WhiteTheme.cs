@@ -4,9 +4,14 @@ using CoreGraphics;
 
 namespace Praeclarum.UI
 {
-	public class Theme
+	public interface IThemeAware
 	{
-		static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
+		void ApplyTheme (Theme theme);
+	}
+
+	public abstract class Theme
+	{
+		static protected readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 
 		readonly Lazy<UIImage> CloneButtonImage = new Lazy<UIImage> (
 			() => UIImage.FromBundle ("Clone.png"));
@@ -19,6 +24,125 @@ namespace Praeclarum.UI
 			if (ios7) {
 				UINavigationBar.Appearance.TintColor = GetTintColor ();
 				UIBarButtonItem.Appearance.TintColor = GetTintColor ();
+
+				UINavigationBar.Appearance.BarTintColor = NavigationBackgroundColor;
+				UINavigationBar.Appearance.TitleTextAttributes = new UIStringAttributes {
+					ForegroundColor = NavigationTextColor,
+				};
+				UIToolbar.Appearance.BarTintColor = NavigationBackgroundColor;
+
+				foreach (var w in UIApplication.SharedApplication.Windows) {
+					ApplyToVC (w.RootViewController);
+				}
+			}
+		}
+
+		public virtual void Apply (UINavigationController nc)
+		{
+			nc.NavigationBar.BarStyle = NavigationBarStyle;
+			nc.NavigationBar.BarTintColor = NavigationBackgroundColor;
+			nc.NavigationBar.TitleTextAttributes = new UIStringAttributes {
+				ForegroundColor = NavigationTextColor,
+			};
+			nc.Toolbar.BarStyle = NavigationBarStyle;
+			nc.Toolbar.BarTintColor = NavigationBackgroundColor;
+		}
+
+		void ApplyToVC (UIViewController vc)
+		{
+			if (vc == null)
+				return;
+
+			try {
+				var nc = vc as UINavigationController;
+				if (nc != null) {
+					Apply (nc);
+				}
+
+				vc.SetNeedsStatusBarAppearanceUpdate ();
+
+				var ta = vc as IThemeAware;
+				if (ta != null) {
+					ta.ApplyTheme (this);
+				}
+
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+
+			try {
+				foreach (var c in (vc.ChildViewControllers??new UIViewController[0])) {
+					ApplyToVC (c);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+
+			try {
+				ApplyToV (vc.View);
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
+		void ApplyToV (UIView view)
+		{
+			if (view == null)
+				return;
+
+			try {
+				var ta = view as IThemeAware;
+				if (ta != null) {
+					ta.ApplyTheme (this);
+				}
+
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+
+			try {
+				foreach (var c in (view.Subviews??new UIView[0])) {
+					ApplyToV (c);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
+		public virtual UIStatusBarStyle StatusBarStyle
+		{
+			get {
+				return UIStatusBarStyle.Default;
+			}
+		}
+
+		public virtual UIBarStyle NavigationBarStyle
+		{
+			get {
+				return UIBarStyle.Default;
+			}
+		}
+
+		public virtual bool IsDark { get { return false; } }
+
+		public virtual UIColor NavigationBackgroundColor {
+			get {
+				return null;
+			}
+		}
+		public virtual UIColor NavigationTextColor {
+			get {
+				return UIColor.Black;
+			}
+		}
+		public virtual UIColor DocumentsBackgroundColor {
+			get {
+				return UIColor.FromRGB (222, 222, 222);
+			}
+		}
+		public virtual UIColor DocumentsControlColor {
+			get {
+				return UIColor.FromWhiteAlpha (59 / 255.0f, 1);
 			}
 		}
 
@@ -97,6 +221,49 @@ namespace Praeclarum.UI
 				return new UIBarButtonItem (fallback, handler);
 
 			return new UIBarButtonItem (image, UIBarButtonItemStyle.Plain, handler);
+		}
+	}
+
+	public class LightTheme : Theme
+	{
+	}
+
+	public class DarkTheme : Theme
+	{
+		public override bool IsDark {
+			get {
+				return true;
+			}
+		}
+		public override UIStatusBarStyle StatusBarStyle {
+			get {
+				return UIStatusBarStyle.LightContent;
+			}
+		}
+		public override UIColor NavigationBackgroundColor {
+			get {
+				return UIColor.Black;
+			}
+		}
+		public override UIColor NavigationTextColor {
+			get {
+				return UIColor.White;
+			}
+		}
+		public override UIColor DocumentsBackgroundColor {
+			get {
+				return UIColor.FromRGB (33, 33, 33);
+			}
+		}
+		public override UIColor DocumentsControlColor {
+			get {
+				return UIColor.FromWhiteAlpha (194 / 255.0f, 1);
+			}
+		}
+		public override UIBarStyle NavigationBarStyle {
+			get {
+				return UIBarStyle.Black;
+			}
 		}
 	}
 

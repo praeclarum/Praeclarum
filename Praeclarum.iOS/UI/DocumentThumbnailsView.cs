@@ -14,7 +14,7 @@ using System.Collections.ObjectModel;
 namespace Praeclarum.UI
 {
 	[Register ("DocumentThumbnailsView")]
-	public class DocumentThumbnailsView : UICollectionView, IDocumentsView
+	public class DocumentThumbnailsView : UICollectionView, IDocumentsView, IThemeAware
 	{
 		public static readonly NSString AddId = new NSString ("A");
 		public static readonly NSString DirId = new NSString ("D");
@@ -36,8 +36,6 @@ namespace Praeclarum.UI
 
 		public Praeclarum.Graphics.SizeF ThumbnailSize { get; private set; }
 
-		public static readonly UIColor DefaultBackgroundColor = UIColor.FromRGB (222, 222, 222);
-
 		public DocumentThumbnailsView (CGRect frame)
 			: base (frame, new UICollectionViewFlowLayout ())
 		{
@@ -47,7 +45,7 @@ namespace Praeclarum.UI
 
 			AlwaysBounceVertical = true;
 
-			BackgroundColor = DefaultBackgroundColor;
+			BackgroundColor = DocumentAppDelegate.Shared.Theme.DocumentsBackgroundColor;
 
 			RegisterClassForCell (typeof(AddDocumentCell), AddId);
 			RegisterClassForCell (typeof(DocumentThumbnailCell), FileId);
@@ -255,13 +253,18 @@ namespace Praeclarum.UI
 
 		public void HandleRenameRequested (object sender, EventArgs a)
 		{
-			var c = sender as BaseDocumentThumbnailCell;
-			if (c == null)
-				return;
+			try {
+				var c = sender as BaseDocumentThumbnailCell;
+				if (c == null)
+					return;
 
-			var view = c.CreateThumbnailView ();
+				var view = c.CreateThumbnailView ();
 
-			RenameRequested (c.Document, view);
+				RenameRequested (c.Document, view);
+
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 
 		public void ShowItem (int docIndex, bool animated)
@@ -269,6 +272,15 @@ namespace Praeclarum.UI
 			var index = NSIndexPath.FromRowSection (docIndex + 1, 1);
 			ScrollToItem (index, UICollectionViewScrollPosition.CenteredVertically, animated);
 		}
+
+		#region IThemeAware implementation
+
+		public void ApplyTheme (Theme theme)
+		{
+			BackgroundColor = theme.DocumentsBackgroundColor;	
+		}
+
+		#endregion
 	}
 
 	class DocumentThumbnailsViewDelegate : UICollectionViewDelegateFlowLayout
@@ -429,7 +441,7 @@ namespace Praeclarum.UI
 	}
 
 	[Preserve]
-	class SortThumbnailCell : UICollectionViewCell
+	class SortThumbnailCell : UICollectionViewCell, IThemeAware
 	{
 		public const float Width = 160.0f;
 
@@ -460,21 +472,19 @@ namespace Praeclarum.UI
 			Initialize ();
 		}
 
+		bool ios7;
+
 		void Initialize ()
 		{
-			BackgroundColor = UIColor.FromRGB (222, 222, 222);
-
-			var b = Bounds;
-
-			var ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
+			ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 
 			segs = new UISegmentedControl (new [] { "Date", "Name" }) {
 
 			};
-			var darkColor = UIColor.FromWhiteAlpha (59 / 255.0f, 1);
-			if (ios7) {
-				segs.TintColor = darkColor;
-			} else {
+
+			ApplyTheme (DocumentAppDelegate.Shared.Theme);
+
+			if (!ios7) {
 				segs.TintColor = UIColor.FromWhiteAlpha (165 / 255.0f, 1);
 				segs.SetTitleTextAttributes (new UITextAttributes {
 					TextColor = UIColor.FromWhiteAlpha (220 / 255.0f, 1),
@@ -492,6 +502,18 @@ namespace Praeclarum.UI
 			segs.SelectedSegment = sort == DocumentsSort.Name ? 1 : 0;
 			segs.ValueChanged += HandleValueChanged;
 		}
+
+		#region IThemeAware implementation
+
+		public void ApplyTheme (Theme theme)
+		{
+			BackgroundColor = theme.DocumentsBackgroundColor;
+			if (ios7) {
+				segs.TintColor = theme.DocumentsControlColor;
+			}
+		}
+
+		#endregion
 
 		bool filledContent = false;
 		public void FillContentView ()
@@ -518,7 +540,7 @@ namespace Praeclarum.UI
 		}
 	}
 
-	abstract class ThumbnailCell : UICollectionViewCell
+	abstract class ThumbnailCell : UICollectionViewCell, IThemeAware
 	{
 		public static UIColor NotSelectableColor = UIColor.FromWhiteAlpha (0.875f, 0.5961f);
 
@@ -569,10 +591,9 @@ namespace Praeclarum.UI
 		protected ThumbnailCell (IntPtr handle)
 			: base (handle)
 		{
-			BackgroundColor = UIColor.FromRGB (222, 222, 222);
+			ApplyTheme (DocumentAppDelegate.Shared.Theme);
 
 			var b = Bounds;
-
 
 			label = new UILabel (new CGRect (0, b.Bottom - DocumentThumbnailsView.LabelHeight+1, b.Width, DocumentThumbnailsView.LabelHeight-1)) {
 				Text = "",
@@ -586,6 +607,18 @@ namespace Praeclarum.UI
 				Opaque = true,
 			};
 		}
+
+		#region IThemeAware implementation
+
+		public virtual void ApplyTheme (Theme theme)
+		{
+			BackgroundColor = theme.DocumentsBackgroundColor;
+			if (label != null) {
+				label.BackgroundColor = theme.DocumentsBackgroundColor;
+			}
+		}
+
+		#endregion
 
 		bool filledContent = false;
 		public void FillContentView ()
@@ -628,7 +661,7 @@ namespace Praeclarum.UI
 			frameView = new AddFrameView ();
 
 			label.Text = "Create New";
-			label.TextColor = UIColor.Black;
+			label.TextColor = DocumentAppDelegate.Shared.Theme.NavigationTextColor;
 
 			SetThumbnail ();
 		}
@@ -947,6 +980,15 @@ namespace Praeclarum.UI
 
 		const int NumCols = 3;
 		const int MaxSubs = 9;
+
+		public override UIColor BackgroundColor {
+			get {
+				return base.BackgroundColor;
+			}
+			set {
+				base.BackgroundColor = UIColor.Clear;
+			}
+		}
 
 		public DocumentsViewItem Item {
 			get {

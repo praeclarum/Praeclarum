@@ -226,7 +226,7 @@ namespace Praeclarum.UI
 			SetTheme (Settings.DarkMode ? (Theme)new DarkTheme () : new LightTheme ());
 		}
 
-		void SetTheme (Theme newTheme)
+		protected virtual void SetTheme (Theme newTheme)
 		{
 			this.theme = newTheme;
 			this.theme.Apply ();
@@ -1480,7 +1480,7 @@ namespace Praeclarum.UI
 			return string.Format ("{0}-{1}{2}",
 				FileSystemManager.Shared.ActiveFileSystem.Id,
 				file.Path.Replace ('/', '-').Replace ('.', '-'),
-				theme.IsDark ? "-dark" : "");
+				theme.IsDark ? "-Dark14" : "");
 		}
 
 		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme)

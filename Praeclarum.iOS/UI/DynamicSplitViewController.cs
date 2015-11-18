@@ -105,6 +105,7 @@ namespace Praeclarum.UI
 					var w = View.Bounds.Width;
 					var rr = panStartRatio + t.X / w;
 					Ratio = rr;
+					containerView.BackgroundColor = First.View.BackgroundColor;
 					containerView.SetNeedsLayout ();
 				}
 				else {
@@ -230,10 +231,15 @@ namespace Praeclarum.UI
 				//
 				// Background
 				//
+				var theme = DocumentAppDelegate.Shared.Theme;
 				var backColor =
-					touching ?
-					UIColor.FromRGB ((nfloat)229/2/255,(nfloat)229/2/255,(nfloat)238/2/255) :
-					UIColor.FromRGB ((nfloat)229/255,(nfloat)229/255,(nfloat)238/255);
+					theme.IsDark ?
+					(touching ?
+						UIColor.Black :
+						UIColor.FromWhiteAlpha (0.25f, 1.0f)) :
+					(touching ?
+						UIColor.FromRGB ((nfloat)229/2/255,(nfloat)229/2/255,(nfloat)238/2/255) :
+						UIColor.FromRGB ((nfloat)229/255,(nfloat)229/255,(nfloat)238/255));
 
 				backColor.SetFill ();
 				var sw = (nfloat)10.0f;
@@ -242,7 +248,10 @@ namespace Praeclarum.UI
 				//
 				// Draw the button
 				//
-				var buttonColor = UIColor.FromRGB ((nfloat)255/255,(nfloat)255/255,(nfloat)255/255);
+				var buttonColor =
+					theme.IsDark ?
+					UIColor.FromWhiteAlpha (0.5f, 1) :
+					UIColor.FromRGB ((nfloat)255/255,(nfloat)255/255,(nfloat)255/255);
 				var bw = (nfloat)4.0f;
 				var bh = (nfloat)44.0f;
 				var l = (b.Width - bw) / 2;

@@ -279,7 +279,7 @@ namespace Praeclarum.UI
 		}
 		public override UIColor DocumentsBackgroundColor {
 			get {
-				return UIColor.FromRGB (33, 33, 33);
+				return UIColor.FromRGB (22, 22, 22);
 			}
 		}
 		public override UIColor DocumentsFolderColor {

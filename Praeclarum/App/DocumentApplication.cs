@@ -41,7 +41,7 @@ namespace Praeclarum.App
 		}
 
 		public virtual Color GetThumbnailBackgroundColor (Theme theme) {
-			return theme.IsDark ? new Color (0x33, 0x33, 0x33) : Colors.White;
+			return theme.IsDark ? new Color (0x22, 0x22, 0x22) : Colors.White;
 		}
 
 		/// <summary>

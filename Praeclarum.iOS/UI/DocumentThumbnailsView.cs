@@ -666,6 +666,14 @@ namespace Praeclarum.UI
 			SetThumbnail ();
 		}
 
+		public override void ApplyTheme (Theme theme)
+		{
+			base.ApplyTheme (theme);
+			if (label != null) {
+				label.TextColor = theme.NavigationTextColor;
+			}
+		}
+
 		protected override void OnFillContentView ()
 		{
 			ContentView.AddSubviews (frameView);

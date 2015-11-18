@@ -677,7 +677,7 @@ namespace Praeclarum.UI
 		void InvalidateThumbnail (IFile file, bool deleteThumbnail, bool reloadThumbnail)
 		{
 			if (deleteThumbnail) {
-				ThumbnailCache.RemoveImage (GetThumbnailKey (file), removeFromDisk: true);
+				ThumbnailCache.RemoveImage (GetThumbnailKey (file, Theme), removeFromDisk: true);
 			}
 
 			if (reloadThumbnail) {
@@ -1472,17 +1472,18 @@ namespace Praeclarum.UI
 
 		public ImageCache ThumbnailCache { get; private set; }
 
-		public virtual string GetThumbnailKey (IFile file)
+		public virtual string GetThumbnailKey (IFile file, Theme theme)
 		{
 			if (file == null)
 				return "";
 
-			return string.Format ("{0}-{1}",
+			return string.Format ("{0}-{1}{2}",
 				FileSystemManager.Shared.ActiveFileSystem.Id,
-				file.Path.Replace ('/', '-').Replace ('.', '-'));
+				file.Path.Replace ('/', '-').Replace ('.', '-'),
+				theme.IsDark ? "-dark" : "");
 		}
 
-		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size)
+		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme)
 		{
 			UIImage r = null;
 
@@ -1503,7 +1504,7 @@ namespace Praeclarum.UI
 
 //				Console.WriteLine ("GenerateThumbnail: " + docRef.File.Path + " " + docRef.File.ModifiedTime);
 
-				r = await GenerateDocumentThumbnailAsync (doc, size);
+				r = await GenerateDocumentThumbnailAsync (doc, size, theme);
 
 			} catch (Exception ex) {
 				Debug.WriteLine ("FAILED to genenerate thumbnail for {0}, {1}", docRef.File.Path, ex.Message);
@@ -1529,7 +1530,7 @@ namespace Praeclarum.UI
 			return r;
 		}
 
-		async Task<UIImage> GenerateDocumentThumbnailAsync (IDocument s, Praeclarum.Graphics.SizeF size)
+		async Task<UIImage> GenerateDocumentThumbnailAsync (IDocument s, Praeclarum.Graphics.SizeF size, Theme theme)
 		{
 			var scale = UIScreen.MainScreen.Scale;
 			return await Task.Run (() => {
@@ -1551,7 +1552,7 @@ namespace Praeclarum.UI
 						c.ScaleCTM (scale, -scale);
 
 						var g = new Praeclarum.Graphics.CoreGraphicsGraphics (c, true);
-						App.DrawThumbnail (s, g, size);
+						App.DrawThumbnail (s, g, size, theme);
 
 						//
 						// Create the bitmap

@@ -402,24 +402,38 @@ namespace Praeclarum.UI
 		}
 	}
 
-	class ThumbnailFrameView : UIView
+	class ThumbnailFrameView : UIView, IThemeAware
 	{
 		public ThumbnailFrameView ()
 		{
-			BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.ThumbnailBackgroundColor);
+			var appDel = DocumentAppDelegate.Shared;
+			BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (appDel.App.GetThumbnailBackgroundColor (appDel.Theme));
 		}
+
+		#region IThemeAware implementation
+
+		public void ApplyTheme (Theme theme)
+		{
+			SetNeedsDisplay ();
+		}
+
+		#endregion
 
 		public override void Draw (CGRect rect)
 		{
 			try {
 				var c = UIGraphics.GetCurrentContext ();
+
+				var appDel = DocumentAppDelegate.Shared;
+				var backColor = Praeclarum.Graphics.ColorEx.GetUIColor (appDel.App.GetThumbnailBackgroundColor (appDel.Theme));
+				backColor.SetFill ();
+				c.FillRect (rect);
 				
 				var b = Bounds;
 				c.SetLineWidth (1.0f);
 				
-				c.SetStrokeColor (202 / 255.0f, 202 / 255.0f, 202 / 255.0f, 1);
-				//			UIColor.Red.SetStroke ();
-				
+				appDel.Theme.DocumentsFrameSideColor.SetStroke ();
+
 				c.MoveTo (0, 0);
 				c.AddLineToPoint (0, b.Height);
 				c.StrokePath ();
@@ -428,8 +442,7 @@ namespace Praeclarum.UI
 				c.AddLineToPoint (b.Width, b.Height);
 				c.StrokePath ();
 				
-				c.SetStrokeColor (176 / 255.0f, 176 / 255.0f, 176 / 255.0f, 1);
-				//			UIColor.Green.SetStroke ();
+				appDel.Theme.DocumentsFrameBottomColor.SetStroke ();
 				
 				c.MoveTo (0, b.Height);
 				c.AddLineToPoint (b.Width, b.Height);
@@ -691,29 +704,42 @@ namespace Praeclarum.UI
 			frameView.SetNeedsDisplay ();
 		}
 
-		class AddFrameView : ThumbnailFrameView
+		class AddFrameView : ThumbnailFrameView, IThemeAware
 		{
 			public bool Editing = false;
 
-
+			#region IThemeAware implementation
+			public void ApplyTheme (Theme theme)
+			{
+				SetNeedsDisplay ();
+			}
+			#endregion
 
 			public AddFrameView ()
 			{
-				BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.ThumbnailBackgroundColor);
+				var appdel = DocumentAppDelegate.Shared;
+				BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (appdel.App.GetThumbnailBackgroundColor (appdel.Theme));
 			}
 
 			public override void Draw (CGRect rect)
 			{
 				try {
 					base.Draw (rect);
-					
+
+					var appdel = DocumentAppDelegate.Shared;
+					var theme = appdel.Theme;
+
 					var c = UIGraphics.GetCurrentContext ();
 					
+					var backColor = Praeclarum.Graphics.ColorEx.GetUIColor (appdel.App.GetThumbnailBackgroundColor (theme));
+					backColor.SetFill ();
+					c.FillRect (rect);
+
 					var b = Bounds;
 					
 					c.SetLineWidth (2.0f);
 					
-					var color = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor);
+					var color = Praeclarum.Graphics.ColorEx.GetUIColor (appdel.App.TintColor);
 					
 					color.SetStroke ();
 					
@@ -889,7 +915,9 @@ namespace Praeclarum.UI
 
 			var path = doc.File.Path;
 
-			var thumbKey = appDel.GetThumbnailKey (doc.File);
+			var theme = DocumentAppDelegate.Shared.Theme;
+
+			var thumbKey = appDel.GetThumbnailKey (doc.File, theme);
 
 			var memImage = Cache.GetMemoryImage (thumbKey);
 
@@ -900,7 +928,7 @@ namespace Praeclarum.UI
 			var thumbImage = await Cache.GetImageAsync (thumbKey, doc.ModifiedTime);
 
 			if (thumbImage == null) {
-				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize);
+				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme);
 				if (thumbImage != null) {
 					if (doc != null && path == doc.File.Path) {
 						SetThumbnail (thumbImage);
@@ -932,7 +960,8 @@ namespace Praeclarum.UI
 			imageView.Image = thumbImage;
 
 			if (thumbImage == null) {
-				imageView.BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.ThumbnailBackgroundColor);
+				var appdel = DocumentAppDelegate.Shared;
+				imageView.BackgroundColor = Praeclarum.Graphics.ColorEx.GetUIColor (appdel.App.GetThumbnailBackgroundColor (appdel.Theme));
 			}
 		}
 
@@ -1092,7 +1121,7 @@ namespace Praeclarum.UI
 
 			try {
 				var fileTasks = from dr in item.SubReferences.Take (9)
-				                select GetThumbnail (new DocumentReference (dr.File, DocumentAppDelegate.Shared.App.CreateDocument, false));
+					select GetThumbnail (new DocumentReference (dr.File, DocumentAppDelegate.Shared.App.CreateDocument, false), appDel.Theme);
 
 				thumbnails = await Task.WhenAll (fileTasks);
 
@@ -1106,17 +1135,17 @@ namespace Praeclarum.UI
 			}
 		}
 
-		async Task<UIImage> GetThumbnail (DocumentReference doc)
+		async Task<UIImage> GetThumbnail (DocumentReference doc, Theme theme)
 		{
 			var appDel = DocumentAppDelegate.Shared;
 			var Cache = appDel.ThumbnailCache;
 
-			var thumbKey = appDel.GetThumbnailKey (doc.File);
+			var thumbKey = appDel.GetThumbnailKey (doc.File, theme);
 
 			var thumbImage = await Cache.GetImageAsync (thumbKey, doc.ModifiedTime);
 
 			if (thumbImage == null) {
-				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize);
+				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme);
 				if (thumbImage != null) {
 					await Cache.SetGeneratedImageAsync (thumbKey, thumbImage, saveToDisk: true);
 				}
@@ -1149,22 +1178,31 @@ namespace Praeclarum.UI
 			return b;
 		}
 
-		class DirectoryBackgroundView : UIView
+		class DirectoryBackgroundView : UIView, IThemeAware
 		{
-			public UIColor GrayColor = UIColor.FromRGB (195, 195, 195);
-
 			public DirectoryBackgroundView ()
 			{
 				Opaque = true;
 				ContentMode = UIViewContentMode.Redraw;
 			}
 
+			#region IThemeAware implementation
+
+			public void ApplyTheme (Theme theme)
+			{
+				SetNeedsDisplay ();
+			}
+
+			#endregion
+
 			public override void Draw (CGRect rect)
 			{
 				base.Draw (rect);
 
+				var theme = DocumentAppDelegate.Shared.Theme;
+
 				try {
-					GrayColor.SetFill ();
+					theme.DocumentsFolderColor.SetFill ();
 					UIBezierPath.FromRoundedRect (Bounds, 10).Fill ();
 				} catch (Exception ex) {
 					Log.Error (ex);					

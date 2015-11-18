@@ -1,6 +1,7 @@
 using System;
 using UIKit;
 using CoreGraphics;
+using System.Collections.Generic;
 
 namespace Praeclarum.UI
 {
@@ -32,7 +33,7 @@ namespace Praeclarum.UI
 				UIToolbar.Appearance.BarTintColor = NavigationBackgroundColor;
 
 				foreach (var w in UIApplication.SharedApplication.Windows) {
-					ApplyToVC (w.RootViewController);
+					ApplyToVC (w.RootViewController, new HashSet<IntPtr> ());
 				}
 			}
 		}
@@ -48,10 +49,15 @@ namespace Praeclarum.UI
 			nc.Toolbar.BarTintColor = NavigationBackgroundColor;
 		}
 
-		void ApplyToVC (UIViewController vc)
+		void ApplyToVC (UIViewController vc, HashSet<IntPtr> visited)
 		{
 			if (vc == null)
 				return;
+
+			if (visited.Contains (vc.Handle))
+				return;
+
+			visited.Add (vc.Handle);
 
 			try {
 				var nc = vc as UINavigationController;
@@ -71,8 +77,14 @@ namespace Praeclarum.UI
 			}
 
 			try {
+				ApplyToVC (vc.PresentedViewController, visited);
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+
+			try {
 				foreach (var c in (vc.ChildViewControllers??new UIViewController[0])) {
-					ApplyToVC (c);
+					ApplyToVC (c, visited);
 				}
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -143,6 +155,21 @@ namespace Praeclarum.UI
 		public virtual UIColor DocumentsControlColor {
 			get {
 				return UIColor.FromWhiteAlpha (59 / 255.0f, 1);
+			}
+		}
+		public virtual UIColor DocumentsFolderColor {
+			get {
+				return UIColor.FromRGB (195, 195, 195);
+			}
+		}
+		public virtual UIColor DocumentsFrameSideColor {
+			get {
+				return UIColor.FromRGB ((nfloat)202 / 255.0f, (nfloat)202 / 255.0f, (nfloat)202 / 255.0f);
+			}
+		}
+		public virtual UIColor DocumentsFrameBottomColor {
+			get {
+				return UIColor.FromRGB ((nfloat)176 / 255.0f, (nfloat)176 / 255.0f, (nfloat)176 / 255.0f);
 			}
 		}
 
@@ -247,7 +274,7 @@ namespace Praeclarum.UI
 		}
 		public override UIColor NavigationTextColor {
 			get {
-				return UIColor.White;
+				return UIColor.LightGray;
 			}
 		}
 		public override UIColor DocumentsBackgroundColor {
@@ -255,9 +282,24 @@ namespace Praeclarum.UI
 				return UIColor.FromRGB (33, 33, 33);
 			}
 		}
+		public override UIColor DocumentsFolderColor {
+			get {
+				return UIColor.Black;
+			}
+		}
+		public override UIColor DocumentsFrameSideColor {
+			get {
+				return UIColor.Black;
+			}
+		}
+		public override UIColor DocumentsFrameBottomColor {
+			get {
+				return UIColor.Black;
+			}
+		}
 		public override UIColor DocumentsControlColor {
 			get {
-				return UIColor.FromWhiteAlpha (194 / 255.0f, 1);
+				return UIColor.Gray;
 			}
 		}
 		public override UIBarStyle NavigationBarStyle {

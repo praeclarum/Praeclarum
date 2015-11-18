@@ -34,16 +34,14 @@ namespace Praeclarum.App
 
 		public virtual float ThumbnailAspectRatio { get { return 8.5f/11.0f; } }
 
-		public virtual void DrawThumbnail (IDocument doc, IGraphics g, SizeF size)
+		public virtual void DrawThumbnail (IDocument doc, IGraphics g, SizeF size, Theme theme)
 		{
-			g.SetColor (Colors.White);
+			g.SetColor (GetThumbnailBackgroundColor (theme));
 			g.FillRect (new RectangleF (PointF.Empty, size));
 		}
 
-		public virtual Color ThumbnailBackgroundColor {
-			get {
-				return Colors.White;
-			}
+		public virtual Color GetThumbnailBackgroundColor (Theme theme) {
+			return theme.IsDark ? new Color (0x33, 0x33, 0x33) : Colors.White;
 		}
 
 		/// <summary>

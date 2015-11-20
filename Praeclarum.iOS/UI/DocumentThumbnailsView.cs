@@ -1257,7 +1257,7 @@ namespace Praeclarum.UI
 
 			var size = text.StringSize (font);
 
-			activity = new UIActivityIndicatorView (UIActivityIndicatorViewStyle.Gray) {
+			activity = new UIActivityIndicatorView (theme.IsDark ? UIActivityIndicatorViewStyle.White : UIActivityIndicatorViewStyle.Gray) {
 			};
 			var af = activity.Frame;
 			af.X = (b.Width - size.Width) / 2 - 11 - af.Width;

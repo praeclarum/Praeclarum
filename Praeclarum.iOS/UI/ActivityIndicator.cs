@@ -29,7 +29,7 @@ namespace Praeclarum.UI
 
 			const float margin = 12;
 
-			activity = new UIActivityIndicatorView (UIActivityIndicatorViewStyle.Gray) {
+			activity = new UIActivityIndicatorView (isDark ? UIActivityIndicatorViewStyle.White : UIActivityIndicatorViewStyle.Gray) {
 				Frame = new CGRect (margin, margin, 21, 21),
 				HidesWhenStopped = false,
 			};

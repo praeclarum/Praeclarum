@@ -4,15 +4,20 @@ using Foundation;
 namespace Praeclarum.UI
 {
 	public class DarkModeSection : PFormSection
-	{
+	{		
 		public DarkModeSection ()
 		{
+			Items.Add ("Light Mode");
 			Items.Add ("Dark Mode");
 		}
 
 		public override bool GetItemChecked (object item)
 		{
-			return DocumentAppDelegate.Shared.Settings.DarkMode;
+			var isDark = DocumentAppDelegate.Shared.Settings.DarkMode;
+			if ("Dark Mode" == item.ToString ()) {
+				return isDark;
+			}
+			return !isDark;
 		}
 
 		public override bool SelectItem (object item)

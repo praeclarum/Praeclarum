@@ -34,6 +34,8 @@ namespace Praeclarum.IO
 		bool IsSyncing { get; }
 		string SyncStatus { get; }
 
+		bool JustForApp { get; }
+
 		bool IsWritable { get; }
 
 		int MaxDirectoryDepth { get; }

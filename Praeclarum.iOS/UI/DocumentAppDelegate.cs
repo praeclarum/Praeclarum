@@ -612,8 +612,8 @@ namespace Praeclarum.UI
 
 		bool ShouldRestoreDocs ()
 		{
-			return (Settings.IsFirstRun ()) ||
-				(Version != Settings.DocumentationVersion);
+			return FileSystem.JustForApp && ((Settings.IsFirstRun ()) ||
+				(Version != Settings.DocumentationVersion));
 		}
 
 		async void HandleFilesChanged (object sender, EventArgs e)

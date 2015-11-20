@@ -63,6 +63,8 @@ namespace Praeclarum.IO
 
 		public bool IsWritable { get { return true; } }
 
+		public bool JustForApp { get { return true; } }
+
 		public bool IsAvailable { get { return true; } }
 		public string AvailabilityReason { get { return ""; } }
 

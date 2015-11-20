@@ -91,6 +91,8 @@ namespace Praeclarum.IO
 
 		bool needsRefresh = true;
 
+		public bool JustForApp { get { return true; } }
+
 		public bool ListFilesIsFast { get { return true; } }
 
 		public async Task<List<IFile>> ListFiles (string directory)

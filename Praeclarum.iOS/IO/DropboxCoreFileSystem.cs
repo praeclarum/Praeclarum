@@ -67,6 +67,7 @@ namespace Praeclarum.IO
 
 	public class DropboxFileSystem : IFileSystem
 	{
+		readonly Session session;
 		readonly RestClient sharedClient;
 
 		public string UserId { get; private set; }
@@ -74,6 +75,7 @@ namespace Praeclarum.IO
 
 		public DropboxFileSystem (Session session)
 		{
+			this.session = session;
 			sharedClient = new RestClient (session);
 			UserId = session.UserIds.FirstOrDefault () ?? "Unknown";
 			FileExtensions = new System.Collections.ObjectModel.Collection<string> ();
@@ -263,6 +265,12 @@ namespace Praeclarum.IO
 		}
 
 		#region IFileSystem implementation
+
+		public bool JustForApp {
+			get {
+				return session.Root == Session.RootAppFolder;
+			}
+		}
 
 		public event EventHandler FilesChanged;
 

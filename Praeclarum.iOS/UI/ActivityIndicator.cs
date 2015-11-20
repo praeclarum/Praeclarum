@@ -21,7 +21,10 @@ namespace Praeclarum.UI
 			var bounds = new CGRect (0, 0, 150, 44);
 			Frame = bounds;
 
-			BackgroundColor = UIColor.FromWhiteAlpha (0.96f, 0.85f);
+			var isDark = DocumentAppDelegate.Shared.Theme.IsDark;
+			BackgroundColor = isDark ?
+				UIColor.FromWhiteAlpha (1-0.96f, 0.85f) :
+				UIColor.FromWhiteAlpha (0.96f, 0.85f);
 			Layer.CornerRadius = 12;
 
 			const float margin = 12;
@@ -33,7 +36,7 @@ namespace Praeclarum.UI
 
 			titleLabel = new UILabel (new CGRect (activity.Frame.Right+margin, 0, bounds.Width - activity.Frame.Right - 2*margin, 44)) {
 				TextAlignment = UITextAlignment.Center,
-				TextColor = UIColor.FromWhiteAlpha (0.33f, 1),
+				TextColor = isDark ? UIColor.FromWhiteAlpha (1-0.33f, 1) : UIColor.FromWhiteAlpha (0.33f, 1),
 				BackgroundColor = UIColor.Clear,
 			};
 

@@ -149,6 +149,9 @@ namespace Praeclarum.UI
 						i.Text = controller.InputText;
 						i.AccessibilityLabel = controller.Title;
 						i.AutocorrectionType = UITextAutocorrectionType.No;
+						var theme = DocumentAppDelegate.Shared.Theme;
+						i.TextColor = theme.TableCellTextColor;
+						theme.Apply (cell);
 						i.BecomeFirstResponder ();
 					}
 

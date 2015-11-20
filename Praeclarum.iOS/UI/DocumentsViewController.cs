@@ -538,11 +538,11 @@ namespace Praeclarum.UI
 		void HandleRenameRequested (DocumentReference docRef, object arg2)
 		{
 			var name = docRef.Name;
-
+			var dir = Path.GetDirectoryName (docRef.File.Path);
 			var c = new TextInputController {
 				Title = "Rename " + (docRef.File.IsDirectory ? "Folder" : DocumentAppDelegate.Shared.App.DocumentBaseName),
 				InputText = name,
-				ValidateFunc = n => DocumentAppDelegate.ValidateNewName (n, docRef.Name),
+				ValidateFunc = n => DocumentAppDelegate.ValidateNewName (dir, n, docRef.Name),
 			};
 
 			var nc = new UINavigationController (c);
@@ -951,11 +951,12 @@ namespace Praeclarum.UI
 				return;
 
 			var name = DirectoryName;
+			var dir = Path.GetDirectoryName (this.Directory);
 
 			var c = new TextInputController {
 				Title = "Rename",
 				InputText = name,
-				ValidateFunc = n => DocumentAppDelegate.ValidateNewName (n, name),
+				ValidateFunc = n => DocumentAppDelegate.ValidateNewName (dir, n, name),
 			};
 
 			var nc = new UINavigationController (c);

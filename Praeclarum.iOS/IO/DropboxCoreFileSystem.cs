@@ -472,9 +472,18 @@ namespace Praeclarum.IO
 			return new DropboxLocal (this, lp, data);
 		}
 
-		public Task<bool> Move (string newPath)
+		public async Task<bool> Move (string newPath)
 		{
-			return FileSystem.Move (Path, newPath);
+			if (await FileSystem.Move (Path, newPath)) {
+				try {
+					var f = (DropboxFile)await FileSystem.GetFile (newPath);
+					meta = f.meta;
+					return true;
+				} catch (Exception ex) {
+					Log.Error (ex);
+				}
+			}
+			return false;
 		}
 
 		public string Path {

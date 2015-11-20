@@ -1000,7 +1000,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public static async Task<string> ValidateNewName (string t, string existingName = null)
+		public static async Task<string> ValidateNewName (string dir, string t, string existingName)
 		{
 			if (t == existingName)
 				return null;
@@ -1008,7 +1008,7 @@ namespace Praeclarum.UI
 				return "Name cannot contain /, \\, ?, nor *.";
 			var fs = FileSystemManager.Shared.ActiveFileSystem;
 			foreach (var ext in fs.FileExtensions) {
-				if (await fs.FileExists (t + "." + ext))
+				if (await fs.FileExists (Path.Combine (dir, t + "." + ext)))
 					return "Name already used. Please enter something different.";
 			}
 			return null;
@@ -1016,11 +1016,13 @@ namespace Praeclarum.UI
 
 		void AddFolder ()
 		{
+			var dir = CurrentDirectory;
+
 			var c = new TextInputController {
 				Title = "Create Folder",
 				InputText = "",
 				Hint = "Enter the name of the new folder.",
-				ValidateFunc = n => ValidateNewName (n),
+				ValidateFunc = n => ValidateNewName (dir, n, null),
 			};
 
 			var presenter = docListNav.TopViewController;

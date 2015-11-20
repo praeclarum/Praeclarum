@@ -307,7 +307,7 @@ namespace Praeclarum.UI
 		}
 		public override UIColor NavigationBackgroundColor {
 			get {
-				return UIColor.Black;
+				return null;
 			}
 		}
 		public override UIColor NavigationTextColor {

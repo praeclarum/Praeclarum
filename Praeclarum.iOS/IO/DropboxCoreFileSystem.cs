@@ -286,7 +286,15 @@ namespace Praeclarum.IO
 				d = "/" + d;
 			}
 			var r = await DropboxLoadMetadataAsync (d);
-			var res = r.Metadata.Contents.Select (GetDropboxFile).Cast<IFile> ().ToList ();
+
+			var exts = FileExtensions.Select (x => "." + x).ToDictionary (x => x);
+
+			var res =
+				r.Metadata.Contents.
+				Select (GetDropboxFile).
+				Where (x => x.IsDirectory || exts.ContainsKey (Path.GetExtension (x.Path))).
+				Cast<IFile> ().
+				ToList ();
 			return res;
 		}
 

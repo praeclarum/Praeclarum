@@ -175,6 +175,8 @@
     <Compile Include="..\Praeclarum\Log.cs">
       <Link>Log.cs</Link>
     </Compile>
+    <Compile Include="UI\DarkModeSection.cs" />
+    <Compile Include="UI\DynamicSplitViewController.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>

@@ -80,7 +80,8 @@ namespace Praeclarum.App
 			var n = baseName + ext;
 			var i = 1;
 			var p = Path.Combine (directory, n);
-			while (await fs.FileExists (p)) {
+			var files = await fs.ListFiles (directory);
+			while (files.Exists (x => x.Path == p)) {
 				i++;
 				n = baseName + " " + i + ext;
 				p = Path.Combine (directory, n);

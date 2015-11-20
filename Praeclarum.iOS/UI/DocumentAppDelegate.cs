@@ -557,6 +557,7 @@ namespace Praeclarum.UI
 
 		protected string DropboxSyncKey = "";
 		protected string DropboxSyncSecret = "";
+		protected bool DropboxAppFolder = true;
 
 		async Task InitFileSystem ()
 		{
@@ -574,7 +575,7 @@ namespace Praeclarum.UI
 			fsman.Add (new DeviceFileSystemProvider ());
 
 			try {
-				fsman.Add (new DropboxFileSystemProvider (DropboxSyncKey, DropboxSyncSecret));
+				fsman.Add (new DropboxFileSystemProvider (DropboxSyncKey, DropboxSyncSecret, DropboxAppFolder));
 			} catch (Exception ex) {
 				Debug.WriteLine (ex);
 			}

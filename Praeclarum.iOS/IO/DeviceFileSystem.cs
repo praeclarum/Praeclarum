@@ -77,6 +77,8 @@ namespace Praeclarum.IO
 			return Task.FromResult<IFile> (file);
 		}
 
+		public bool ListFilesIsFast { get { return true; } }
+
 		public Task<List<IFile>> ListFiles (string directory)
 		{
 			var dirPath = Path.Combine (documentsPath, directory);

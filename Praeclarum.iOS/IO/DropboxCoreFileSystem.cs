@@ -15,13 +15,9 @@ namespace Praeclarum.IO
 			set;
 		}
 
-		public DropboxFileSystemProvider (string appKey, string appSecret)
+		public DropboxFileSystemProvider (string appKey, string appSecret, bool appFolder)
 		{
-			// Create a new Dropbox Session, choose the type of access that your app has to your folders.
-			// Session.RootAppFolder = The app will only have access to its own folder located in /Applications/AppName/
-			// Session.RootDropbox = The app will have access to all the files that you have granted permission
-			var session = new Session (appKey, appSecret, Session.RootDropbox);
-			// The session that you have just created, will live through all the app
+			var session = new Session (appKey, appSecret, appFolder ? Session.RootAppFolder : Session.RootDropbox);
 			Session.SharedSession = session;
 		}
 
@@ -69,21 +65,65 @@ namespace Praeclarum.IO
 
 	public class DropboxFileSystem : IFileSystem
 	{
+		readonly Session session;
+
 		public string UserId { get; private set; }
 
 		public DropboxFileSystem (Session session)
 		{
+			this.session = session;
 			UserId = session.UserIds.FirstOrDefault () ?? "Unknown";
 			FileExtensions = new System.Collections.ObjectModel.Collection<string> ();
 		}
+
+		RestClient GetClient ()
+		{
+			return new RestClient (session);
+		}
+
+		DropboxFile GetDropboxFile (Metadata meta)
+		{
+			return new DropboxFile (session, meta);
+		}
+
 		#region IFileSystem implementation
 		public event EventHandler FilesChanged;
 		public async Task Initialize ()
 		{
 		}
-		public Task<List<IFile>> ListFiles (string directory)
+		public bool ListFilesIsFast { get { return false; } }
+		public async Task<List<IFile>> ListFiles (string directory)
 		{
-			throw new NotImplementedException ();
+			var c = GetClient ();
+
+			var tcs = new TaskCompletionSource<RestClientMetadataLoadedEventArgs> ();
+			EventHandler<RestClientMetadataLoadedEventArgs> onSuccess = null;
+			EventHandler<RestClientErrorEventArgs> onFail = null;
+			var error = "";
+			onSuccess = (s, e) => {
+				c.MetadataLoaded -= onSuccess;
+				c.LoadMetadataFailed -= onFail;
+				tcs.SetResult (e);
+			};
+			onFail = (s, e) => {
+				c.MetadataLoaded -= onSuccess;
+				c.LoadMetadataFailed -= onFail;
+				error = e.Error.Description ?? "";
+				tcs.SetResult (null);
+			};
+			c.MetadataLoaded += onSuccess;
+			c.LoadMetadataFailed += onFail;
+			c.LoadMetadata (directory);
+
+			var r = await tcs.Task.ConfigureAwait (false);
+
+			if (r == null) {
+				throw new Exception (error);
+			}
+
+			var res = r.Metadata.Contents.Select (GetDropboxFile).Cast<IFile> ().ToList ();
+
+			return res;
 		}
 		public Task<IFile> GetFile (string path)
 		{
@@ -158,6 +198,66 @@ namespace Praeclarum.IO
 			get;
 			private set;
 		}
+		#endregion
+	}
+
+	public class DropboxFile : IFile
+	{
+		readonly Session session;
+		Metadata meta;
+		public DropboxFile (Session session, Metadata meta)
+		{
+			this.session = session;
+			this.meta = meta;
+		}
+
+		public override string ToString ()
+		{
+			return Path;
+		}
+
+		#region IFile implementation
+
+		public Task<LocalFileAccess> BeginLocalAccess ()
+		{
+			throw new NotImplementedException ();
+		}
+
+		public Task<bool> Move (string newPath)
+		{
+			throw new NotImplementedException ();
+		}
+
+		public string Path {
+			get {
+				return meta.Path;
+			}
+		}
+
+		public bool IsDirectory {
+			get {
+				return meta.IsDirectory;
+			}
+		}
+
+		public DateTime ModifiedTime {
+			get {
+				return (DateTime)meta.LastModifiedDate;
+			}
+		}
+
+		public bool IsDownloaded {
+			get {
+				return true;
+			}
+		}
+
+		public double DownloadProgress {
+			get {
+				return 1;
+			}
+		}
+
 		#endregion
 	}
 }

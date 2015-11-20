@@ -42,6 +42,7 @@ namespace Praeclarum.IO
 
 		event EventHandler FilesChanged;
 		Task<List<IFile>> ListFiles (string directory);
+		bool ListFilesIsFast { get; }
 
 		Task<IFile> GetFile (string path);
 

@@ -74,7 +74,7 @@ namespace Praeclarum.IO
 			tcs.SetResult (false);
 			return tcs.Task;
 		}
-
+		public bool ListFilesIsFast { get { return true; } }
 		public Task<List<IFile>> ListFiles (string directory)
 		{
 			return Task.FromResult (files);

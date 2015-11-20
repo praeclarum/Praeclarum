@@ -190,9 +190,15 @@ namespace Praeclarum.UI
 					new DocumentReference (f, dctor, isNew: false))).ToList ();
 			foreach (var item in newItems) {
 				if (item.Reference.File.IsDirectory) {
-					item.SubReferences = (from f in await fs.ListFiles (item.Reference.File.Path)
-						where !f.IsDirectory
-						select new DocumentReference (f, dctor, isNew: false)).ToList ();
+					if (fs.ListFilesIsFast) {
+//						Console.WriteLine ("Listing subrefs for " + item.Reference.File);				
+						item.SubReferences = (from f in await fs.ListFiles (item.Reference.File.Path)
+							where !f.IsDirectory
+							select new DocumentReference (f, dctor, isNew: false)).ToList ();
+					}
+					else {
+						item.SubReferences = new List<DocumentReference> ();
+					}
 				}
 			}
 

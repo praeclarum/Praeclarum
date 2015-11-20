@@ -1124,6 +1124,8 @@ namespace Praeclarum.UI
 			var Cache = appDel.ThumbnailCache;
 			if (Cache == null)
 				return;
+			if (item == null)
+				return;
 
 			var startDir = Item.Reference.File.Path;
 			UIImage[] thumbnails = null;

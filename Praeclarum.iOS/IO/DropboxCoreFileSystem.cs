@@ -70,6 +70,7 @@ namespace Praeclarum.IO
 		readonly RestClient sharedClient;
 
 		public string UserId { get; private set; }
+		public string DisplayName { get; private set; }
 
 		public DropboxFileSystem (Session session)
 		{
@@ -238,12 +239,42 @@ namespace Praeclarum.IO
 			return tcs.Task;
 		}
 
+		public Task<RestClientAccountInfoLoadedEventArgs> DropboxLoadAccountInfoAsync ()
+		{
+			var c = GetClient ();
+			var tcs = new TaskCompletionSource<RestClientAccountInfoLoadedEventArgs> ();
+			EventHandler<RestClientAccountInfoLoadedEventArgs> onSuccess = null;
+			EventHandler<RestClientErrorEventArgs> onFail = null;
+			onSuccess = (s, e) => {
+				c.AccountInfoLoaded -= onSuccess;
+				c.LoadAccountInfoFailed -= onFail;
+				tcs.SetResult (e);
+			};
+			onFail = (s, e) => {
+				c.AccountInfoLoaded -= onSuccess;
+				c.LoadAccountInfoFailed -= onFail;
+				var error = e.Error.Description ?? "";
+				tcs.SetException (new Exception (error));
+			};
+			c.AccountInfoLoaded += onSuccess;
+			c.LoadAccountInfoFailed += onFail;
+			c.LoadAccountInfo ();
+			return tcs.Task;
+		}
+
 		#region IFileSystem implementation
 
 		public event EventHandler FilesChanged;
 
 		public async Task Initialize ()
 		{
+			try {
+				var r = await DropboxLoadAccountInfoAsync ();
+				DisplayName = r.Info.DisplayName;				
+			} catch (Exception ex) {
+				Log.Error (ex);
+				DisplayName = UserId;
+			}
 		}
 
 		public bool ListFilesIsFast { get { return false; } }
@@ -338,7 +369,7 @@ namespace Praeclarum.IO
 		}
 		public string Description {
 			get {
-				return IsAvailable ? "Dropbox: " + UserId : "Dropbox";
+				return IsAvailable ? "Dropbox: " + DisplayName : "Dropbox";
 			}
 		}
 		public string ShortDescription {

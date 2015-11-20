@@ -67,15 +67,12 @@ namespace Praeclarum.IO
 
 	public class DropboxFileSystem : IFileSystem
 	{
-		readonly Session session;
-
 		readonly RestClient sharedClient;
 
 		public string UserId { get; private set; }
 
 		public DropboxFileSystem (Session session)
 		{
-			this.session = session;
 			sharedClient = new RestClient (session);
 			UserId = session.UserIds.FirstOrDefault () ?? "Unknown";
 			FileExtensions = new System.Collections.ObjectModel.Collection<string> ();
@@ -91,22 +88,14 @@ namespace Praeclarum.IO
 			return new DropboxFile (this, meta);
 		}
 
-		#region IFileSystem implementation
-		public event EventHandler FilesChanged;
-		public async Task Initialize ()
-		{
-		}
-
-		public bool ListFilesIsFast { get { return false; } }
-
-		public Task<RestClientMetadataLoadedEventArgs> LoadMetadataAsync (string directory)
+		public Task<RestClientMetadataLoadedEventArgs> DropboxLoadMetadataAsync (string path)
 		{
 			var c = GetClient ();
 			var tcs = new TaskCompletionSource<RestClientMetadataLoadedEventArgs> ();
 			EventHandler<RestClientMetadataLoadedEventArgs> onSuccess = null;
 			EventHandler<RestClientErrorEventArgs> onFail = null;
 			onSuccess = (s, e) => {
-				if (e.Metadata.Path == directory) {
+				if (e.Metadata.Path == path) {
 					c.MetadataLoaded -= onSuccess;
 					c.LoadMetadataFailed -= onFail;
 					tcs.SetResult (e);
@@ -120,11 +109,11 @@ namespace Praeclarum.IO
 			};
 			c.MetadataLoaded += onSuccess;
 			c.LoadMetadataFailed += onFail;
-			c.LoadMetadata (directory);
+			c.LoadMetadata (path);
 			return tcs.Task;
 		}
 
-		public Task<RestClientFileLoadedEventArgs> LoadFileAsync (string path, string destinationPath)
+		public Task<RestClientFileLoadedEventArgs> DropboxLoadFileAsync (string path, string destinationPath)
 		{
 			var c = GetClient ();
 			var tcs = new TaskCompletionSource<RestClientFileLoadedEventArgs> ();
@@ -149,7 +138,7 @@ namespace Praeclarum.IO
 			return tcs.Task;
 		}
 
-		public Task<RestClientFileUploadedEventArgs> UploadFileAsync (string path, string parentRev, string sourcePath)
+		public Task<RestClientFileUploadedEventArgs> DropboxUploadFileAsync (string path, string parentRev, string sourcePath)
 		{
 			var c = GetClient ();
 			var tcs = new TaskCompletionSource<RestClientFileUploadedEventArgs> ();
@@ -174,40 +163,173 @@ namespace Praeclarum.IO
 			return tcs.Task;
 		}
 
+		public Task<RestClientFolderCreatedEventArgs> DropboxCreateFolderAsync (string path, string parentRev, string sourcePath)
+		{
+			var c = GetClient ();
+			var tcs = new TaskCompletionSource<RestClientFolderCreatedEventArgs> ();
+			EventHandler<RestClientFolderCreatedEventArgs> onSuccess = null;
+			EventHandler<RestClientErrorEventArgs> onFail = null;
+			onSuccess = (s, e) => {
+				if (e.Folder.Path == path) {
+					c.FolderCreated -= onSuccess;
+					c.CreateFolderFailed -= onFail;
+					tcs.SetResult (e);
+				}
+			};
+			onFail = (s, e) => {
+				c.FolderCreated -= onSuccess;
+				c.CreateFolderFailed -= onFail;
+				var error = e.Error.Description ?? "";
+				tcs.SetException (new Exception (error));
+			};
+			c.FolderCreated += onSuccess;
+			c.CreateFolderFailed += onFail;
+			c.CreateFolder (path);
+			return tcs.Task;
+		}
+
+		public Task<RestClientPathDeletedEventArgs> DropboxDeletePathAsync (string path)
+		{
+			var c = GetClient ();
+			var tcs = new TaskCompletionSource<RestClientPathDeletedEventArgs> ();
+			EventHandler<RestClientPathDeletedEventArgs> onSuccess = null;
+			EventHandler<RestClientErrorEventArgs> onFail = null;
+			onSuccess = (s, e) => {
+				if (e.Path == path) {
+					c.PathDeleted -= onSuccess;
+					c.DeletePathFailed -= onFail;
+					tcs.SetResult (e);
+				}
+			};
+			onFail = (s, e) => {
+				c.PathDeleted -= onSuccess;
+				c.DeletePathFailed -= onFail;
+				var error = e.Error.Description ?? "";
+				tcs.SetException (new Exception (error));
+			};
+			c.PathDeleted += onSuccess;
+			c.DeletePathFailed += onFail;
+			c.DeletePath (path);
+			return tcs.Task;
+		}
+
+		public Task<RestClientPathMovedEventArgs> DropboxMovePathAsync (string fromPath, string toPath)
+		{
+			var c = GetClient ();
+			var tcs = new TaskCompletionSource<RestClientPathMovedEventArgs> ();
+			EventHandler<RestClientPathMovedEventArgs> onSuccess = null;
+			EventHandler<RestClientErrorEventArgs> onFail = null;
+			onSuccess = (s, e) => {
+				if (e.From_path == fromPath) {
+					c.PathMoved -= onSuccess;
+					c.MovePathFailedWithError -= onFail;
+					tcs.SetResult (e);
+				}
+			};
+			onFail = (s, e) => {
+				c.PathMoved -= onSuccess;
+				c.MovePathFailedWithError -= onFail;
+				var error = e.Error.Description ?? "";
+				tcs.SetException (new Exception (error));
+			};
+			c.PathMoved += onSuccess;
+			c.MovePathFailedWithError += onFail;
+			c.MoveFrom (fromPath, toPath);
+			return tcs.Task;
+		}
+
+		#region IFileSystem implementation
+
+		public event EventHandler FilesChanged;
+
+		public async Task Initialize ()
+		{
+		}
+
+		public bool ListFilesIsFast { get { return false; } }
+
 		public async Task<List<IFile>> ListFiles (string directory)
 		{
 			var d = directory;
 			if (!d.StartsWith ("/", StringComparison.Ordinal)) {
 				d = "/" + d;
 			}
-			var r = await LoadMetadataAsync (d);//.ConfigureAwait (false);
+			var r = await DropboxLoadMetadataAsync (d);
 			var res = r.Metadata.Contents.Select (GetDropboxFile).Cast<IFile> ().ToList ();
 			return res;
 		}
 
-		public Task<IFile> GetFile (string path)
+		public async Task<IFile> GetFile (string path)
 		{
-			throw new NotImplementedException ();
+			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
+				path = "/" + path;
+			}
+			var meta = await DropboxLoadMetadataAsync (path);
+			return GetDropboxFile (meta.Metadata);
 		}
-		public Task<IFile> CreateFile (string path, byte[] contents)
+		public async Task<IFile> CreateFile (string path, byte[] contents)
 		{
-			throw new NotImplementedException ();
+			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
+				path = "/" + path;
+			}
+			var src = await Task.Run(() => {
+				var p = Path.GetTempFileName ();
+				File.WriteAllBytes (p, contents);
+				return p;
+			});//.ConfigureAwait (false);
+			await DropboxUploadFileAsync (path, null, src);
+			return await GetFile (path);
 		}
-		public Task<bool> CreateDirectory (string path)
+		public async Task<bool> CreateDirectory (string path)
 		{
-			throw new NotImplementedException ();
+			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
+				path = "/" + path;
+			}
+			try {
+				await DropboxDeletePathAsync (path);
+				return true;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return false;
+			}
 		}
-		public Task<bool> FileExists (string path)
+		public async Task<bool> FileExists (string path)
 		{
-			throw new NotImplementedException ();
+			try {
+				var f = await GetFile (path);
+				return f != null;
+			} catch (Exception) {
+				return false;
+			}
 		}
-		public Task<bool> DeleteFile (string path)
+		public async Task<bool> DeleteFile (string path)
 		{
-			throw new NotImplementedException ();
+			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
+				path = "/" + path;
+			}
+			try {
+				await DropboxDeletePathAsync (path);
+				return true;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return false;
+			}
 		}
-		public Task<bool> Move (string fromPath, string toPath)
+		public async Task<bool> Move (string fromPath, string toPath)
 		{
-			throw new NotImplementedException ();
+			if (!fromPath.StartsWith ("/", StringComparison.Ordinal)) {
+				fromPath = "/" + fromPath;
+			}
+			if (!toPath.StartsWith ("/", StringComparison.Ordinal)) {
+				toPath = "/" + toPath;
+			}
+			try {
+				await DropboxMovePathAsync (fromPath, toPath);
+				return true;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return false;
+			}
 		}
 		public string Id {
 			get {
@@ -273,7 +395,7 @@ namespace Praeclarum.IO
 
 		public override string ToString ()
 		{
-			return Path + "@" + Rev;
+			return DropboxPath + "@" + Rev;
 		}
 
 		public string Rev { get { return meta.Revision; } }
@@ -291,26 +413,34 @@ namespace Praeclarum.IO
 			var tmpDir = System.IO.Path.Combine (cachesDir, "DropboxTemp");
 
 			var filename = Path;
-			if (filename.StartsWith ("/", StringComparison.Ordinal)) {
-				filename = filename.Substring (1);
-			}
+			
 			var lp = System.IO.Path.Combine (tmpDir, filename);
 
 			FileSystemManager.EnsureDirectoryExists (System.IO.Path.GetDirectoryName (lp));
 
-			await FileSystem.LoadFileAsync (Path, lp);
+			await FileSystem.DropboxLoadFileAsync (DropboxPath, lp);
 
-			var data = await Task.Run (() => File.ReadAllText (lp, Encoding.UTF8));//.ConfigureAwait (false);
+			var data = await Task.Run (() => File.ReadAllText (lp, Encoding.UTF8));
 
 			return new DropboxLocal (this, lp, data);
 		}
 
 		public Task<bool> Move (string newPath)
 		{
-			throw new NotImplementedException ();
+			return FileSystem.Move (Path, newPath);
 		}
 
 		public string Path {
+			get {
+				var p = meta.Path;
+				if (p.StartsWith ("/", StringComparison.Ordinal)) {
+					p = p.Substring (1);
+				}
+				return p;
+			}
+		}
+
+		public string DropboxPath {
 			get {
 				return meta.Path;
 			}
@@ -359,7 +489,9 @@ namespace Praeclarum.IO
 		{
 			var data = await Task.Run (() => File.ReadAllText (LocalPath, Encoding.UTF8));
 			if (data != remoteData) {
-				await file.FileSystem.UploadFileAsync (file.Path, file.Rev, LocalPath);
+				// Get the newest revision
+				var newestFile = (DropboxFile)await file.FileSystem.GetFile (file.Path);
+				await file.FileSystem.DropboxUploadFileAsync (file.DropboxPath, newestFile.Rev, LocalPath);
 			}
 		}
 	}

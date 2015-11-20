@@ -4,12 +4,10 @@ using UIKit;
 using Foundation;
 using Praeclarum.IO;
 using System.IO;
-using System.Globalization;
 using System.Linq;
 using Praeclarum.App;
 using System.Collections.Generic;
 using System.Diagnostics;
-using DropBoxSync.iOS;
 
 namespace Praeclarum.UI
 {

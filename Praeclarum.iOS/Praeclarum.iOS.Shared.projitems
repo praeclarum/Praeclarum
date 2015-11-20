@@ -18,7 +18,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\CoreGraphicsGraphics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\CloudFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\DeviceFileSystem.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)IO\DropboxFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\EmptyFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ActivityIndicator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Canvas.cs" />
@@ -47,5 +46,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\GLGraphics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DynamicSplitViewController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DarkModeSection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\DropboxCoreFileSystem.cs" />
   </ItemGroup>
 </Project>

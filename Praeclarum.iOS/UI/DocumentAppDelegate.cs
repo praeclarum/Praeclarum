@@ -9,7 +9,7 @@ using System.Linq;
 using Praeclarum.App;
 using System.Collections.Generic;
 using System.Diagnostics;
-using DropBoxSync.iOS;
+using Dropbox.CoreApi.iOS;
 
 namespace Praeclarum.UI
 {
@@ -344,18 +344,16 @@ namespace Praeclarum.UI
 
 		bool HandleDropboxUrl (NSUrl url)
 		{
-			var account = DBAccountManager.SharedManager.HandleOpenURL (url);
-			if (account != null) {
+			var session = Session.SharedSession;
+			if (session.HandleOpenUrl (url) && session.IsLinked) {
 				var fman = FileSystemManager.Shared;
-				var fs = fman.FileSystems.OfType<DropboxFileSystem> ().FirstOrDefault (x => x.UserId == account.UserId);
+				var fs = fman.FileSystems.OfType<DropboxFileSystem> ().FirstOrDefault (x => x.UserId == session.UserIds.FirstOrDefault ());
 				if (fs != null) {
 					Debug.WriteLine ("Dropbox: Existing account detected!");
 				}
 				else {
-					var dbfs = new DBFilesystem (account);
-					DBFilesystem.SharedFilesystem = dbfs;
 					Debug.WriteLine ("Dropbox: App linked successfully!");
-					fs = new DropboxFileSystem (account, dbfs);
+					fs = new DropboxFileSystem (session);
 					FileSystemManager.Shared.Add (fs);
 				}
 				if (DropboxFileSystemProvider.AddCompletionSource != null) {
@@ -364,6 +362,9 @@ namespace Praeclarum.UI
 				}
 				if (fs.IsAvailable) {
 					SetFileSystemAsync (fs, true).ContinueWith (t =>  {
+						if (t.IsFaulted) {
+							Debug.WriteLine (t.Exception);
+						}
 					});
 				}
 				return true;

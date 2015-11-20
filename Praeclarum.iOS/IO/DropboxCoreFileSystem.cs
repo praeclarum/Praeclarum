@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using Dropbox.CoreApi.iOS;
 using System.Linq;
 using UIKit;
+using System.Text;
+using System.IO;
 
 namespace Praeclarum.IO
 {
@@ -67,23 +69,26 @@ namespace Praeclarum.IO
 	{
 		readonly Session session;
 
+		readonly RestClient sharedClient;
+
 		public string UserId { get; private set; }
 
 		public DropboxFileSystem (Session session)
 		{
 			this.session = session;
+			sharedClient = new RestClient (session);
 			UserId = session.UserIds.FirstOrDefault () ?? "Unknown";
 			FileExtensions = new System.Collections.ObjectModel.Collection<string> ();
 		}
 
-		RestClient GetClient ()
+		public RestClient GetClient ()
 		{
-			return new RestClient (session);
+			return sharedClient;
 		}
 
 		DropboxFile GetDropboxFile (Metadata meta)
 		{
-			return new DropboxFile (session, meta);
+			return new DropboxFile (this, meta);
 		}
 
 		#region IFileSystem implementation
@@ -91,40 +96,95 @@ namespace Praeclarum.IO
 		public async Task Initialize ()
 		{
 		}
+
 		public bool ListFilesIsFast { get { return false; } }
-		public async Task<List<IFile>> ListFiles (string directory)
+
+		public Task<RestClientMetadataLoadedEventArgs> LoadMetadataAsync (string directory)
 		{
 			var c = GetClient ();
-
 			var tcs = new TaskCompletionSource<RestClientMetadataLoadedEventArgs> ();
 			EventHandler<RestClientMetadataLoadedEventArgs> onSuccess = null;
 			EventHandler<RestClientErrorEventArgs> onFail = null;
-			var error = "";
 			onSuccess = (s, e) => {
-				c.MetadataLoaded -= onSuccess;
-				c.LoadMetadataFailed -= onFail;
-				tcs.SetResult (e);
+				if (e.Metadata.Path == directory) {
+					c.MetadataLoaded -= onSuccess;
+					c.LoadMetadataFailed -= onFail;
+					tcs.SetResult (e);
+				}
 			};
 			onFail = (s, e) => {
 				c.MetadataLoaded -= onSuccess;
 				c.LoadMetadataFailed -= onFail;
-				error = e.Error.Description ?? "";
-				tcs.SetResult (null);
+				var error = e.Error.Description ?? "";
+				tcs.SetException (new Exception (error));
 			};
 			c.MetadataLoaded += onSuccess;
 			c.LoadMetadataFailed += onFail;
 			c.LoadMetadata (directory);
+			return tcs.Task;
+		}
 
-			var r = await tcs.Task.ConfigureAwait (false);
+		public Task<RestClientFileLoadedEventArgs> LoadFileAsync (string path, string destinationPath)
+		{
+			var c = GetClient ();
+			var tcs = new TaskCompletionSource<RestClientFileLoadedEventArgs> ();
+			EventHandler<RestClientFileLoadedEventArgs> onSuccess = null;
+			EventHandler<RestClientErrorEventArgs> onFail = null;
+			onSuccess = (s, e) => {
+				if (e.DestPath == destinationPath) {
+					c.FileLoaded -= onSuccess;
+					c.LoadFileFailed -= onFail;
+					tcs.SetResult (e);
+				}
+			};
+			onFail = (s, e) => {
+				c.FileLoaded -= onSuccess;
+				c.LoadFileFailed -= onFail;
+				var error = e.Error.Description ?? "";
+				tcs.SetException (new Exception (error));
+			};
+			c.FileLoaded += onSuccess;
+			c.LoadFileFailed += onFail;
+			c.LoadFile (path, destinationPath);
+			return tcs.Task;
+		}
 
-			if (r == null) {
-				throw new Exception (error);
+		public Task<RestClientFileUploadedEventArgs> UploadFileAsync (string path, string parentRev, string sourcePath)
+		{
+			var c = GetClient ();
+			var tcs = new TaskCompletionSource<RestClientFileUploadedEventArgs> ();
+			EventHandler<RestClientFileUploadedEventArgs> onSuccess = null;
+			EventHandler<RestClientErrorEventArgs> onFail = null;
+			onSuccess = (s, e) => {
+				if (e.SrcPath == sourcePath) {
+					c.FileUploaded -= onSuccess;
+					c.UploadFileFailed -= onFail;
+					tcs.SetResult (e);
+				}
+			};
+			onFail = (s, e) => {
+				c.FileUploaded -= onSuccess;
+				c.UploadFileFailed -= onFail;
+				var error = e.Error.Description ?? "";
+				tcs.SetException (new Exception (error));
+			};
+			c.FileUploaded += onSuccess;
+			c.UploadFileFailed += onFail;
+			c.UploadFile (Path.GetFileName (path), Path.GetDirectoryName (path), parentRev, sourcePath);
+			return tcs.Task;
+		}
+
+		public async Task<List<IFile>> ListFiles (string directory)
+		{
+			var d = directory;
+			if (!d.StartsWith ("/", StringComparison.Ordinal)) {
+				d = "/" + d;
 			}
-
+			var r = await LoadMetadataAsync (d);//.ConfigureAwait (false);
 			var res = r.Metadata.Contents.Select (GetDropboxFile).Cast<IFile> ().ToList ();
-
 			return res;
 		}
+
 		public Task<IFile> GetFile (string path)
 		{
 			throw new NotImplementedException ();
@@ -201,26 +261,48 @@ namespace Praeclarum.IO
 		#endregion
 	}
 
-	public class DropboxFile : IFile
+	class DropboxFile : IFile
 	{
-		readonly Session session;
+		public readonly DropboxFileSystem FileSystem;
 		Metadata meta;
-		public DropboxFile (Session session, Metadata meta)
+		public DropboxFile (DropboxFileSystem fs, Metadata meta)
 		{
-			this.session = session;
+			this.FileSystem = fs;
 			this.meta = meta;
 		}
 
 		public override string ToString ()
 		{
-			return Path;
+			return Path + "@" + Rev;
 		}
+
+		public string Rev { get { return meta.Revision; } }
 
 		#region IFile implementation
 
-		public Task<LocalFileAccess> BeginLocalAccess ()
+		public async Task<LocalFileAccess> BeginLocalAccess ()
 		{
-			throw new NotImplementedException ();
+			if (IsDirectory)
+				throw new InvalidOperationException ("Only files permit local access");
+
+			var docsDir = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var cachesDir = System.IO.Path.GetFullPath (System.IO.Path.Combine (docsDir, "../Library/Caches"));
+
+			var tmpDir = System.IO.Path.Combine (cachesDir, "DropboxTemp");
+
+			var filename = Path;
+			if (filename.StartsWith ("/", StringComparison.Ordinal)) {
+				filename = filename.Substring (1);
+			}
+			var lp = System.IO.Path.Combine (tmpDir, filename);
+
+			FileSystemManager.EnsureDirectoryExists (System.IO.Path.GetDirectoryName (lp));
+
+			await FileSystem.LoadFileAsync (Path, lp);
+
+			var data = await Task.Run (() => File.ReadAllText (lp, Encoding.UTF8));//.ConfigureAwait (false);
+
+			return new DropboxLocal (this, lp, data);
 		}
 
 		public Task<bool> Move (string newPath)
@@ -259,6 +341,27 @@ namespace Praeclarum.IO
 		}
 
 		#endregion
+	}
+
+	class DropboxLocal : LocalFileAccess
+	{
+		readonly DropboxFile file;
+		readonly string remoteData;
+
+		public DropboxLocal (DropboxFile file, string localPath, string data)
+			: base (localPath)
+		{
+			this.file = file;
+			this.remoteData = data;
+		}
+
+		public override async Task End ()
+		{
+			var data = await Task.Run (() => File.ReadAllText (LocalPath, Encoding.UTF8));
+			if (data != remoteData) {
+				await file.FileSystem.UploadFileAsync (file.Path, file.Rev, LocalPath);
+			}
+		}
 	}
 }
 

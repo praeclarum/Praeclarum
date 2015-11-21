@@ -40,13 +40,29 @@ namespace Praeclarum.UI
 
 		public virtual void Apply (UINavigationController nc)
 		{
-			nc.NavigationBar.BarStyle = NavigationBarStyle;
-			nc.NavigationBar.BarTintColor = NavigationBackgroundColor;
-			nc.NavigationBar.TitleTextAttributes = new UIStringAttributes {
+			if (nc == null)
+				return;
+			Apply (nc.NavigationBar);
+			Apply (nc.Toolbar);
+		}
+
+		public virtual void Apply (UINavigationBar navigationBar)
+		{
+			if (navigationBar == null)
+				return;
+			navigationBar.BarStyle = NavigationBarStyle;
+			navigationBar.BarTintColor = NavigationBackgroundColor;
+			navigationBar.TitleTextAttributes = new UIStringAttributes {
 				ForegroundColor = NavigationTextColor,
 			};
-			nc.Toolbar.BarStyle = NavigationBarStyle;
-			nc.Toolbar.BarTintColor = NavigationBackgroundColor;
+		}
+
+		public virtual void Apply (UIToolbar toolbar)
+		{
+			if (toolbar == null)
+				return;
+			toolbar.BarStyle = NavigationBarStyle;
+			toolbar.BarTintColor = NavigationBackgroundColor;
 		}
 
 		void ApplyToVC (UIViewController vc, HashSet<IntPtr> visited)
@@ -212,10 +228,6 @@ namespace Praeclarum.UI
 			}
 			tableView.BackgroundColor = c;
 			tableView.SeparatorColor = TableSeparatorColor;
-		}
-
-		public virtual void Apply (UIToolbar toolbar)
-		{
 		}
 
 		public virtual void Apply (UITableViewCell cell)

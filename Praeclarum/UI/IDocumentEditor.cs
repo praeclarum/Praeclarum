@@ -7,7 +7,7 @@ namespace Praeclarum.UI
 	{
 		DocumentReference DocumentReference { get; }
 
-		IView EditorView { get; }
+//		IView EditorView { get; }
 
 		void DidEnterBackground ();
 		void WillEnterForeground ();

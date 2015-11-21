@@ -151,6 +151,7 @@ namespace Praeclarum.UI
 						i.AutocorrectionType = UITextAutocorrectionType.No;
 						var theme = DocumentAppDelegate.Shared.Theme;
 						i.TextColor = theme.TableCellTextColor;
+						i.KeyboardAppearance = theme.IsDark ? UIKeyboardAppearance.Dark : UIKeyboardAppearance.Default;
 						theme.Apply (cell);
 						i.BecomeFirstResponder ();
 					}

@@ -137,6 +137,24 @@ namespace Praeclarum.App
 				defs.SetBool (value, "DarkMode");
 			}
 		}
+
+		public bool IsPatron {
+			get {
+				return defs.BoolForKey ("IsPatron");
+			}
+			set {
+				defs.SetBool (value, "IsPatron");
+			}
+		}
+
+		public DateTime PatronEndDate {
+			get {
+				return GetDateTime ("PatronEndDate");
+			}
+			set {
+				SetDateTime ("PatronEndDate", value);
+			}
+		}
 	}
 }
 

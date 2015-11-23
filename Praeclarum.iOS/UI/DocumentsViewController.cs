@@ -999,8 +999,15 @@ namespace Praeclarum.UI
 			if (docsView == null)
 				return;
 
+			var showPatron = false;
+			var appdel = DocumentAppDelegate.Shared;
+			if (appdel.App.IsPatronSupported) {
+				showPatron = !appdel.IsPatronageActive;
+			}
+
 			docsView.IsSyncing = IsSyncing;
 			docsView.Items = items;
+			docsView.ShowPatron = showPatron;
 			docsView.ReloadData ();
 		}
 	}

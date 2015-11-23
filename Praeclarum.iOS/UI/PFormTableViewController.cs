@@ -55,6 +55,20 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public override void ViewWillAppear (bool animated)
+		{
+			base.ViewWillAppear (animated);
+			try {
+				var nc = NavigationController;
+				if (nc != null) {
+					DocumentAppDelegate.Shared.Theme.Apply (nc);
+				}
+				
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
 		public override UIStatusBarStyle PreferredStatusBarStyle ()
 		{
 			return DocumentAppDelegate.Shared.Theme.StatusBarStyle;
@@ -160,8 +174,11 @@ namespace Praeclarum.UI
 
 		public class PFormCell : UITableViewCell, IThemeAware
 		{
-			public PFormCell (string reuseId)
-				: base (UITableViewCellStyle.Default, reuseId)
+			public PFormCell (PFormItemDisplay display, string reuseId)
+				: base (
+					(display == PFormItemDisplay.Title) ? UITableViewCellStyle.Default
+					: ((display == PFormItemDisplay.TitleAndSubtitle) ? UITableViewCellStyle.Subtitle : UITableViewCellStyle.Value1),
+					reuseId)
 			{
 				ApplyTheme (DocumentAppDelegate.Shared.Theme);
 			}
@@ -233,12 +250,13 @@ namespace Praeclarum.UI
 					var section = controller.Sections [indexPath.Section];
 					var item = section.Items [indexPath.Row];
 
-					var id = item.GetType ().Name;
+					var itemDisplay = section.GetItemDisplay (item);
+					var id = item.GetType ().Name + itemDisplay;
 
 					var cell = tableView.DequeueReusableCell (id) as PFormCell;
 
 					if (cell == null) {
-						cell = new PFormCell (id);
+						cell = new PFormCell (itemDisplay, id);
 					}
 
 					try {
@@ -267,6 +285,14 @@ namespace Praeclarum.UI
 				cell.TextLabel.Text = itemTitle;
 				cell.TextLabel.AccessibilityLabel = itemTitle;
 				cell.TextLabel.BackgroundColor = UIColor.Clear;
+
+				var display = section.GetItemDisplay (item);
+				if (display != PFormItemDisplay.Title) {
+					cell.DetailTextLabel.Text = section.GetItemDetails (item) ?? "";
+					if (display == PFormItemDisplay.TitleAndValue) {
+						cell.DetailTextLabel.TextColor = UIApplication.SharedApplication.KeyWindow.TintColor;
+					}
+				}
 
 				var imageUrl = section.GetItemImage (item);
 				if (string.IsNullOrEmpty (imageUrl)) {

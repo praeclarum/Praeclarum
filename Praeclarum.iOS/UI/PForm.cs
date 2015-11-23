@@ -37,6 +37,13 @@ namespace Praeclarum.UI
 		}
 	}
 
+	public enum PFormItemDisplay
+	{
+		Title,
+		TitleAndSubtitle,
+		TitleAndValue,
+	}
+
 	public class PFormSection
 	{
 		public PForm Form { get; internal set; }
@@ -69,6 +76,16 @@ namespace Praeclarum.UI
 		{
 			if (Form != null)
 				Form.FormatSection (this);
+		}
+
+		public virtual PFormItemDisplay GetItemDisplay (object item)
+		{
+			return PFormItemDisplay.Title;
+		}
+
+		public virtual string GetItemDetails (object item)
+		{
+			return "";
 		}
 
 		public virtual bool GetItemEnabled (object item)

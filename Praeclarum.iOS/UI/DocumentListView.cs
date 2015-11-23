@@ -25,6 +25,8 @@ namespace Praeclarum.UI
 
 		public ObservableCollection<string> SelectedDocuments { get; private set; }
 
+		public bool ShowPatron { get; set; }
+
 		public DocumentListView (CGRect frame)
 			: base (frame)
 		{

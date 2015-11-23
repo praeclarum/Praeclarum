@@ -78,6 +78,10 @@ namespace Praeclarum.App
 
 			return word + "s";
 		}
+
+		public virtual bool IsPatronSupported {
+			get { return false; }
+		}
 	}
 }
 

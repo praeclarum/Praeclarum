@@ -33,6 +33,7 @@ namespace Praeclarum.UI
 			get;
 			set;
 		}
+		public bool ShowPatron { get; set; }
 
 		public Praeclarum.Graphics.SizeF ThumbnailSize { get; private set; }
 

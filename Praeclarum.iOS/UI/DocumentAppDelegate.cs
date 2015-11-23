@@ -143,6 +143,15 @@ namespace Praeclarum.UI
 			mru.InitializeMRU ();
 
 			//
+			// Start in app purchase data
+			//
+			try {
+				StoreKit.SKPaymentQueue.DefaultQueue.AddTransactionObserver (StoreManager.Shared);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
+
+			//
 			// Construct the UI
 			//
 			try {
@@ -215,6 +224,11 @@ namespace Praeclarum.UI
 			}
 
 			return shouldPerformAdditionalDelegateHandling;
+		}
+
+		public override void WillTerminate (UIApplication application)
+		{			
+			StoreKit.SKPaymentQueue.DefaultQueue.RemoveTransactionObserver (StoreManager.Shared);
 		}
 
 		Task initFileSystemTask;
@@ -1618,7 +1632,7 @@ namespace Praeclarum.UI
 						if (a.PopoverPresentationController != null) {
 							try {
 								a.PopoverPresentationController.BarButtonItem = fromController.NavigationItem.LeftBarButtonItem;
-							} catch (Exception ex) {
+							} catch (Exception) {
 								a.PopoverPresentationController.SourceView = fromController.View;
 							}
 						}
@@ -1692,6 +1706,14 @@ namespace Praeclarum.UI
 			}
 		}
 
+		#endregion
+
+		#region
+		public bool IsPatronageActive {
+			get {
+				return false;
+			}
+		}
 		#endregion
 	}
 }

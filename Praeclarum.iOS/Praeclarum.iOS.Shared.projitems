@@ -47,5 +47,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\DynamicSplitViewController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DarkModeSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\DropboxCoreFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\StoreManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\PatronForm.cs" />
   </ItemGroup>
 </Project>

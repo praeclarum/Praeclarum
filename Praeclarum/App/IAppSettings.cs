@@ -21,6 +21,16 @@ namespace Praeclarum.App
 		string DocumentationVersion { get; set; }
 
 		bool DarkMode { get; set; }
+
+		bool IsPatron {
+			get;
+			set;
+		}
+
+		DateTime PatronEndDate {
+			get;
+			set;
+		}
 	}
 
 	public interface IAppSettings

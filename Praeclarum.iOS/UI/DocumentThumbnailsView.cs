@@ -10,6 +10,7 @@ using Praeclarum.App;
 using Praeclarum.IO;
 using CoreGraphics;
 using System.Collections.ObjectModel;
+using Praeclarum.Graphics;
 
 namespace Praeclarum.UI
 {
@@ -21,6 +22,7 @@ namespace Praeclarum.UI
 		public static readonly NSString FileId = new NSString ("F");
 		public static readonly NSString NotReadyId = new NSString ("NR");
 		public static readonly NSString SortId = new NSString ("S");
+		public static readonly NSString PatronId = new NSString ("P");
 
 		public static float LabelHeight = 33;
 		public static float Margin = 10;
@@ -53,6 +55,7 @@ namespace Praeclarum.UI
 			RegisterClassForCell (typeof(DirectoryThumbnailCell), DirId);
 			RegisterClassForCell (typeof(NotReadyThumbnailCell), NotReadyId);
 			RegisterClassForCell (typeof(SortThumbnailCell), SortId);
+			RegisterClassForCell (typeof(PatronCell), PatronId);
 
 			Delegate = new DocumentThumbnailsViewDelegate ();
 			DataSource = new DocumentThumbnailsViewDataSource ();
@@ -385,8 +388,13 @@ namespace Praeclarum.UI
 					if (row == 0) {
 						// Add
 						await DocumentAppDelegate.Shared.AddAndOpenNewDocument ();
+					} else if (row > controller.Items.Count) {
+						await DocumentAppDelegate.Shared.ShowPatronAsync ();
 					} else {
 						row--;
+
+
+
 						var d = controller.Items [row].Reference;
 
 						if (d.File.IsDirectory) {
@@ -551,6 +559,82 @@ namespace Praeclarum.UI
 			sort = segs.SelectedSegment == 0 ? DocumentsSort.Date : DocumentsSort.Name;
 			if (Controller != null)
 				Controller.Sort = sort;
+		}
+	}
+
+	class PatronCell : UICollectionViewCell, IThemeAware
+	{
+		ButtonView button;
+
+		public PatronCell ()
+		{
+			ContentView.Frame = new CGRect (0, 0, 100, 100);
+			Initialize ();
+		}
+
+		public PatronCell (IntPtr handle)
+			: base (handle)
+		{
+			Initialize ();
+		}
+
+		void Initialize ()
+		{
+			button = new ButtonView ();
+//			ContentView.BackgroundColor = UIColor.Red;
+			button.Frame = ContentView.Bounds;
+			button.AutoresizingMask = UIViewAutoresizing.FlexibleDimensions;
+//			button.SetTitle ("Support Calca Development", UIControlState.Normal);
+			ContentView.AddSubview (button);
+			ApplyTheme (DocumentAppDelegate.Shared.Theme);
+		}
+
+		class ButtonView : UIView, IThemeAware
+		{
+			public ButtonView ()
+			{
+				ApplyTheme (null);
+			}
+
+			public void ApplyTheme (Theme theme)
+			{
+//				var appdel = DocumentAppDelegate.Shared;
+				BackgroundColor = UIColor.Clear;// appdel.App.GetThumbnailBackgroundColor (appdel.Theme).GetUIColor ().ColorWithAlpha (0.5f);
+			}
+
+			public override void Draw (CGRect rect)
+			{
+				base.Draw (rect);
+				var b = Bounds;
+				var bb = b;
+				bb.Inflate (-4.0f, -4.0f);
+				var w = bb.Width;
+				var h = 3 * w / 5;
+				bb.Height = h;
+				bb.Y = (b.Height - h) / 5;
+				var rr = UIBezierPath.FromRoundedRect (bb, 10.0f);
+				var color = TintColor;
+				color.SetStroke ();
+				rr.Stroke ();
+				color.SetFill ();
+				var str = new NSString ("Become a Patron");
+				var tb = bb;
+				tb.Inflate (-4.0f, -4.0f);
+				tb.Y += (tb.Height - 42)/2;
+				str.DrawString (tb, UIFont.SystemFontOfSize (16.0f), UILineBreakMode.WordWrap, UITextAlignment.Center);
+
+				var dtb = bb;
+				dtb.Y += bb.Height + 4;
+				var appdel = DocumentAppDelegate.Shared;
+				appdel.Theme.NavigationTextColor.SetFill ();
+				str = new NSString ("Support the Development of " + appdel.App.Name);
+				str.DrawString (dtb, UIFont.SystemFontOfSize (10.0f), UILineBreakMode.WordWrap, UITextAlignment.Center);
+			}
+		}
+
+		public void ApplyTheme (Theme theme)
+		{
+			button.SetNeedsDisplay ();
 		}
 	}
 
@@ -1326,7 +1410,11 @@ namespace Praeclarum.UI
 				return 1;
 			}
 			else {
-				return count + 1;
+				var n = count + 1;
+				if (controller.ShowPatron) {
+					n++;
+				}
+				return n;
 			}
 		}
 
@@ -1351,6 +1439,10 @@ namespace Praeclarum.UI
 				var row = indexPath.Row;
 				if (row == 0) {
 					return GetAddCell (collectionView, indexPath);
+				}
+
+				if (row > controller.Items.Count) {
+					return GetPatronCell (collectionView, indexPath);
 				}
 				
 				row--;
@@ -1388,6 +1480,15 @@ namespace Praeclarum.UI
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}
+
+			return c;
+		}
+
+		UICollectionViewCell GetPatronCell (UICollectionView collectionView, NSIndexPath indexPath)
+		{
+			var controller = (DocumentThumbnailsView)collectionView;
+
+			var c = (PatronCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.PatronId, indexPath);
 
 			return c;
 		}

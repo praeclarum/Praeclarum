@@ -1723,6 +1723,13 @@ namespace Praeclarum.UI
 
 		#endregion
 
+		public async Task ShowPatronAsync ()
+		{
+			var pform = new PatronForm ();
+			var nav = new UINavigationController (pform);
+			var vc = UIApplication.SharedApplication.KeyWindow.RootViewController;
+			await vc.PresentViewControllerAsync (nav, true);
+		}
 	}
 }
 

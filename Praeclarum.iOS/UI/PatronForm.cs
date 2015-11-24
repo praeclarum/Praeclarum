@@ -24,9 +24,9 @@ namespace Praeclarum.UI
 		{
 			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
 			prices = new[] {
-				new PatronSubscriptionPrice(bundleId + ".patrontest2.3month", 3, ""),
-				new PatronSubscriptionPrice(bundleId + ".patron_6month", 6, ""),
-				new PatronSubscriptionPrice(bundleId + ".patron_12month", 12, "")
+				new PatronSubscriptionPrice(bundleId + ".patron.nsub.3month", 3, "$2.99"),
+				new PatronSubscriptionPrice(bundleId + ".patron.nsub.6month", 6, "$5.99"),
+				new PatronSubscriptionPrice(bundleId + ".patron.nsub.12month", 12, "$9.99")
 			};
 		}
 

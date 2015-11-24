@@ -42,6 +42,9 @@ namespace Praeclarum.UI
 			Sections.Add (aboutSection);
 			Sections.Add (buySection);
 			Sections.Add (new PatronRestoreSection ());
+			#if DEBUG
+			Sections.Add (new PatronDeleteSection ());
+			#endif
 
 			isPatron = appdel.Settings.IsPatron;
 			endDate = appdel.Settings.PatronEndDate;
@@ -69,47 +72,61 @@ namespace Praeclarum.UI
 
 		async Task<int> GetPastPurchasesAsync ()
 		{
-			var n = 0;
+			var container = CKContainer.DefaultContainer;
+			var db = container.PrivateCloudDatabase;
+
+			var pred = NSPredicate.FromFormat ("TransactionId != 'tttt'");
+			var query = new CKQuery ("PatronSubscription", pred);
+
+			var recs = await db.PerformQueryAsync (query, CKRecordZone.DefaultRecordZone().ZoneId);
+
+			Console.WriteLine ("NUM RECS = {0}", recs.Length);
+
+			var subs = recs.Select (x => new PatronSubscription (x)).OrderBy (x => x.PurchaseDate).ToArray ();
+
+			var ed = DateTime.UtcNow;
+
+			if (subs.Length > 0) {
+				ed = subs[0].PurchaseEndDate;
+				foreach (var s in subs.Skip (1)) {
+					if (s.PurchaseDate < ed) {
+						ed = ed.AddMonths (s.NumMonths);
+					}
+					else {
+						ed = s.PurchaseEndDate;
+					}
+				}
+			}
+
+			Console.WriteLine ("NEW END DATE = {0}", ed);
+
+			endDate = ed;
+			isPatron = DateTime.UtcNow < endDate;
+
+			var settings = DocumentAppDelegate.Shared.Settings;
+			settings.IsPatron = isPatron;
+			settings.PatronEndDate = endDate;
+
+			return subs.Length;
+		}
+
+		async Task DeletePastPurchasesAsync ()
+		{
 			try {
-				
+
 				var container = CKContainer.DefaultContainer;
 				var db = container.PrivateCloudDatabase;
 
 				var pred = NSPredicate.FromFormat ("TransactionId != 'tttt'");
 				var query = new CKQuery ("PatronSubscription", pred);
 
-				var zones = await db.FetchAllRecordZonesAsync ();
-				var zone = zones.FirstOrDefault ();
-
-				var recs = await db.PerformQueryAsync (query, zone.ZoneId);
+				var recs = await db.PerformQueryAsync (query, CKRecordZone.DefaultRecordZone().ZoneId);
 
 				Console.WriteLine ("NUM RECS = {0}", recs.Length);
 
-				var subs = recs.Select (x => new PatronSubscription (x)).OrderBy (x => x.PurchaseDate).ToArray ();
-				n = subs.Length;
-
-				var ed = DateTime.UtcNow;
-
-				if (subs.Length > 0) {
-					ed = subs[0].PurchaseEndDate;
-					foreach (var s in subs.Skip (1)) {
-						if (s.PurchaseDate < ed) {
-							ed = ed.AddMonths (s.NumMonths);
-						}
-						else {
-							ed = s.PurchaseEndDate;
-						}
-					}
+				foreach (var r in recs) {
+					await db.DeleteRecordAsync (r.Id);
 				}
-
-				Console.WriteLine ("NEW END DATE = {0}", ed);
-
-				endDate = ed;
-				isPatron = DateTime.UtcNow < endDate;
-
-				var settings = DocumentAppDelegate.Shared.Settings;
-				settings.IsPatron = isPatron;
-				settings.PatronEndDate = endDate;
 
 			} catch (NSErrorException ex) {
 				Console.WriteLine ("ERROR: {0}", ex.Error);
@@ -117,7 +134,6 @@ namespace Praeclarum.UI
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}
-			return n;
 		}
 
 		async Task<int> RefreshPatronDataAsync ()
@@ -138,7 +154,12 @@ namespace Praeclarum.UI
 
 			ReloadSection (buySection);
 
-			var n = await GetPastPurchasesAsync ();
+			var n = 0;
+			try {
+				n = await GetPastPurchasesAsync ();	
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
 
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
@@ -169,12 +190,43 @@ namespace Praeclarum.UI
 			} catch (NSErrorException ex) {
 				Console.WriteLine ("ERROR: {0}", ex.Error);
 				Log.Error (ex);
+				ShowFormError ("Failed to Connect to iCloud", ex);
 			} catch (Exception ex) {
 				Log.Error (ex);
+				ShowFormError ("Failed to Connect to iCloud", ex);
 			}
 			return hasCloud;
 		}
-
+		void ShowFormError (string title, Exception ex)
+		{
+			try {
+				var iex = ex;
+				while (iex.InnerException != null) {
+					iex = iex.InnerException;
+				}
+				var m = iex.Message;
+				var alert = UIAlertController.Create (title, m, UIAlertControllerStyle.Alert);
+				alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => {}));
+				PresentViewController (alert, true, null);
+			} catch (Exception ex2) {
+				Log.Error (ex2);
+			}
+		}
+		public static async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
+		{
+			try {
+				var m = t.Error != null ? t.Error.LocalizedDescription : "Unknown error";
+				var alert = UIAlertController.Create ("Purchase Failed", m, UIAlertControllerStyle.Alert);
+				alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => {}));
+				var vc = UIApplication.SharedApplication.KeyWindow.RootViewController;
+				while (vc.PresentedViewController != null) {
+					vc = vc.PresentedViewController;
+				}
+				vc.PresentViewController (alert, true, null);
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
 		public static async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
 		{
 			var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
@@ -190,18 +242,18 @@ namespace Praeclarum.UI
 			var db = CKContainer.DefaultContainer.PrivateCloudDatabase;
 			await db.SaveRecordAsync (sub.Record);
 
-			NSTimer.CreateScheduledTimer (0.5, nst => {
-				var v = visibleForm;
-				if (v != null) {
-					v.BeginInvokeOnMainThread (()=> {
+			var v = visibleForm;
+			if (v != null) {
+				NSTimer.CreateScheduledTimer (2.0, nst => {
+					v.BeginInvokeOnMainThread (async () => {
 						try {
-							v.RefreshPatronDataAsync ();
+							await v.RefreshPatronDataAsync ();
 						} catch (Exception ex) {
 							Log.Error (ex);
 						}
 					});
-				}
-			});
+				});
+			}
 		}
 
 		class PatronAboutSection : PFormSection
@@ -290,14 +342,18 @@ namespace Praeclarum.UI
 			async Task BuyAsync (object item)
 			{
 				var form = (PatronForm)Form;
-				if (!await form.CheckForCloudAsync ())
-					return;
+				try {
+					if (!await form.CheckForCloudAsync ())
+						return;
 
-				var price = (PatronSubscriptionPrice)item;
-				if (price.Product == null)
-					return;
-				StoreManager.Shared.Buy (price.Product);
-				return;
+					var price = (PatronSubscriptionPrice)item;
+					if (price.Product == null)
+						return;
+					StoreManager.Shared.Buy (price.Product);
+				} catch (Exception ex) {
+					form.ShowFormError ("Purchase Failed", ex);
+					Log.Error (ex);
+				}
 			}
 		}
 
@@ -317,13 +373,13 @@ namespace Praeclarum.UI
 			async void RestoreAsync ()
 			{
 				var form = (PatronForm)Form;
-				if (!await form.CheckForCloudAsync ())
-					return;
-				// We save receipts in iCloud
-//				StoreManager.Shared.Restore ();
-				var n = await form.RefreshPatronDataAsync ();
-
 				try {
+					if (!await form.CheckForCloudAsync ())
+						return;
+					// We save receipts in iCloud
+					//				StoreManager.Shared.Restore ();
+					var n = await form.RefreshPatronDataAsync ();
+
 					Console.WriteLine (n);
 					var m = n > 0 ?
 						"Your subscriptions have been restored." :
@@ -332,8 +388,32 @@ namespace Praeclarum.UI
 					alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => {}));
 					form.PresentViewController (alert, true, null);
 				} catch (Exception ex) {
+					form.ShowFormError ("Restore Failed", ex);
 					Log.Error (ex);
 				}
+			}
+		}
+
+		class PatronDeleteSection : PFormSection
+		{
+			public PatronDeleteSection ()
+				: base ("Delete Previous Purchases")
+			{
+			}
+
+			public override bool SelectItem (object item)
+			{
+				DeleteAsync ();
+				return false;
+			}
+
+			async void DeleteAsync ()
+			{
+				var form = (PatronForm)Form;
+				if (!await form.CheckForCloudAsync ())
+					return;
+				await form.DeletePastPurchasesAsync ();
+				await form.RefreshPatronDataAsync ();
 			}
 		}
 	}

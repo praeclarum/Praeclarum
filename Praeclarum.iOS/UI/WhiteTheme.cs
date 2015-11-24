@@ -238,9 +238,10 @@ namespace Praeclarum.UI
 
 		public virtual void ApplyCommand (UITableViewCell cell)
 		{
+			var isnav = cell.Accessory == UITableViewCellAccessory.DisclosureIndicator;
 			cell.TextLabel.TextColor = ios7 ? 
-				GetTintColor () : 
-			                           UIColor.DarkTextColor;
+				(isnav ? TableCellTextColor : GetTintColor ()) : 
+				TableCellTextColor;
 		}
 
 		readonly UIColor checkColor = UIColor.FromRGB (50, 79, 133);

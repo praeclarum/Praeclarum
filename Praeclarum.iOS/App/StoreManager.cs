@@ -16,6 +16,7 @@ namespace Praeclarum.App
 		readonly List<SKPaymentTransaction> productsRestored = new List<SKPaymentTransaction> ();
 
 		public readonly List<Func<SKPaymentTransaction, Task>> CompletionActions = new List<Func<SKPaymentTransaction, Task>> ();
+		public readonly List<Func<SKPaymentTransaction, Task>> FailActions = new List<Func<SKPaymentTransaction, Task>> ();
 
 		public Task<SKProductsResponse> FetchProductInformationAsync (string[] ids)
 		{
@@ -84,6 +85,9 @@ namespace Praeclarum.App
 
 			if (t.TransactionState == SKPaymentTransactionState.Failed) {
 				Console.WriteLine ("STORE ERROR CompleteTransaction: {0} {1} {2}", t.TransactionState, t.TransactionIdentifier, t.TransactionDate);
+				foreach (var a in FailActions) {
+					await a (t);
+				}
 			} else {
 				Console.WriteLine ("STORE CompleteTransaction: {0} {1} {2} {3}", t.Payment.ProductIdentifier, t.TransactionState, t.TransactionIdentifier, t.TransactionDate);
 				foreach (var a in CompletionActions) {

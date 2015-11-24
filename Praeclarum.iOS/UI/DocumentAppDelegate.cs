@@ -151,6 +151,7 @@ namespace Praeclarum.UI
 						Settings.IsPatron = DateTime.UtcNow < Settings.PatronEndDate;
 					}
 					StoreManager.Shared.CompletionActions.Add (PatronForm.HandlePurchaseCompletionAsync);
+					StoreManager.Shared.FailActions.Add (PatronForm.HandlePurchaseFailAsync);
 				}				
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -1722,13 +1723,6 @@ namespace Praeclarum.UI
 
 		#endregion
 
-		#region
-		public bool IsPatronageActive {
-			get {
-				return false;
-			}
-		}
-		#endregion
 	}
 }
 

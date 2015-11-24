@@ -1002,7 +1002,7 @@ namespace Praeclarum.UI
 			var showPatron = false;
 			var appdel = DocumentAppDelegate.Shared;
 			if (appdel.App.IsPatronSupported) {
-				showPatron = !appdel.IsPatronageActive;
+				showPatron = !appdel.Settings.IsPatron;
 			}
 
 			docsView.IsSyncing = IsSyncing;

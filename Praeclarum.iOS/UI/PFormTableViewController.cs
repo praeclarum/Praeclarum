@@ -306,18 +306,6 @@ namespace Praeclarum.UI
 					cell.ImageView.Image = image;
 				}
 
-				if (section.GetItemEnabled (item)) {
-					var cmd = item as Command;
-					if (cmd != null) {
-						theme.ApplyCommand (cell);
-					}
-					cell.SelectionStyle = UITableViewCellSelectionStyle.Blue;
-				}
-				else {
-					cell.TextLabel.TextColor = UIColor.LightGray;
-					cell.SelectionStyle = UITableViewCellSelectionStyle.None;
-				}
-
 				if (section.GetItemChecked (item)) {
 					cell.Accessory = UITableViewCellAccessory.Checkmark;
 
@@ -328,6 +316,18 @@ namespace Praeclarum.UI
 					cell.Accessory = section.GetItemNavigates (item) ?
 					             UITableViewCellAccessory.DisclosureIndicator :
 					             UITableViewCellAccessory.None;
+				}
+
+				if (section.GetItemEnabled (item)) {
+					var cmd = item as Command;
+					if (cmd != null) {
+						theme.ApplyCommand (cell);
+					}
+					cell.SelectionStyle = UITableViewCellSelectionStyle.Blue;
+				}
+				else {
+					cell.TextLabel.TextColor = UIColor.LightGray;
+					cell.SelectionStyle = UITableViewCellSelectionStyle.None;
 				}
 			}
 

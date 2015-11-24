@@ -143,6 +143,17 @@ namespace Praeclarum.UI
 			mru.InitializeMRU ();
 
 			//
+			// Patron
+			//
+			try {
+				if (App.IsPatronSupported) {
+					StoreManager.Shared.CompletionActions.Add (PatronForm.HandlePurchaseCompletionAsync);
+				}				
+			} catch (Exception ex) {
+				Log.Error (ex);
+			}
+
+			//
 			// Start in app purchase data
 			//
 			try {

@@ -4,6 +4,7 @@ using Foundation;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CloudKit;
 
 namespace Praeclarum.App
 {
@@ -14,9 +15,7 @@ namespace Praeclarum.App
 		readonly List<SKPaymentTransaction> productsPurchased = new List<SKPaymentTransaction> ();
 		readonly List<SKPaymentTransaction> productsRestored = new List<SKPaymentTransaction> ();
 
-		public StoreManager ()
-		{
-		}
+		public readonly List<Func<SKPaymentTransaction, Task>> CompletionActions = new List<Func<SKPaymentTransaction, Task>> ();
 
 		public Task<SKProductsResponse> FetchProductInformationAsync (string[] ids)
 		{
@@ -29,7 +28,7 @@ namespace Praeclarum.App
 		}
 
 		public void Buy (SKProduct product)
-		{
+		{			
 			Console.WriteLine ("STORE Buy({0})", product.ProductIdentifier);
 			var payment = SKMutablePayment.PaymentWithProduct (product);
 			SKPaymentQueue.DefaultQueue.AddPayment (payment);
@@ -75,17 +74,21 @@ namespace Praeclarum.App
 			}
 		}
 
-		void CompleteTransaction (SKPaymentTransaction t)
+		async void CompleteTransaction (SKPaymentTransaction t)
 		{
 			if (t == null)
 				return;
 
-			if (t.Error != null) {
+			if (t.TransactionState == SKPaymentTransactionState.Failed) {
 				Console.WriteLine ("STORE ERROR CompleteTransaction: {0} {1} {2}", t.TransactionState, t.TransactionIdentifier, t.TransactionDate);
 				return;
 			}
-			
+
 			Console.WriteLine ("STORE CompleteTransaction: {0} {1} {2} {3}", t.Payment.ProductIdentifier, t.TransactionState, t.TransactionIdentifier, t.TransactionDate);
+			foreach (var a in CompletionActions) {
+				await a (t);
+			}
+			Console.WriteLine ("STORE FinishTransaction()");
 			SKPaymentQueue.DefaultQueue.FinishTransaction (t);
 		}
 

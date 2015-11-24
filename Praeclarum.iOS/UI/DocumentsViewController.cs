@@ -679,11 +679,14 @@ namespace Praeclarum.UI
 		{
 			base.ViewWillAppear (animated);
 
+			var appdel = DocumentAppDelegate.Shared;
+
 			//
 			// Style the navigation controller
 			//
 			if (NavigationController != null) {
 				NavigationController.SetToolbarHidden (false, animated);
+				appdel.Theme.Apply (NavigationController);
 			}
 
 			//
@@ -710,7 +713,7 @@ namespace Praeclarum.UI
 			//
 			// Show which doc is open
 			//
-			SetOpenedDocument (DocumentAppDelegate.Shared.OpenedDocIndex, animated);
+			SetOpenedDocument (appdel.OpenedDocIndex, animated);
 		}
 
 		public override void ViewDidAppear (bool animated)

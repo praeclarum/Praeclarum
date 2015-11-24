@@ -67,6 +67,9 @@ namespace Praeclarum.App
 						productsRestored.Add (t);
 						CompleteTransaction (t);
 						break;
+					case SKPaymentTransactionState.Failed:
+						CompleteTransaction (t);
+						break;
 					}
 				}
 			} catch (Exception ex) {
@@ -81,12 +84,11 @@ namespace Praeclarum.App
 
 			if (t.TransactionState == SKPaymentTransactionState.Failed) {
 				Console.WriteLine ("STORE ERROR CompleteTransaction: {0} {1} {2}", t.TransactionState, t.TransactionIdentifier, t.TransactionDate);
-				return;
-			}
-
-			Console.WriteLine ("STORE CompleteTransaction: {0} {1} {2} {3}", t.Payment.ProductIdentifier, t.TransactionState, t.TransactionIdentifier, t.TransactionDate);
-			foreach (var a in CompletionActions) {
-				await a (t);
+			} else {
+				Console.WriteLine ("STORE CompleteTransaction: {0} {1} {2} {3}", t.Payment.ProductIdentifier, t.TransactionState, t.TransactionIdentifier, t.TransactionDate);
+				foreach (var a in CompletionActions) {
+					await a (t);
+				}
 			}
 			Console.WriteLine ("STORE FinishTransaction()");
 			SKPaymentQueue.DefaultQueue.FinishTransaction (t);

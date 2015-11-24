@@ -147,6 +147,9 @@ namespace Praeclarum.UI
 			//
 			try {
 				if (App.IsPatronSupported) {
+					if (Settings.IsPatron) {
+						Settings.IsPatron = DateTime.UtcNow < Settings.PatronEndDate;
+					}
 					StoreManager.Shared.CompletionActions.Add (PatronForm.HandlePurchaseCompletionAsync);
 				}				
 			} catch (Exception ex) {

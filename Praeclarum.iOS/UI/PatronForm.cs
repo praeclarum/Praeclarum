@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CloudKit;
 using Foundation;
+using UIKit;
 
 namespace Praeclarum.UI
 {
@@ -47,7 +48,7 @@ namespace Praeclarum.UI
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
 
-			RefreshPatronData ();
+			RefreshPatronDataAsync ();
 		}
 
 		static PatronForm visibleForm;
@@ -66,8 +67,9 @@ namespace Praeclarum.UI
 
 		bool hasCloud = false;
 
-		async Task GetPastPurchasesAsync ()
+		async Task<int> GetPastPurchasesAsync ()
 		{
+			var n = 0;
 			try {
 				
 				var container = CKContainer.DefaultContainer;
@@ -81,7 +83,10 @@ namespace Praeclarum.UI
 
 				var recs = await db.PerformQueryAsync (query, zone.ZoneId);
 
+				Console.WriteLine ("NUM RECS = {0}", recs.Length);
+
 				var subs = recs.Select (x => new PatronSubscription (x)).OrderBy (x => x.PurchaseDate).ToArray ();
+				n = subs.Length;
 
 				var ed = DateTime.UtcNow;
 
@@ -97,8 +102,14 @@ namespace Praeclarum.UI
 					}
 				}
 
+				Console.WriteLine ("NEW END DATE = {0}", ed);
+
 				endDate = ed;
 				isPatron = DateTime.UtcNow < endDate;
+
+				var settings = DocumentAppDelegate.Shared.Settings;
+				settings.IsPatron = isPatron;
+				settings.PatronEndDate = endDate;
 
 			} catch (NSErrorException ex) {
 				Console.WriteLine ("ERROR: {0}", ex.Error);
@@ -106,9 +117,10 @@ namespace Praeclarum.UI
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}
+			return n;
 		}
 
-		async void RefreshPatronData ()
+		async Task<int> RefreshPatronDataAsync ()
 		{
 			var ids = prices.Select (x => x.Id).ToArray ();
 			var prods = await StoreManager.Shared.FetchProductInformationAsync (ids);
@@ -126,13 +138,15 @@ namespace Praeclarum.UI
 
 			ReloadSection (buySection);
 
-			await GetPastPurchasesAsync ();
+			var n = await GetPastPurchasesAsync ();
 
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
 
 			ReloadSection (aboutSection);
 			ReloadSection (buySection);
+
+			return n;
 		}
 
 		async Task<bool> CheckForCloudAsync ()
@@ -177,11 +191,16 @@ namespace Praeclarum.UI
 			await db.SaveRecordAsync (sub.Record);
 
 			NSTimer.CreateScheduledTimer (0.5, nst => {
-				this.BeginInvokeOnMainThread (()=> {
-					if (visibleForm != null) {
-						visibleForm.RefreshPatronData ();
-					}
-				});
+				var v = visibleForm;
+				if (v != null) {
+					v.BeginInvokeOnMainThread (()=> {
+						try {
+							v.RefreshPatronDataAsync ();
+						} catch (Exception ex) {
+							Log.Error (ex);
+						}
+					});
+				}
 			});
 		}
 
@@ -300,8 +319,21 @@ namespace Praeclarum.UI
 				var form = (PatronForm)Form;
 				if (!await form.CheckForCloudAsync ())
 					return;
-				StoreManager.Shared.Restore ();
-				form.RefreshPatronData ();
+				// We save receipts in iCloud
+//				StoreManager.Shared.Restore ();
+				var n = await form.RefreshPatronDataAsync ();
+
+				try {
+					Console.WriteLine (n);
+					var m = n > 0 ?
+						"Your subscriptions have been restored." :
+						"No past subscriptions found for this iCloud account.";
+					var alert = UIAlertController.Create ("Restore Complete", m, UIAlertControllerStyle.Alert);
+					alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => {}));
+					form.PresentViewController (alert, true, null);
+				} catch (Exception ex) {
+					Log.Error (ex);
+				}
 			}
 		}
 	}
@@ -328,9 +360,17 @@ namespace Praeclarum.UI
 			}
 			return false;
 		}
+
+		public override string GetItemTitle (object item)
+		{
+			var isp = DocumentAppDelegate.Shared.Settings.IsPatron;
+			return isp ?
+				"Extend Your Patrongage" :
+				"Become a Patron";
+		}
 	}
 
-	class PatronSubscription
+	public class PatronSubscription
 	{
 		public readonly CKRecord Record;
 

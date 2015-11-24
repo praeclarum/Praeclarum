@@ -87,7 +87,7 @@ namespace Praeclarum.IO
 
 		NSMetadataQuery query;
 
-		public int MaxDirectoryDepth { get { return 1; } }
+		public int MaxDirectoryDepth { get { return short.MaxValue; } }
 
 		bool needsRefresh = true;
 

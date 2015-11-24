@@ -56,7 +56,7 @@ namespace Praeclarum.IO
 			}
 		}
 
-		public int MaxDirectoryDepth { get { return 1; } }
+		public int MaxDirectoryDepth { get { return short.MaxValue; } }
 
 		public string Description { get; private set; }
 		public string ShortDescription { get { return Description; } }

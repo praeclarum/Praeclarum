@@ -46,9 +46,7 @@ namespace Praeclarum.UI
 						HandleDone);
 				}
 
-				var theme = DocumentAppDelegate.Shared.Theme;
-
-				theme.Apply (TableView);
+				Theme.Current.Apply (TableView);
 			}
 			catch (Exception ex) {
 				Log.Error (ex);
@@ -61,7 +59,7 @@ namespace Praeclarum.UI
 			try {
 				var nc = NavigationController;
 				if (nc != null) {
-					DocumentAppDelegate.Shared.Theme.Apply (nc);
+					Theme.Current.Apply (nc);
 				}
 				
 			} catch (Exception ex) {
@@ -71,7 +69,7 @@ namespace Praeclarum.UI
 
 		public override UIStatusBarStyle PreferredStatusBarStyle ()
 		{
-			return DocumentAppDelegate.Shared.Theme.StatusBarStyle;
+			return Theme.Current.StatusBarStyle;
 		}
 
 		protected virtual async void HandleCancel (object sender, EventArgs e)
@@ -180,7 +178,7 @@ namespace Praeclarum.UI
 					: ((display == PFormItemDisplay.TitleAndSubtitle) ? UITableViewCellStyle.Subtitle : UITableViewCellStyle.Value1),
 					reuseId)
 			{
-				ApplyTheme (DocumentAppDelegate.Shared.Theme);
+				ApplyTheme (Theme.Current);
 			}
 
 			#region IThemeAware implementation
@@ -278,7 +276,7 @@ namespace Praeclarum.UI
 
 			public void FormatCell (PFormCell cell, PFormSection section, object item)
 			{
-				var theme = DocumentAppDelegate.Shared.Theme;
+				var theme = Theme.Current;
 				theme.Apply (cell);
 
 				var itemTitle = section.GetItemTitle (item);
@@ -330,38 +328,6 @@ namespace Praeclarum.UI
 					cell.SelectionStyle = UITableViewCellSelectionStyle.None;
 				}
 			}
-
-//			UIFont headingFont = UIFont.FromName (WhiteTheme.TableHeadingFontName, 18);
-//
-//			public override float GetHeightForHeader (UITableView tableView, int section)
-//			{
-//				return string.IsNullOrWhiteSpace (controller.sections[section].Title) ? 11 : 44;
-//			}
-//
-//			static readonly float LeftPadding = UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone ?
-//				20 : 40;
-//
-//			public override UIView GetViewForHeader (UITableView tableView, int section)
-//			{
-//				var size = new SizeF (320, 44);
-//
-//				var label = new UILabel (new RectangleF (LeftPadding, 0, size.Width - LeftPadding, size.Height)) {
-//					Opaque = false,
-//					BackgroundColor = UIColor.Clear,
-//					Text = controller.sections[section].Title,
-//					TextColor = WhiteTheme.TableHeadingTextColor,
-//					Font = headingFont,
-//					AutoresizingMask = UIViewAutoresizing.FlexibleDimensions,
-//				};
-//
-//				var h = new UIView (new RectangleF (PointF.Empty, size)) {
-//					Opaque = false,
-//					BackgroundColor = UIColor.Clear,
-//				};
-//				h.AddSubview (label);
-//
-//				return h;
-//			}
 
 			public override void RowSelected (UITableView tableView, NSIndexPath indexPath)
 			{

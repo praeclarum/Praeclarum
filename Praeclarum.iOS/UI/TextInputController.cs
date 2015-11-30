@@ -185,6 +185,7 @@ namespace Praeclarum.UI
 				ClearButtonMode = UITextFieldViewMode.WhileEditing,
 				AutocorrectionType = UITextAutocorrectionType.Default,
 				AutocapitalizationType = UITextAutocapitalizationType.Sentences,
+				KeyboardAppearance = Theme.Current.KeyboardAppearance,
 				ReturnKeyType = UIReturnKeyType.Done,
 				ShouldReturn = tf => {
 					done ().ContinueWith (ta => {

@@ -10,7 +10,7 @@ namespace Praeclarum.UI
 		void ApplyTheme (Theme theme);
 	}
 
-	public abstract class Theme
+	public class Theme
 	{
 		static protected readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 
@@ -20,11 +20,68 @@ namespace Praeclarum.UI
 		readonly Lazy<UIImage> MoveButtonImage = new Lazy<UIImage> (
 			() => UIImage.FromBundle ("Move.png"));
 
+		public static Theme Current;
+
+		static Theme ()
+		{
+			Current = new Theme (dark: false);
+		}
+
+		public Theme ()
+			: this (dark: false)
+		{
+		}
+
+		public Theme (bool dark)
+		{
+			IsDark = dark;
+			TintColor = UIColor.Red;
+			var appdel = DocumentAppDelegate.Shared;
+			if (appdel != null && appdel.App != null) {
+				TintColor = Praeclarum.Graphics.ColorEx.GetUIColor (appdel.App.TintColor);
+			}
+			if (dark) {
+				StatusBarStyle = UIStatusBarStyle.LightContent;
+				NavigationBackgroundColor = null;
+				NavigationTextColor = UIColor.LightGray;
+				DocumentsBackgroundColor = UIColor.FromRGB (22, 22, 22);
+				DocumentsFolderColor = UIColor.Black;
+				DocumentsFrameSideColor = UIColor.Black;
+				DocumentsFrameBottomColor = UIColor.Black;
+				DocumentsControlColor = UIColor.Gray;
+				NavigationBarStyle = UIBarStyle.Black;
+				GroupedTableBackgroundColor = DocumentsBackgroundColor;
+				TableHeadingTextColor = UIColor.Gray;
+				TableCellBackgroundColor = UIColor.FromWhiteAlpha (0.15f, 1.0f);
+				TableCellTextColor = UIColor.White;
+				TableSeparatorColor = UIColor.FromWhiteAlpha (0.25f, 1.0f);
+				DocumentBackgroundColor = new UIColor ((nfloat)0x22 / 255.0f, (nfloat)0x22 / 255.0f, (nfloat)0x22 / 255.0f, 1);
+				KeyboardAppearance = UIKeyboardAppearance.Dark;
+			} else {
+				StatusBarStyle = UIStatusBarStyle.Default;
+				NavigationBarStyle = UIBarStyle.Default;
+				TableHeadingTextColor = UIColor.Gray;
+				NavigationBackgroundColor = null;
+				NavigationTextColor = UIColor.Black;
+				DocumentsBackgroundColor = UIColor.FromRGB (222, 222, 222);
+				DocumentsControlColor = UIColor.FromWhiteAlpha (59 / 255.0f, 1);
+				DocumentsFolderColor = UIColor.FromRGB (195, 195, 195);
+				DocumentsFrameSideColor = UIColor.FromRGB ((nfloat)202 / 255.0f, (nfloat)202 / 255.0f, (nfloat)202 / 255.0f);
+				DocumentsFrameBottomColor = UIColor.FromRGB ((nfloat)176 / 255.0f, (nfloat)176 / 255.0f, (nfloat)176 / 255.0f);
+				GroupedTableBackgroundColor = UIColor.GroupTableViewBackgroundColor;
+				TableCellBackgroundColor = UIColor.White;
+				TableCellTextColor = UIColor.DarkTextColor;
+				TableSeparatorColor = UIColor.FromWhiteAlpha (0.85f, 1.0f);
+				DocumentBackgroundColor = UIColor.White;
+				KeyboardAppearance = UIKeyboardAppearance.Default;
+			}
+		}
+
 		public virtual void Apply ()
 		{
 			if (ios7) {
-				UINavigationBar.Appearance.TintColor = GetTintColor ();
-				UIBarButtonItem.Appearance.TintColor = GetTintColor ();
+				UINavigationBar.Appearance.TintColor = TintColor;
+				UIBarButtonItem.Appearance.TintColor = TintColor;
 
 				UINavigationBar.Appearance.BarTintColor = NavigationBackgroundColor;
 				UINavigationBar.Appearance.TitleTextAttributes = new UIStringAttributes {
@@ -146,77 +203,24 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public virtual UIStatusBarStyle StatusBarStyle
-		{
-			get {
-				return UIStatusBarStyle.Default;
-			}
-		}
-
-		public virtual UIBarStyle NavigationBarStyle
-		{
-			get {
-				return UIBarStyle.Default;
-			}
-		}
-
-		public virtual bool IsDark { get { return false; } }
-
-		public virtual UIColor NavigationBackgroundColor {
-			get {
-				return null;
-			}
-		}
-		public virtual UIColor NavigationTextColor {
-			get {
-				return UIColor.Black;
-			}
-		}
-		public virtual UIColor DocumentsBackgroundColor {
-			get {
-				return UIColor.FromRGB (222, 222, 222);
-			}
-		}
-		public virtual UIColor DocumentsControlColor {
-			get {
-				return UIColor.FromWhiteAlpha (59 / 255.0f, 1);
-			}
-		}
-		public virtual UIColor DocumentsFolderColor {
-			get {
-				return UIColor.FromRGB (195, 195, 195);
-			}
-		}
-		public virtual UIColor DocumentsFrameSideColor {
-			get {
-				return UIColor.FromRGB ((nfloat)202 / 255.0f, (nfloat)202 / 255.0f, (nfloat)202 / 255.0f);
-			}
-		}
-		public virtual UIColor DocumentsFrameBottomColor {
-			get {
-				return UIColor.FromRGB ((nfloat)176 / 255.0f, (nfloat)176 / 255.0f, (nfloat)176 / 255.0f);
-			}
-		}
-		public virtual UIColor GroupedTableBackgroundColor {
-			get {
-				return UIColor.GroupTableViewBackgroundColor;
-			}
-		}
-		public virtual UIColor TableCellBackgroundColor {
-			get {
-				return UIColor.White;
-			}
-		}
-		public virtual UIColor TableCellTextColor {
-			get {
-				return UIColor.DarkTextColor;
-			}
-		}
-		public virtual UIColor TableSeparatorColor {
-			get {
-				return UIColor.FromWhiteAlpha (0.85f, 1.0f);
-			}
-		}
+		public UIStatusBarStyle StatusBarStyle { get; protected set; }
+		public UIBarStyle NavigationBarStyle { get; protected set; }
+		public bool IsDark { get; protected set; }
+		public UIColor TableHeadingTextColor  { get; protected set; }
+		public UIColor NavigationBackgroundColor  { get; protected set; }
+		public UIColor NavigationTextColor  { get; protected set; }
+		public UIColor DocumentsBackgroundColor  { get; protected set; }
+		public UIColor DocumentsControlColor  { get; protected set; }
+		public UIColor DocumentsFolderColor  { get; protected set; }
+		public UIColor DocumentsFrameSideColor  { get; protected set; }
+		public UIColor DocumentsFrameBottomColor  { get; protected set; }
+		public UIColor GroupedTableBackgroundColor  { get; protected set; }
+		public UIColor TableCellBackgroundColor  { get; protected set; }
+		public UIColor TableCellTextColor  { get; protected set; }
+		public UIColor TableSeparatorColor  { get; protected set; }
+		public UIColor DocumentBackgroundColor { get; protected set; }
+		public UIKeyboardAppearance KeyboardAppearance { get; protected set; }
+		public UIColor TintColor { get; protected set; }
 
 		public virtual void Apply (UITableView tableView)
 		{
@@ -240,22 +244,16 @@ namespace Praeclarum.UI
 		{
 			var isnav = cell.Accessory == UITableViewCellAccessory.DisclosureIndicator;
 			cell.TextLabel.TextColor = ios7 ? 
-				(isnav ? TableCellTextColor : GetTintColor ()) : 
+				(isnav ? TableCellTextColor : TintColor) : 
 				TableCellTextColor;
 		}
 
 		readonly UIColor checkColor = UIColor.FromRGB (50, 79, 133);
 
-		static UIColor GetTintColor ()
-		{
-			return DocumentAppDelegate.Shared.TintColor;
-		}
-
 		public virtual void ApplyChecked (UITableViewCell cell)
 		{
 			cell.TextLabel.TextColor = ios7 ? 
-				GetTintColor () : 
-			                           checkColor;
+				TintColor : checkColor;
 		}
 
 		public virtual UIBarButtonItem CreateAddButton (EventHandler handler)
@@ -308,75 +306,9 @@ namespace Praeclarum.UI
 
 	public class DarkTheme : Theme
 	{
-		public override bool IsDark {
-			get {
-				return true;
-			}
-		}
-		public override UIStatusBarStyle StatusBarStyle {
-			get {
-				return UIStatusBarStyle.LightContent;
-			}
-		}
-		public override UIColor NavigationBackgroundColor {
-			get {
-				return null;
-			}
-		}
-		public override UIColor NavigationTextColor {
-			get {
-				return UIColor.LightGray;
-			}
-		}
-		public override UIColor DocumentsBackgroundColor {
-			get {
-				return UIColor.FromRGB (22, 22, 22);
-			}
-		}
-		public override UIColor DocumentsFolderColor {
-			get {
-				return UIColor.Black;
-			}
-		}
-		public override UIColor DocumentsFrameSideColor {
-			get {
-				return UIColor.Black;
-			}
-		}
-		public override UIColor DocumentsFrameBottomColor {
-			get {
-				return UIColor.Black;
-			}
-		}
-		public override UIColor DocumentsControlColor {
-			get {
-				return UIColor.Gray;
-			}
-		}
-		public override UIBarStyle NavigationBarStyle {
-			get {
-				return UIBarStyle.Black;
-			}
-		}
-		public override UIColor GroupedTableBackgroundColor {
-			get {
-				return DocumentsBackgroundColor;
-			}
-		}
-		public override UIColor TableCellBackgroundColor {
-			get {
-				return UIColor.FromWhiteAlpha (0.15f, 1.0f);
-			}
-		}
-		public override UIColor TableCellTextColor {
-			get {
-				return UIColor.White;
-			}
-		}
-		public override UIColor TableSeparatorColor {
-			get {
-				return UIColor.FromWhiteAlpha (0.25f, 1.0f);
-			}
+		public DarkTheme ()
+			: base (dark: true)
+		{			
 		}
 	}
 

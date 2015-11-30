@@ -6,14 +6,29 @@ namespace Praeclarum.UI
 	public class DarkModeSection : PFormSection
 	{		
 		public DarkModeSection ()
+			: this (() => DocumentAppDelegate.Shared.Settings.DarkMode, () => {
+				var appdel = DocumentAppDelegate.Shared;
+				appdel.Settings.DarkMode = !appdel.Settings.DarkMode;
+				appdel.UpdateTheme ();
+			})
+		{
+		}
+
+		readonly Func<bool> isDarkFunc;
+		readonly Action toggleAction;
+
+		public DarkModeSection (Func<bool> isDark, Action toggle)
 		{
 			Items.Add ("Light Mode");
 			Items.Add ("Dark Mode");
+
+			this.isDarkFunc = isDark;
+			this.toggleAction = toggle;
 		}
 
 		public override bool GetItemChecked (object item)
 		{
-			var isDark = DocumentAppDelegate.Shared.Settings.DarkMode;
+			var isDark = isDarkFunc ();
 			if ("Dark Mode" == item.ToString ()) {
 				return isDark;
 			}
@@ -22,10 +37,8 @@ namespace Praeclarum.UI
 
 		public override bool SelectItem (object item)
 		{
-			var appdel = DocumentAppDelegate.Shared;
 			NSTimer.CreateScheduledTimer (0.1, t => {
-				appdel.Settings.DarkMode = !DocumentAppDelegate.Shared.Settings.DarkMode;
-				DocumentAppDelegate.Shared.UpdateTheme ();
+				toggleAction ();
 				SetNeedsFormat ();
 			});
 			return false;

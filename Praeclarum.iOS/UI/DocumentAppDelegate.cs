@@ -248,8 +248,7 @@ namespace Praeclarum.UI
 
 		Task initFileSystemTask;
 
-		Theme theme = new LightTheme ();
-		public Theme Theme { get { return theme; } set { SetTheme (value); } }
+		public Theme Theme { get { return Praeclarum.UI.Theme.Current; } set { SetTheme (value); } }
 
 		public void UpdateTheme ()
 		{
@@ -258,8 +257,8 @@ namespace Praeclarum.UI
 
 		protected virtual void SetTheme (Theme newTheme)
 		{
-			this.theme = newTheme;
-			this.theme.Apply ();
+			Theme.Current = newTheme;
+			newTheme.Apply ();
 			UpdateFonts ();
 		}
 

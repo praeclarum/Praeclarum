@@ -723,8 +723,10 @@ namespace Praeclarum.UI
 		public async Task CloseDocumentEditor (IDocumentEditor editor, bool unbindUI, bool deleteThumbnail, bool reloadThumbnail)
 		{
 			var docRef = editor.DocumentReference;
+			if (docRef == null)
+				return;
+			
 			var doc = docRef.Document;
-
 			if (doc == null)
 				return;
 
@@ -1727,8 +1729,8 @@ namespace Praeclarum.UI
 		{
 			var pform = new PatronForm ();
 			var nav = new UINavigationController (pform);
-			var vc = UIApplication.SharedApplication.KeyWindow.RootViewController;
-			await vc.PresentViewControllerAsync (nav, true);
+			nav.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
+			await CurrentDocumentListController.PresentViewControllerAsync (nav, true);
 		}
 	}
 }

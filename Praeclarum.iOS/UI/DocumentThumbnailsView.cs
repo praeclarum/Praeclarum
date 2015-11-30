@@ -620,8 +620,10 @@ namespace Praeclarum.UI
 				var str = new NSString ("Become a Patron");
 				var tb = bb;
 				tb.Inflate (-4.0f, -4.0f);
-				tb.Y += (tb.Height - 42)/2;
-				str.DrawString (tb, UIFont.SystemFontOfSize (16.0f), UILineBreakMode.WordWrap, UITextAlignment.Center);
+				var font = UIFont.SystemFontOfSize (16.0f);
+				var sz = str.StringSize (font, tb.Size);
+				tb.Y += (tb.Height - sz.Height) / 2;
+				str.DrawString (tb, font, UILineBreakMode.WordWrap, UITextAlignment.Center);
 
 				var dtb = bb;
 				dtb.Y += bb.Height + 4;

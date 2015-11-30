@@ -251,6 +251,11 @@ namespace Praeclarum.UI
 						} catch (Exception ex) {
 							Log.Error (ex);
 						}
+						try {
+							await DocumentAppDelegate.Shared.CurrentDocumentListController.LoadDocs ();					
+						} catch (Exception ex) {
+							Log.Error (ex);
+						}
 					});
 				});
 			}
@@ -414,6 +419,11 @@ namespace Praeclarum.UI
 					return;
 				await form.DeletePastPurchasesAsync ();
 				await form.RefreshPatronDataAsync ();
+				try {
+					await DocumentAppDelegate.Shared.CurrentDocumentListController.LoadDocs ();					
+				} catch (Exception ex) {
+					Log.Error (ex);
+				}
 			}
 		}
 	}

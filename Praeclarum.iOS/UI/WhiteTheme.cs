@@ -54,6 +54,7 @@ namespace Praeclarum.UI
 				TableHeadingTextColor = UIColor.Gray;
 				TableCellBackgroundColor = UIColor.FromWhiteAlpha (0.15f, 1.0f);
 				TableCellTextColor = UIColor.White;
+				TableCellDetailTextColor = UIColor.LightGray;
 				TableSeparatorColor = UIColor.FromWhiteAlpha (0.25f, 1.0f);
 				DocumentBackgroundColor = new UIColor ((nfloat)0x22 / 255.0f, (nfloat)0x22 / 255.0f, (nfloat)0x22 / 255.0f, 1);
 				KeyboardAppearance = UIKeyboardAppearance.Dark;
@@ -71,6 +72,7 @@ namespace Praeclarum.UI
 				GroupedTableBackgroundColor = UIColor.GroupTableViewBackgroundColor;
 				TableCellBackgroundColor = UIColor.White;
 				TableCellTextColor = UIColor.DarkTextColor;
+				TableCellDetailTextColor = UIColor.LightGray;
 				TableSeparatorColor = UIColor.FromWhiteAlpha (0.85f, 1.0f);
 				DocumentBackgroundColor = UIColor.White;
 				KeyboardAppearance = UIKeyboardAppearance.Default;
@@ -217,6 +219,7 @@ namespace Praeclarum.UI
 		public UIColor GroupedTableBackgroundColor  { get; protected set; }
 		public UIColor TableCellBackgroundColor  { get; protected set; }
 		public UIColor TableCellTextColor  { get; protected set; }
+		public UIColor TableCellDetailTextColor  { get; protected set; }
 		public UIColor TableSeparatorColor  { get; protected set; }
 		public UIColor DocumentBackgroundColor { get; protected set; }
 		public UIKeyboardAppearance KeyboardAppearance { get; protected set; }
@@ -238,6 +241,10 @@ namespace Praeclarum.UI
 		{
 			cell.BackgroundColor = TableCellBackgroundColor;
 			cell.TextLabel.TextColor = TableCellTextColor;
+			var d = cell.DetailTextLabel;
+			if (d != null) {
+				d.TextColor = TableCellDetailTextColor;
+			}
 		}
 
 		public virtual void ApplyCommand (UITableViewCell cell)

@@ -154,6 +154,11 @@ namespace Praeclarum.App
 				Title = title,
 				TextData = textData,
 			};
+
+			if (revisionIndex >= 0 && revisionIndex + 1 < revisions.Count) {
+				revisions.RemoveRange (revisionIndex + 1, (revisions.Count - (revisionIndex + 1)));
+			}
+
 			revisions.Add (r);
 			revisionIndex = revisions.Count - 1;
 		}

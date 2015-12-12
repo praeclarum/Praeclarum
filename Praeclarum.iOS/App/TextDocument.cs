@@ -3,6 +3,7 @@ using UIKit;
 using Foundation;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Praeclarum.App
 {
@@ -126,6 +127,65 @@ namespace Praeclarum.App
 		{
 			return Task.FromResult (new UIActivity[0]);
 		}
+	}
+
+	public class TextDocumentHistory
+	{
+		List<TextDocumentRevision> revisions = new List<TextDocumentRevision> ();
+		int revisionIndex = 0;
+
+		public TextDocumentHistory ()
+		{
+			SaveInitialRevision ("Initial", "");
+		}
+
+		public void SaveInitialRevision (string title, string textData)
+		{
+			revisions.Clear ();
+			revisionIndex = -1;
+			SaveRevision (title, textData);
+		}
+
+		public void SaveRevision (string title, string textData)
+		{
+			Console.WriteLine ("SAVE REV " + title);
+			var r = new TextDocumentRevision {
+				ModifiedTimeUtc = DateTime.UtcNow,
+				Title = title,
+				TextData = textData,
+			};
+			revisions.Add (r);
+			revisionIndex = revisions.Count - 1;
+		}
+
+		public bool CanUndo { get { return revisionIndex > 0; } }
+		public bool CanRedo { get { return revisionIndex < revisions.Count - 1; } }
+
+		public void Undo ()
+		{
+			if (!CanUndo)
+				return;
+			revisionIndex--;
+		}
+
+		public void Redo ()
+		{
+			if (!CanRedo)
+				return;
+			revisionIndex++;
+		}
+
+		public string TextData
+		{
+			get { return revisions [revisionIndex].TextData; }
+		}
+	}
+
+	public class TextDocumentRevision
+	{
+		public string Title;
+		public DateTime ModifiedTimeUtc;
+		public string TextData;
 	}
 
 	public class SavingEventArgs : EventArgs

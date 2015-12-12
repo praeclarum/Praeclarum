@@ -685,6 +685,7 @@ namespace Praeclarum.UI
 			// Style the navigation controller
 			//
 			if (NavigationController != null) {
+				NavigationController.SetNavigationBarHidden (false, animated);
 				NavigationController.SetToolbarHidden (false, animated);
 				appdel.Theme.Apply (NavigationController);
 			}

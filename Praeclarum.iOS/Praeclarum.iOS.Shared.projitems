@@ -49,5 +49,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)IO\DropboxCoreFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\StoreManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\PatronForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\StorageSection.cs" />
   </ItemGroup>
 </Project>

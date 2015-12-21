@@ -61,7 +61,7 @@ namespace Praeclarum.UI
 				if (nc != null) {
 					Theme.Current.Apply (nc);
 				}
-				
+				TableView.ReloadData ();
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}

@@ -74,7 +74,7 @@ namespace Praeclarum.UI
 
 			var recs = await db.PerformQueryAsync (query, CKRecordZone.DefaultRecordZone().ZoneId);
 
-			Console.WriteLine ("NUM RECS = {0}", recs.Length);
+			Console.WriteLine ("NUM PATRON RECS = {0}", recs.Length);
 
 			var subs = recs.Select (x => new PatronSubscription (x)).OrderBy (x => x.PurchaseDate).ToArray ();
 
@@ -273,7 +273,7 @@ namespace Praeclarum.UI
 
 				} else {
 					Title = "Thank you for using " + appName;
-					Hint = appName + " for iOS's development is supported " +
+					Hint = "Development of " + appName + " for iOS is supported " +
 						"by voluntary patronage from people like you.\n\n" +
 						"Please consider becoming a patron " +
 						"to make continued development of " + appName + " possible and " +

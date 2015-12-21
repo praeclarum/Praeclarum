@@ -59,6 +59,7 @@ namespace Praeclarum.UI
 			dupBtn = theme.CreateDuplicateButton (HandleDuplicate);
 			moveBtn = theme.CreateMoveButton (HandleMove);
 			cancelSelBtn = theme.CreateCancelButton (HandleCancelSelection);
+			patronBtn = new UIBarButtonItem ("Support " + appName, UIBarButtonItemStyle.Plain, HandlePatron);
 
 			NavigationItem.BackBarButtonItem = new UIBarButtonItem (
 				"Back",
@@ -226,6 +227,8 @@ namespace Praeclarum.UI
 			Docs = newItems.Select (x => x.Reference).ToList ();		
 
 			ReloadData ();
+
+			UpdateToolbar (false);
 		}
 
 		DocumentsSort SortOrder { get { return docsView != null ? docsView.Sort : DocumentsSort.Name; } }
@@ -280,6 +283,7 @@ namespace Praeclarum.UI
 		readonly UIBarButtonItem dupBtn;
 		readonly UIBarButtonItem moveBtn;
 		readonly UIBarButtonItem cancelSelBtn;
+		readonly UIBarButtonItem patronBtn;
 
 		static readonly TimeSpan SyncTimeout = TimeSpan.FromSeconds (20);
 		static readonly TimeSpan RefreshListTimesInterval = TimeSpan.FromSeconds (30);
@@ -666,26 +670,13 @@ namespace Praeclarum.UI
 
 			var appdel = DocumentAppDelegate.Shared;
 
-			var needsPatronBar = false;
-
-			var needsToolbar = needsPatronBar;
-
-			//
-			// Set the toobar
-			//
-			try {
-				var items = new List<UIBarButtonItem> ();
-				SetToolbarItems (items.ToArray (), animated);
-			} catch (Exception ex) {
-				Log.Error (ex);				
-			}
+			UpdateToolbar (animated);
 
 			//
 			// Style the navigation controller
 			//
 			if (NavigationController != null) {
 				NavigationController.SetNavigationBarHidden (false, animated);
-				NavigationController.SetToolbarHidden (!needsToolbar, animated);
 				appdel.Theme.Apply (NavigationController);
 			}
 
@@ -754,6 +745,33 @@ namespace Praeclarum.UI
 			}
 		}
 
+		protected virtual void UpdateToolbar (bool animated)
+		{
+			try {
+				var appdel = DocumentAppDelegate.Shared;
+
+				var items = new List<UIBarButtonItem> ();
+
+				var needsPatronBar = false;
+				if (appdel.App.IsPatronSupported) {
+					needsPatronBar = !appdel.Settings.IsPatron;
+				}
+				if (needsPatronBar) {
+					items.Add (new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace));
+					items.Add (patronBtn);
+					items.Add (new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace));
+				}
+
+				SetToolbarItems (items.ToArray (), animated);			
+
+				if (NavigationController != null) {
+					NavigationController.SetToolbarHidden (items.Count == 0, animated);
+				}
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
+		}
+
 		static void ShowSyncError ()
 		{
 			var alert = new UIAlertView (
@@ -772,6 +790,11 @@ namespace Praeclarum.UI
 		void HandleLamda (object sender, EventArgs e)
 		{
 			DocumentAppDelegate.Shared.ShowSettings (this);
+		}
+
+		async void HandlePatron (object sender, EventArgs e)
+		{
+			await DocumentAppDelegate.Shared.ShowPatronAsync ();
 		}
 
 		void HandleStorage (object sender, EventArgs e)

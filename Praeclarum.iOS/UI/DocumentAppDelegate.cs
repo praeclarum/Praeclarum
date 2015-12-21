@@ -1726,10 +1726,15 @@ namespace Praeclarum.UI
 
 		public async Task ShowPatronAsync ()
 		{
-			var pform = new PatronForm ();
+			var pform = new PatronForm (GetPatronMonthlyPrices ());
 			var nav = new UINavigationController (pform);
 			nav.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 			await CurrentDocumentListController.PresentViewControllerAsync (nav, true);
+		}
+
+		public virtual IEnumerable<Tuple<int, string>> GetPatronMonthlyPrices ()
+		{
+			return Enumerable.Empty<Tuple<int, string>> ();
 		}
 	}
 }

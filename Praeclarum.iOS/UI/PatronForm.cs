@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CloudKit;
 using Foundation;
 using UIKit;
+using System.Collections.Generic;
 
 namespace Praeclarum.UI
 {
@@ -14,24 +15,17 @@ namespace Praeclarum.UI
 
 		PatronAboutSection aboutSection;
 
-		static readonly PatronSubscriptionPrice[] prices;
+		static PatronSubscriptionPrice[] prices = new PatronSubscriptionPrice[0];
 
 		bool isPatron;
 
 		DateTime endDate;
 
-		static PatronForm ()
+		public PatronForm (IEnumerable<Tuple<int, string>> monthlyPrices)
 		{
 			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = new[] {
-				new PatronSubscriptionPrice(bundleId + ".patron.nsub.3month", 3, "$2.99"),
-				new PatronSubscriptionPrice(bundleId + ".patron.nsub.6month", 6, "$5.99"),
-				new PatronSubscriptionPrice(bundleId + ".patron.nsub.12month", 12, "$9.99")
-			};
-		}
+			prices = monthlyPrices.Select (x => new PatronSubscriptionPrice (bundleId + ".patron.nsub." + x.Item1 + "month", x.Item1, x.Item2)).ToArray ();
 
-		public PatronForm ()
-		{
 			var appdel = DocumentAppDelegate.Shared;
 			var appName = appdel.App.Name;
 			Title = "Support " + appName;
@@ -279,7 +273,7 @@ namespace Praeclarum.UI
 
 				} else {
 					Title = "Thank you for using " + appName;
-					Hint = appName + "'s development is supported " +
+					Hint = appName + " for iOS's development is supported " +
 						"by voluntary patronage from people like you.\n\n" +
 						"Please consider becoming a patron " +
 						"to make continued development of " + appName + " possible and " +
@@ -307,7 +301,7 @@ namespace Praeclarum.UI
 			public PatronBuySection (PatronSubscriptionPrice[] prices)
 				: base (prices)
 			{
-				Hint = "These one-time purchases do not auto-renew and are tied to your iCloud account.";
+				Hint = "These one-time purchases do not auto-renew and are saved in iCloud.";
 			}
 
 			public void SetPatronage ()
@@ -444,7 +438,7 @@ namespace Praeclarum.UI
 
 		public override bool SelectItem (object item)
 		{
-			var f = new PatronForm ();
+			var f = new PatronForm (DocumentAppDelegate.Shared.GetPatronMonthlyPrices ());
 			if (this.Form.NavigationController != null) {
 				this.Form.NavigationController.PushViewController (f, true);
 			}

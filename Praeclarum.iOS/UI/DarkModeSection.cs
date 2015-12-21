@@ -19,6 +19,8 @@ namespace Praeclarum.UI
 
 		public DarkModeSection (Func<bool> isDark, Action toggle)
 		{
+			Title = "Theme";
+
 			Items.Add ("Light Mode");
 			Items.Add ("Dark Mode");
 

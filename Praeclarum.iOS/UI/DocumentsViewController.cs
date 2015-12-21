@@ -639,7 +639,7 @@ namespace Praeclarum.UI
 			var docRef = this.Docs.FirstOrDefault (x => x.File.Path == filePath);
 			if (docRef != null) {
 
-				await DocumentAppDelegate.Shared.PerformActionOnDocument (docRef, this);
+				await DocumentAppDelegate.Shared.PerformActionOnDocument (docRef, this, actionBtn);
 
 			}
 		}
@@ -856,7 +856,7 @@ namespace Praeclarum.UI
 		public override UIStatusBarStyle PreferredStatusBarStyle ()
 		{
 			try {
-				return Editing ? UIStatusBarStyle.LightContent : DocumentAppDelegate.Shared.Theme.StatusBarStyle;
+				return (Editing || selecting) ? UIStatusBarStyle.LightContent : DocumentAppDelegate.Shared.Theme.StatusBarStyle;
 			} catch (Exception ex) {
 				Log.Error (ex);
 				return UIStatusBarStyle.Default;
@@ -869,10 +869,11 @@ namespace Praeclarum.UI
 		void SetSpecialNav (bool animated)
 		{
 			if (ios7) {
-//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
+				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 				NavigationController.NavigationBar.BarTintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
 				NavigationController.NavigationBar.TintColor = UIColor.White;
 				SetNeedsStatusBarAppearanceUpdate ();
+				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
 			} else {
 //				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 			}
@@ -884,15 +885,16 @@ namespace Praeclarum.UI
 		{
 			if (ios7) {
 				var theme = DocumentAppDelegate.Shared.Theme;
-//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
+				NavigationController.NavigationBar.BarStyle = theme.NavigationBarStyle;
 				NavigationController.NavigationBar.BarTintColor = theme.NavigationBackgroundColor;
 				NavigationController.NavigationBar.TintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
 				SetNeedsStatusBarAppearanceUpdate ();
+				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
 			} else {
 //				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
 			}
 
-			NavigationController.SetToolbarHidden (false, animated);
+			UpdateToolbar (animated);
 		}
 
 		bool selecting = false;
@@ -922,6 +924,11 @@ namespace Praeclarum.UI
 			}
 
 			docsView.SetSelecting (selecting, animated);
+
+			SetNeedsStatusBarAppearanceUpdate ();
+			if (NavigationController != null) {
+				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
+			}
 		}
 
 		public override void SetEditing (bool editing, bool animated)
@@ -945,8 +952,13 @@ namespace Praeclarum.UI
 				
 					SetNormalNavItems (animated);
 				}
-				
+
 				docsView.SetEditing (editing, animated);
+
+				SetNeedsStatusBarAppearanceUpdate ();
+				if (NavigationController != null) {
+					NavigationController.SetNeedsStatusBarAppearanceUpdate ();
+				}
 
 			} catch (Exception ex) {
 				Log.Error (ex);				

@@ -171,7 +171,7 @@ namespace Praeclarum.UI
 			//
 			try {
 				var docList = CreateDirectoryViewController ("");
-				docListNav = new UINavigationController (docList);
+				docListNav = new DocumentsNavigationController (docList);
 				docListNav.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 				docListNav.ToolbarHidden = false;
 				Theme.Apply (docListNav);
@@ -1604,7 +1604,7 @@ namespace Praeclarum.UI
 
 		#region Actions
 
-		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController fromController)
+		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController fromController, UIBarButtonItem fromButton)
 		{
 			try {
 				
@@ -1647,7 +1647,7 @@ namespace Praeclarum.UI
 					if (UIDevice.CurrentDevice.CheckSystemVersion (8, 0)) {
 						if (a.PopoverPresentationController != null) {
 							try {
-								a.PopoverPresentationController.BarButtonItem = fromController.NavigationItem.LeftBarButtonItem;
+								a.PopoverPresentationController.BarButtonItem = fromButton;
 							} catch (Exception) {
 								a.PopoverPresentationController.SourceView = fromController.View;
 							}
@@ -1735,6 +1735,25 @@ namespace Praeclarum.UI
 		public virtual IEnumerable<Tuple<int, string>> GetPatronMonthlyPrices ()
 		{
 			return Enumerable.Empty<Tuple<int, string>> ();
+		}
+	}
+
+	public class DocumentsNavigationController : UINavigationController
+	{
+		public DocumentsNavigationController (UIViewController root)
+			: base (root)
+		{			
+		}
+
+		public override UIStatusBarStyle PreferredStatusBarStyle ()
+		{
+			try {
+				var top = this.TopViewController as DocumentsViewController;
+				return top != null ? top.PreferredStatusBarStyle () : DocumentAppDelegate.Shared.Theme.StatusBarStyle;
+			} catch (Exception ex) {
+				Log.Error (ex);
+				return UIStatusBarStyle.Default;
+			}
 		}
 	}
 }

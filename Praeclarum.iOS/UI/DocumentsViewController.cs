@@ -44,7 +44,12 @@ namespace Praeclarum.UI
 			var appDel = DocumentAppDelegate.Shared;
 			var appName = appDel.App.Name;
 
-			thereforeBtn = new UIBarButtonItem (appName, UIBarButtonItemStyle.Plain, HandleLamda);
+			var settingsImage = UIImage.FromBundle ("Settings.png");
+			if (settingsImage != null) {
+				thereforeBtn = new UIBarButtonItem (settingsImage, UIBarButtonItemStyle.Plain, HandleLamda);
+			} else {
+				thereforeBtn = new UIBarButtonItem (appName, UIBarButtonItemStyle.Plain, HandleLamda);
+			}
 			fileSystemsBtn = new UIBarButtonItem ("Loading Storage...", UIBarButtonItemStyle.Plain, HandleStorage);
 
 			var theme = appDel.Theme;
@@ -340,7 +345,6 @@ namespace Praeclarum.UI
 			//
 			try {
 				SetToolbarItems (new[] { 
-					thereforeBtn,
 					new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
 					fileSystemsBtn
 				}, false);
@@ -389,6 +393,7 @@ namespace Praeclarum.UI
 
 			NavigationItem.LeftItemsSupplementBackButton = true;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
+				thereforeBtn,
 				actionBtn,
 			}, animated);
 			NavigationItem.SetRightBarButtonItems (new UIBarButtonItem[] {

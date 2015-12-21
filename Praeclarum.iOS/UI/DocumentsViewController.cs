@@ -50,7 +50,6 @@ namespace Praeclarum.UI
 			} else {
 				thereforeBtn = new UIBarButtonItem (appName, UIBarButtonItemStyle.Plain, HandleLamda);
 			}
-			fileSystemsBtn = new UIBarButtonItem ("Loading Storage...", UIBarButtonItemStyle.Plain, HandleStorage);
 
 			var theme = appDel.Theme;
 
@@ -153,13 +152,6 @@ namespace Praeclarum.UI
 			Title = (Editing) ? "" : 
 			        (selecting ? "Select a " + DocumentAppDelegate.Shared.App.DocumentBaseName : 
 			        (IsRoot ? DocumentAppDelegate.Shared.App.DocumentBaseNamePluralized : DirectoryName));
-
-			if (fileSystemsBtn != null) {
-				var desc = FileSystem.Description;
-				if (desc.Length > 30 || (!ios7 && desc.Length > 16))
-					desc = FileSystem.ShortDescription;
-				fileSystemsBtn.Title = desc;
-			}
 		}
 
 		public async Task LoadDocs ()
@@ -281,7 +273,7 @@ namespace Praeclarum.UI
 		#endregion
 
 		UIRefreshControl refresh;
-		UIBarButtonItem thereforeBtn, fileSystemsBtn;
+		UIBarButtonItem thereforeBtn;
 		readonly UIBarButtonItem addBtn;
 		readonly UIBarButtonItem actionBtn;
 		readonly UIBarButtonItem deleteBtn;
@@ -336,18 +328,6 @@ namespace Praeclarum.UI
 			//
 			try {
 				SetNormalNavItems (false);
-			} catch (Exception ex) {
-				Log.Error (ex);				
-			}
-
-			//
-			// Set the toobar
-			//
-			try {
-				SetToolbarItems (new[] { 
-					new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace),
-					fileSystemsBtn
-				}, false);
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}
@@ -686,12 +666,26 @@ namespace Praeclarum.UI
 
 			var appdel = DocumentAppDelegate.Shared;
 
+			var needsPatronBar = false;
+
+			var needsToolbar = needsPatronBar;
+
+			//
+			// Set the toobar
+			//
+			try {
+				var items = new List<UIBarButtonItem> ();
+				SetToolbarItems (items.ToArray (), animated);
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
+
 			//
 			// Style the navigation controller
 			//
 			if (NavigationController != null) {
 				NavigationController.SetNavigationBarHidden (false, animated);
-				NavigationController.SetToolbarHidden (false, animated);
+				NavigationController.SetToolbarHidden (!needsToolbar, animated);
 				appdel.Theme.Apply (NavigationController);
 			}
 

@@ -171,7 +171,7 @@ namespace Praeclarum.UI
 			//
 			try {
 				var docList = CreateDirectoryViewController ("");
-				docListNav = new DocumentsNavigationController (docList);
+				docListNav = CreateDocumentsNavigationController (docList);
 				docListNav.NavigationBar.BarStyle = Theme.NavigationBarStyle;
 				docListNav.ToolbarHidden = false;
 				Theme.Apply (docListNav);
@@ -239,6 +239,11 @@ namespace Praeclarum.UI
 			}
 
 			return shouldPerformAdditionalDelegateHandling;
+		}
+
+		protected virtual UINavigationController CreateDocumentsNavigationController (DocumentsViewController docList)
+		{
+			return new DocumentsNavigationController (docList);
 		}
 
 		public override void WillTerminate (UIApplication application)

@@ -57,6 +57,8 @@ namespace Praeclarum.UI
 			RegisterClassForCell (typeof(SortThumbnailCell), SortId);
 			RegisterClassForCell (typeof(PatronCell), PatronId);
 
+			((UICollectionViewFlowLayout)this.CollectionViewLayout).EstimatedItemSize = new CGSize (88, 122);
+
 			Delegate = new DocumentThumbnailsViewDelegate ();
 			DataSource = new DocumentThumbnailsViewDataSource ();
 

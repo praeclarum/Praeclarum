@@ -764,7 +764,7 @@ namespace Praeclarum.UI
 
 				SetToolbarItems (items.ToArray (), animated);			
 
-				if (NavigationController != null) {
+				if (NavigationController != null && NavigationController.TopViewController != null && NavigationController.TopViewController.Handle == this.Handle) {
 					NavigationController.SetToolbarHidden (items.Count == 0, animated);
 				}
 			} catch (Exception ex) {

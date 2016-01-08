@@ -353,7 +353,7 @@ namespace Praeclarum.UI
 			if (indexPath.Section == 0)
 				return;
 
-			Console.WriteLine ("SELECT {0}", indexPath.Row);
+//			Console.WriteLine ("SELECT {0}", indexPath.Row);
 
 			var controller = (DocumentThumbnailsView)collectionView;
 
@@ -366,7 +366,10 @@ namespace Praeclarum.UI
 
 				if (row == 0) {
 					// Add
-				} else {
+				} else if (row > controller.Items.Count) {
+					await DocumentAppDelegate.Shared.ShowPatronAsync ();
+				}
+				else {
 					row--;
 
 					var item = controller.Items [row];

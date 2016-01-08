@@ -872,6 +872,9 @@ namespace Praeclarum.UI
 				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
 				NavigationController.NavigationBar.BarTintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
 				NavigationController.NavigationBar.TintColor = UIColor.White;
+				NavigationController.NavigationBar.TitleTextAttributes = new UIStringAttributes {
+					ForegroundColor = UIColor.White,
+				};
 				SetNeedsStatusBarAppearanceUpdate ();
 				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
 			} else {
@@ -888,6 +891,9 @@ namespace Praeclarum.UI
 				NavigationController.NavigationBar.BarStyle = theme.NavigationBarStyle;
 				NavigationController.NavigationBar.BarTintColor = theme.NavigationBackgroundColor;
 				NavigationController.NavigationBar.TintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
+				NavigationController.NavigationBar.TitleTextAttributes = new UIStringAttributes {
+					ForegroundColor = theme.NavigationTextColor,
+				};
 				SetNeedsStatusBarAppearanceUpdate ();
 				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
 			} else {

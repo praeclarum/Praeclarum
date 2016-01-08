@@ -647,7 +647,12 @@ namespace Praeclarum.UI
 
 	abstract class ThumbnailCell : UICollectionViewCell, IThemeAware
 	{
-		public static UIColor NotSelectableColor = UIColor.FromWhiteAlpha (0.875f, 0.5961f);
+		public static UIColor GetNotSelectableColor (Theme theme) {
+			if (theme.IsDark) {
+				return UIColor.FromWhiteAlpha (1.0f - 0.875f, 0.5961f);;
+			}
+			return UIColor.FromWhiteAlpha (0.875f, 0.5961f);
+		}
 
 		public Praeclarum.Graphics.SizeF ThumbnailSize = new Praeclarum.Graphics.SizeF (1, 1);
 
@@ -849,7 +854,7 @@ namespace Praeclarum.UI
 					c.StrokePath ();
 					
 					if (Editing) {
-						NotSelectableColor.SetFill ();
+						GetNotSelectableColor (theme).SetFill ();
 						c.FillRect (b);
 					}
 				} catch (Exception ex) {

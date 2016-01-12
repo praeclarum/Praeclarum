@@ -931,9 +931,11 @@ namespace Praeclarum.UI
 
 			docsView.SetSelecting (selecting, animated);
 
-			SetNeedsStatusBarAppearanceUpdate ();
-			if (NavigationController != null) {
-				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
+			if (ios7) {
+				SetNeedsStatusBarAppearanceUpdate ();
+				if (NavigationController != null) {
+					NavigationController.SetNeedsStatusBarAppearanceUpdate ();
+				}
 			}
 		}
 
@@ -961,9 +963,11 @@ namespace Praeclarum.UI
 
 				docsView.SetEditing (editing, animated);
 
-				SetNeedsStatusBarAppearanceUpdate ();
-				if (NavigationController != null) {
-					NavigationController.SetNeedsStatusBarAppearanceUpdate ();
+				if (ios7) {
+					SetNeedsStatusBarAppearanceUpdate ();
+					if (NavigationController != null) {
+						NavigationController.SetNeedsStatusBarAppearanceUpdate ();
+					}
 				}
 
 			} catch (Exception ex) {

@@ -110,10 +110,12 @@ namespace Praeclarum.UI
 			if (navigationBar == null)
 				return;
 			navigationBar.BarStyle = NavigationBarStyle;
-			navigationBar.BarTintColor = NavigationBackgroundColor;
-			navigationBar.TitleTextAttributes = new UIStringAttributes {
-				ForegroundColor = NavigationTextColor,
-			};
+			if (ios7) {
+				navigationBar.BarTintColor = NavigationBackgroundColor;
+				navigationBar.TitleTextAttributes = new UIStringAttributes {
+					ForegroundColor = NavigationTextColor,
+				};
+			}
 		}
 
 		public virtual void Apply (UIToolbar toolbar)
@@ -121,7 +123,9 @@ namespace Praeclarum.UI
 			if (toolbar == null)
 				return;
 			toolbar.BarStyle = NavigationBarStyle;
-			toolbar.BarTintColor = NavigationBackgroundColor;
+			if (ios7) {
+				toolbar.BarTintColor = NavigationBackgroundColor;
+			}
 		}
 
 		void ApplyToVC (UIViewController vc, HashSet<IntPtr> visited)
@@ -140,7 +144,9 @@ namespace Praeclarum.UI
 					Apply (nc);
 				}
 
-				vc.SetNeedsStatusBarAppearanceUpdate ();
+				if (ios7) {
+					vc.SetNeedsStatusBarAppearanceUpdate ();
+				}
 
 				var ta = vc as IThemeAware;
 				if (ta != null) {

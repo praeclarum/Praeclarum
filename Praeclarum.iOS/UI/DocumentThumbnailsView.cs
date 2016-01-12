@@ -27,6 +27,8 @@ namespace Praeclarum.UI
 		public static float LabelHeight = 33;
 		public static float Margin = 10;
 
+		readonly bool ios8 = UIDevice.CurrentDevice.CheckSystemVersion (8, 0);
+
 		public List<DocumentsViewItem> Items {
 			get;
 			set;
@@ -57,7 +59,9 @@ namespace Praeclarum.UI
 			RegisterClassForCell (typeof(SortThumbnailCell), SortId);
 			RegisterClassForCell (typeof(PatronCell), PatronId);
 
-			((UICollectionViewFlowLayout)this.CollectionViewLayout).EstimatedItemSize = new CGSize (88, 122);
+			if (ios8) {
+				((UICollectionViewFlowLayout)this.CollectionViewLayout).EstimatedItemSize = new CGSize (88, 122);
+			}
 
 			Delegate = new DocumentThumbnailsViewDelegate ();
 			DataSource = new DocumentThumbnailsViewDataSource ();
@@ -499,12 +503,11 @@ namespace Praeclarum.UI
 			Initialize ();
 		}
 
-		bool ios7;
+		readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
+		readonly bool ios8 = UIDevice.CurrentDevice.CheckSystemVersion (8, 0);
 
 		void Initialize ()
 		{
-			ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
-
 			segs = new UISegmentedControl (new [] { "Date", "Name" }) {
 
 			};

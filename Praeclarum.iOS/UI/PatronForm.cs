@@ -24,7 +24,7 @@ namespace Praeclarum.UI
 		public PatronForm (IEnumerable<Tuple<int, string>> monthlyPrices)
 		{
 			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = monthlyPrices.Select (x => new PatronSubscriptionPrice (bundleId + ".patron.nsub." + x.Item1 + "month", x.Item1, x.Item2)).ToArray ();
+			prices = monthlyPrices.Select (x => new PatronSubscriptionPrice (bundleId + ".patron.cons." + x.Item1 + "month", x.Item1, x.Item2)).ToArray ();
 
 			var appdel = DocumentAppDelegate.Shared;
 			var appName = appdel.App.Name;

@@ -35,8 +35,8 @@ namespace Praeclarum.UI
 
 			Sections.Add (aboutSection);
 			Sections.Add (buySection);
-			Sections.Add (new PatronRestoreSection ());
 			#if DEBUG
+			Sections.Add (new PatronRestoreSection ());
 			Sections.Add (new PatronDeleteSection ());
 			#endif
 
@@ -64,9 +64,15 @@ namespace Praeclarum.UI
 
 		bool hasCloud = false;
 
-		async Task<int> GetPastPurchasesAsync ()
+		public static async Task<int> GetPastPurchasesAsync ()
 		{
 			var container = CKContainer.DefaultContainer;
+
+			var status = await container.GetAccountStatusAsync ();
+			var hasCloud = status == CKAccountStatus.Available;
+			if (!hasCloud)
+				return 0;
+
 			var db = container.PrivateCloudDatabase;
 
 			var pred = NSPredicate.FromFormat ("TransactionId != 'tttt'");
@@ -94,8 +100,8 @@ namespace Praeclarum.UI
 
 			Console.WriteLine ("NEW END DATE = {0}", ed);
 
-			endDate = ed;
-			isPatron = DateTime.UtcNow < endDate;
+			var endDate = ed;
+			var isPatron = DateTime.UtcNow < endDate;
 
 			var settings = DocumentAppDelegate.Shared.Settings;
 			settings.IsPatron = isPatron;
@@ -151,6 +157,9 @@ namespace Praeclarum.UI
 			var n = 0;
 			try {
 				n = await GetPastPurchasesAsync ();	
+				var settings = DocumentAppDelegate.Shared.Settings;
+				isPatron = settings.IsPatron;
+				endDate = settings.PatronEndDate;
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}
@@ -173,7 +182,7 @@ namespace Praeclarum.UI
 				var s = await container.GetAccountStatusAsync ();
 				hasCloud = s == CKAccountStatus.Available;
 				if (!hasCloud) {
-					var alert = UIKit.UIAlertController.Create ("iCloud Required for Subscriptions", "In order to keep your subscription synced between devices, you need to be logged into iCloud.", UIKit.UIAlertControllerStyle.Alert);
+					var alert = UIKit.UIAlertController.Create ("iCloud Required for Subscriptions", "In order to keep your patronage synced between devices, you need to be logged into iCloud.", UIKit.UIAlertControllerStyle.Alert);
 					var tcs = new TaskCompletionSource<object> ();
 					alert.AddAction (UIKit.UIAlertAction.Create ("OK", UIKit.UIAlertActionStyle.Default, a => {
 						tcs.SetResult (null);
@@ -238,17 +247,20 @@ namespace Praeclarum.UI
 
 			var v = visibleForm;
 			if (v != null) {
-				NSTimer.CreateScheduledTimer (2.0, nst => {
+				NSTimer.CreateScheduledTimer (1.0, nst => {
 					v.BeginInvokeOnMainThread (async () => {
-						try {
-							await v.RefreshPatronDataAsync ();
-						} catch (Exception ex) {
-							Log.Error (ex);
-						}
-						try {
-							await DocumentAppDelegate.Shared.CurrentDocumentListController.LoadDocs ();					
-						} catch (Exception ex) {
-							Log.Error (ex);
+						for (var i = 0; i < 3; i++) {
+							try {
+								await v.RefreshPatronDataAsync ();
+							} catch (Exception ex) {
+								Log.Error (ex);
+							}
+							try {
+								await DocumentAppDelegate.Shared.CurrentDocumentListController.LoadDocs ();
+							} catch (Exception ex) {
+								Log.Error (ex);
+							}
+							await Task.Delay (TimeSpan.FromSeconds (2.0));
 						}
 					});
 				});
@@ -342,13 +354,21 @@ namespace Praeclarum.UI
 			{
 				var form = (PatronForm)Form;
 				try {
-					if (!await form.CheckForCloudAsync ())
-						return;
-
 					var price = (PatronSubscriptionPrice)item;
-					if (price.Product == null)
+
+					if (price.Product == null) {
+						var m =
+							"The prices have not been loaded. Are you connected to the internet? If so, please wait for the prices to appear.";
+						var alert = UIAlertController.Create ("Unable to Proceed", m, UIAlertControllerStyle.Alert);
+						alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => {}));
+						Form.PresentViewController (alert, true, null);
 						return;
-					StoreManager.Shared.Buy (price.Product);
+					}
+					else {
+						if (!await form.CheckForCloudAsync ())
+							return;
+						StoreManager.Shared.Buy (price.Product);
+					}
 				} catch (Exception ex) {
 					form.ShowFormError ("Purchase Failed", ex);
 					Log.Error (ex);

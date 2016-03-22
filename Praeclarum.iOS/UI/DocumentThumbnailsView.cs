@@ -430,7 +430,7 @@ namespace Praeclarum.UI
 
 		#region IThemeAware implementation
 
-		public void ApplyTheme (Theme theme)
+		public virtual void ApplyTheme (Theme theme)
 		{
 			SetNeedsDisplay ();
 		}
@@ -804,16 +804,14 @@ namespace Praeclarum.UI
 			frameView.SetNeedsDisplay ();
 		}
 
-		class AddFrameView : ThumbnailFrameView, IThemeAware
+		class AddFrameView : ThumbnailFrameView
 		{
 			public bool Editing = false;
 
-			#region IThemeAware implementation
-			public void ApplyTheme (Theme theme)
+			public override void ApplyTheme (Theme theme)
 			{
 				SetNeedsDisplay ();
 			}
-			#endregion
 
 			public AddFrameView ()
 			{

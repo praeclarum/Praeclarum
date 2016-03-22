@@ -517,7 +517,7 @@ namespace Praeclarum.UI
 			try {
 				var ed = viewControllerToCommit as IDocumentEditor;
 				if (ed != null) {
-					DocumentAppDelegate.Shared.OpenDocument (ed.DocumentReference.File.Path, false);
+					await DocumentAppDelegate.Shared.OpenDocument (ed.DocumentReference.File.Path, false);
 				}
 			} catch (Exception ex) {
 				Log.Error (ex);

@@ -154,6 +154,7 @@ namespace Praeclarum.IO
 				return await dest.GetFile (newPath);
 
 			} catch (Exception ex) {
+				Log.Error (ex);
 				return null;
 			}
 		}

@@ -47,7 +47,7 @@ namespace Praeclarum.UI
 
 			RefreshPatronDataAsync ().ContinueWith (t => {
 				if (t.IsFaulted)
-					Log.Error (t);
+					Log.Error (t.Exception);
 			});
 		}
 
@@ -349,7 +349,9 @@ namespace Praeclarum.UI
 
 			public override bool SelectItem (object item)
 			{
-				BuyAsync (item);
+				BuyAsync (item).ContinueWith (t => {
+					if (t.IsFaulted) Log.Error (t.Exception);
+				});
 				return false;
 			}
 

@@ -217,7 +217,7 @@ namespace Praeclarum.UI
 						try {
 							CurrentDocumentListController.LoadDocs ().ContinueWith (tt => {
 								if (tt.IsFaulted) {
-									Debug.WriteLine (tt.Exception);
+									Log.Error (tt.Exception);
 								}
 							});
 						} catch (Exception ex) {

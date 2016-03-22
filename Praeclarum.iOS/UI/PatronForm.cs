@@ -15,6 +15,8 @@ namespace Praeclarum.UI
 
 		PatronAboutSection aboutSection;
 
+		PatronForceSubscriptionSection forceSection;
+
 		static PatronSubscriptionPrice[] prices = new PatronSubscriptionPrice[0];
 
 		bool isPatron;
@@ -39,6 +41,7 @@ namespace Praeclarum.UI
 			Sections.Add (new PatronRestoreSection ());
 			Sections.Add (new PatronDeleteSection ());
 			#endif
+			forceSection = new PatronForceSubscriptionSection (prices);
 
 			isPatron = appdel.Settings.IsPatron;
 			endDate = appdel.Settings.PatronEndDate;
@@ -158,17 +161,27 @@ namespace Praeclarum.UI
 			ReloadSection (buySection);
 
 			var n = 0;
+			var error = false;
 			try {
 				n = await GetPastPurchasesAsync ();	
 				var settings = DocumentAppDelegate.Shared.Settings;
 				isPatron = settings.IsPatron;
 				endDate = settings.PatronEndDate;
 			} catch (Exception ex) {
+				error = true;
 				Log.Error (ex);
 			}
 
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
+
+			if (n == 0 && !error) {
+				if (!Sections.Contains (forceSection)) {
+					Sections.Add (forceSection);
+				}
+			} else {
+				Sections.Remove (forceSection);
+			}
 
 			ReloadSection (aboutSection);
 			ReloadSection (buySection);
@@ -233,15 +246,11 @@ namespace Praeclarum.UI
 				Log.Error (ex);
 			}
 		}
-		public static async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
+		static async Task AddSubscriptionAsync (string transactionId, DateTime transactionDate, PatronSubscriptionPrice p)
 		{
-			var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
-			if (p == null)
-				return;
-
 			var sub = new PatronSubscription ();
-			sub.TransactionId = t.TransactionIdentifier;
-			sub.PurchaseDate = (DateTime)t.TransactionDate;
+			sub.TransactionId = transactionId;
+			sub.PurchaseDate = transactionDate;
 			sub.ProductId = p.Id;
 			sub.NumMonths = p.NumMonths;
 
@@ -268,6 +277,20 @@ namespace Praeclarum.UI
 					});
 				});
 			}
+		}
+		public static async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
+		{
+			var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
+			if (p == null)
+				return;
+			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, p);
+		}
+
+		async Task ForceSubscriptionAsync (PatronSubscriptionPrice p)
+		{
+			var now = DateTime.UtcNow;
+			var id = "force" + now.Ticks;
+			await AddSubscriptionAsync (id, now, p);
 		}
 
 		class PatronAboutSection : PFormSection
@@ -376,6 +399,46 @@ namespace Praeclarum.UI
 					}
 				} catch (Exception ex) {
 					form.ShowFormError ("Purchase Failed", ex);
+					Log.Error (ex);
+				}
+			}
+		}
+
+		class PatronForceSubscriptionSection : PFormSection
+		{
+			PatronSubscriptionPrice[] prices;
+			public PatronForceSubscriptionSection (PatronSubscriptionPrice[] prices)
+				: base ()
+			{
+				this.prices = prices;
+				Hint = "Did you already donate but are not receiving credit?";
+				var c = new Command ("Already Paid", this.SelectPayAsync);
+				Items.Add(c);
+			}
+
+			async Task SelectPayAsync ()
+			{
+				var form = (PatronForm)Form;
+				try {
+					if (!await form.CheckForCloudAsync ())
+						return;
+
+					var m = "Which duration did you purchase?";
+					var alert = UIAlertController.Create ("", m, UIAlertControllerStyle.ActionSheet);
+					foreach (var p in prices) {
+						alert.AddAction (UIAlertAction.Create (p.NumMonths + " Months", UIAlertActionStyle.Default, async a => {
+							try {
+								await form.ForceSubscriptionAsync (p);
+							} catch (Exception ex) {
+								form.ShowFormError ("Purchase Restoration Failed", ex);
+								Log.Error (ex);
+							}
+						}));
+					}
+					alert.AddAction (UIAlertAction.Create ("Cancel", UIAlertActionStyle.Cancel, a => {}));
+					form.PresentViewController (alert, true, null);
+				} catch (Exception ex) {
+					form.ShowFormError ("Restore Failed", ex);
 					Log.Error (ex);
 				}
 			}

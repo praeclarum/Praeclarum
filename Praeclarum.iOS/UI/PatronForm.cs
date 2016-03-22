@@ -45,7 +45,10 @@ namespace Praeclarum.UI
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
 
-			RefreshPatronDataAsync ();
+			RefreshPatronDataAsync ().ContinueWith (t => {
+				if (t.IsFaulted)
+					Log.Error (t);
+			});
 		}
 
 		static PatronForm visibleForm;

@@ -52,25 +52,29 @@ namespace Praeclarum.App
 			Console.WriteLine ("STORE ERROR RestoreError ({0})", error);
 		}
 
-		public override void UpdatedTransactions (SKPaymentQueue queue, SKPaymentTransaction[] transactions)
+		public override async void UpdatedTransactions (SKPaymentQueue queue, SKPaymentTransaction[] transactions)
 		{
 			if (transactions == null)
 				return;
 			try {
 				foreach (var t in transactions) {
-					Console.WriteLine ("STORE Transaction: {0} {1} {2} {3} {4}", t.Payment.ProductIdentifier, t.TransactionState, t.TransactionIdentifier, t.TransactionDate, t.Error);
-					switch (t.TransactionState) {
-					case SKPaymentTransactionState.Purchased:
-						productsPurchased.Add (t);
-						CompleteTransaction (t);
-						break;
-					case SKPaymentTransactionState.Restored:
-						productsRestored.Add (t);
-						CompleteTransaction (t);
-						break;
-					case SKPaymentTransactionState.Failed:
-						CompleteTransaction (t);
-						break;
+					try {
+						Console.WriteLine ("STORE Transaction: {0} {1} {2} {3} {4}", t.Payment.ProductIdentifier, t.TransactionState, t.TransactionIdentifier, t.TransactionDate, t.Error);
+						switch (t.TransactionState) {
+						case SKPaymentTransactionState.Purchased:
+							productsPurchased.Add (t);
+							await CompleteTransactionAsync (t);
+							break;
+						case SKPaymentTransactionState.Restored:
+							productsRestored.Add (t);
+							await CompleteTransactionAsync (t);
+							break;
+						case SKPaymentTransactionState.Failed:
+							await CompleteTransactionAsync (t);
+							break;
+						}
+					} catch (Exception ex) {
+						Log.Error (ex);
 					}
 				}
 			} catch (Exception ex) {
@@ -78,7 +82,7 @@ namespace Praeclarum.App
 			}
 		}
 
-		async void CompleteTransaction (SKPaymentTransaction t)
+		async Task CompleteTransactionAsync (SKPaymentTransaction t)
 		{
 			if (t == null)
 				return;

@@ -8,6 +8,9 @@ namespace Praeclarum
 
 		public static void Error (Exception ex)
 		{
+#if XAMARIN_INSIGHTS
+			Xamarin.Insights.Report (ex, Xamarin.Insights.Severity.Warning);
+#endif
 			try {
 				if (ex == null)
 					return;

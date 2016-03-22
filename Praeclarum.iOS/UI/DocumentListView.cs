@@ -21,7 +21,7 @@ namespace Praeclarum.UI
 		public List<DocumentsViewItem> Items { get; set; }
 
 		public DocumentsSort Sort { get; set; }
-		public event EventHandler SortChanged =  delegate {};
+		public event EventHandler SortChanged = delegate {};
 
 		public ObservableCollection<string> SelectedDocuments { get; private set; }
 

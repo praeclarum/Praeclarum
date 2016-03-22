@@ -85,11 +85,9 @@ namespace Praeclarum.Graphics
 			_g = g;
 		}
 
-		Color _color = Colors.Black;
-
 		public void SetColor (Color c)
 		{
-			_color = c;
+//			_color = c;
 			var cgcol = c.GetCGColor ();
 			_c.SetFillColor (cgcol);
 			_c.SetStrokeColor (cgcol);

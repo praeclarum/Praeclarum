@@ -6,17 +6,25 @@ namespace Praeclarum
 	{
 		public static string Domain = "Praeclarum";
 
-		public static void Error (Exception ex)
+		public static void Error(string context, Exception ex)
 		{
 #if XAMARIN_INSIGHTS
-			Xamarin.Insights.Report (ex, Xamarin.Insights.Severity.Warning);
+			Xamarin.Insights.Report(ex, "Context", context??"", Xamarin.Insights.Severity.Warning);
 #endif
-			try {
+			try
+			{
 				if (ex == null)
 					return;
-				WriteLine ("E", ex.ToString ());
-			} catch {
+				WriteLine("E", ex.ToString());
 			}
+			catch
+			{
+			}
+		}
+
+		public static void Error (Exception ex)
+		{
+			Error("", ex);
 		}
 
 		static void WriteLine (string type, string line)

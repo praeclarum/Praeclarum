@@ -27,16 +27,16 @@ namespace Praeclarum
 			ClassName = className;
 		}
 
-		#if __IOS__
+#if __IOS__
 		static readonly NSString FontAttributeName = new NSString ("NSFont");
 		static readonly NSString ForegroundColorAttributeName = new NSString ("NSColor");
 		static readonly NSString BackgroundColorAttributeName = new NSString ("NSBackgroundColor");
 		static readonly NSString UnderlineColorAttributeName = new NSString ("NSUnderlineColor");
 		public static readonly NSString LinkAttributeName = new NSString ("NSLink");
-		#elif MONOMAC
-		public static readonly NSString ForegroundColorAttributeName = NSAttributedString.ForegroundColorAttributeName;
-		public static readonly NSString BackgroundColorAttributeName = NSAttributedString.BackgroundColorAttributeName;
-		public static readonly NSString LinkAttributeName = NSAttributedString.LinkAttributeName;
+#elif MONOMAC
+		public static readonly NSString ForegroundColorAttributeName = AppKit.NSStringAttributeKey.ForegroundColor;
+		public static readonly NSString BackgroundColorAttributeName = AppKit.NSStringAttributeKey.BackgroundColor;
+		public static readonly NSString LinkAttributeName = AppKit.NSStringAttributeKey.Link;
 		#endif
 
 
@@ -162,10 +162,10 @@ namespace Praeclarum
 				CoreText.CTUnderlineStyle.None : 
 			                       CoreText.CTUnderlineStyle.Single;
 			#elif MONOMAC
-			attrs.Dictionary.SetValue (NSAttributedString.UnderlineColorAttributeName, ToNativeColor (underlineColor));
+			attrs.Dictionary.SetValue (AppKit.NSStringAttributeKey.UnderlineColor, ToNativeColor (underlineColor));
 			var ns = underlineStyle == UnderlineStyle.None ? 0 :
 			         (underlineStyle == UnderlineStyle.Single ? 0x1 : 0x9);
-			attrs.Dictionary.SetValue (NSAttributedString.UnderlineStyleAttributeName, NSNumber.FromInt32 (ns));
+			attrs.Dictionary.SetValue (AppKit.NSStringAttributeKey.UnderlineStyle, NSNumber.FromInt32 (ns));
 			#endif
 		}
 

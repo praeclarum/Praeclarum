@@ -6,10 +6,10 @@ namespace Praeclarum
 	{
 		public static string Domain = "Praeclarum";
 
-		public static void Error(string context, Exception ex)
+		public static void Error (string context, Exception ex)
 		{
-#if XAMARIN_INSIGHTS
-			Xamarin.Insights.Report(ex, "Context", context??"", Xamarin.Insights.Severity.Warning);
+#if MOBILE_CENTER
+			Microsoft.Azure.Mobile.MobileCenterLog.Error (context, ex.Message, ex);
 #endif
 			try
 			{
@@ -29,21 +29,21 @@ namespace Praeclarum
 
 		static void WriteLine (string type, string line)
 		{
-			#if MONODROID
+#if MONODROID
 			if (_pendingType == "E") {
 				Android.Util.Log.Error (Domain, line);
 			}
 			else {
 				Android.Util.Log.Info (Domain, line);
 			}
-			#elif MONOMAC
+#elif MONOMAC
 			if (type == "E") {
 				Console.WriteLine ("ERROR: " + line);
 			}
 			else {
 				Console.WriteLine (line);
 			}
-			#else
+#else
 			if (type == "E") {
 				System.Diagnostics.Debug.WriteLine ("ERROR: " + line);
 			}
@@ -51,7 +51,7 @@ namespace Praeclarum
 				System.Diagnostics.Debug.WriteLine (line);
 			}
 			//Console.WriteLine (line);
-			#endif
+#endif
 		}
 
 		public static string GetUserErrorMessage (Exception ex)
@@ -66,7 +66,7 @@ namespace Praeclarum
 			return i.Message;
 		}
 
-		#if __IOS__
+#if __IOS__
 		public static void ShowError (this Foundation.NSObject obj, Exception ex, string format, params string[] args)
 		{
 			var title = format;
@@ -89,10 +89,10 @@ namespace Praeclarum
 					title = "Error";
 				}
 				var message = GetUserErrorMessage (ex);
-				#if DEBUG
+#if DEBUG
 				message += "\n\n" + ((ex.GetType () == typeof (Exception)) ? "" : ex.GetType ().Name);
 				message += " " + ex.StackTrace;
-				#endif
+#endif
 				if (obj != null) {
 					obj.BeginInvokeOnMainThread (() => {
 						try {
@@ -111,7 +111,7 @@ namespace Praeclarum
 				Error (ex2);
 			}
 		}
-		#endif
+#endif
 	}
 }
 

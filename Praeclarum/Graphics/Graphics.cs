@@ -352,6 +352,11 @@ namespace Praeclarum.Graphics
 		{
 			return string.Format ("[Color: RedValue={0}, GreenValue={1}, BlueValue={2}, AlphaValue={3}]", RedValue, GreenValue, BlueValue, AlphaValue);
 		}
+
+		public Color GetColor ()
+		{
+			return this;
+		}
 	}
 
 	public static class Colors

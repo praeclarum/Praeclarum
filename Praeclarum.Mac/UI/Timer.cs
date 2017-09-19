@@ -1,5 +1,5 @@
 using System;
-using MonoMac.Foundation;
+using Foundation;
 
 namespace Praeclarum.UI
 {
@@ -55,7 +55,7 @@ namespace Praeclarum.UI
 			interval = TimeSpan.FromSeconds (1);
 		}
 
-		void NSTimerTick ()
+		void NSTimerTick (NSTimer t)
 		{
 			var ev = Tick;
 			if (ev != null) {

@@ -1,5 +1,6 @@
 using System;
-using MonoMac.AppKit;
+using AppKit;
+using CoreGraphics;
 using Praeclarum.Graphics;
 
 namespace Praeclarum.UI
@@ -50,7 +51,7 @@ namespace Praeclarum.UI
 			SetNeedsDisplayInRect (frame.ToRectangleF ());
 		}
 
-		public override void DrawRect (System.Drawing.RectangleF dirtyRect)
+		public override void DrawRect (CGRect dirtyRect)
 		{
 			try {
 				var c = NSGraphicsContext.CurrentContext.GraphicsPort;

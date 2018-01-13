@@ -12,6 +12,11 @@ namespace Praeclarum.UI
 		{
 		}
 
+		public Editor (CoreGraphics.CGRect frame, NSTextContainer container)
+			: base (frame, container)
+		{
+		}
+
 		#region IView implementation
 
 		Color IView.BackgroundColor {

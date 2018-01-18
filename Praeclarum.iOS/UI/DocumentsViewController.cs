@@ -152,7 +152,7 @@ namespace Praeclarum.UI
 
 			Title = (Editing) ? "" : 
 			        (selecting ? "Select a " + DocumentAppDelegate.Shared.App.DocumentBaseName : 
-			        (IsRoot ? DocumentAppDelegate.Shared.App.DocumentBaseNamePluralized : DirectoryName));
+			        (IsRoot ? DocumentAppDelegate.Shared.App.Name : DirectoryName));
 		}
 
 		public async Task LoadDocs ()

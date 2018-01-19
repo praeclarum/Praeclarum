@@ -8,9 +8,6 @@ namespace Praeclarum
 
 		public static void Error (string context, Exception ex)
 		{
-#if MOBILE_CENTER
-			Microsoft.Azure.Mobile.MobileCenterLog.Error (context, ex.Message, ex);
-#endif
 			try
 			{
 				if (ex == null)

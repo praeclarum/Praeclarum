@@ -10,6 +10,8 @@ namespace Praeclarum.App
 	{
 		public virtual string AutoOpenDocumentPath { get { return ""; } }
 
+		public bool UseDocumentBrowser { get; set; }
+
 		public virtual IDocument CreateDocument (string localFilePath)
 		{
 			return null;
@@ -24,6 +26,12 @@ namespace Praeclarum.App
 		{
 			get {
 				yield return "txt";
+			}
+		}
+
+		public virtual IEnumerable<string> ContentTypes {
+			get {
+				yield return "public.plaint-text";
 			}
 		}
 

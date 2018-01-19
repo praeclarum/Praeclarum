@@ -18,10 +18,13 @@ namespace Praeclarum.UI
 	{
 		static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 		static readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
+		static readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 
 		protected UIWindow window;
 
 		protected readonly MRU mru = new MRU ();
+
+		protected bool useDocumentBrowser;
 
 		public override UIWindow Window {
 			get {
@@ -63,6 +66,8 @@ namespace Praeclarum.UI
 			if (App == null) {
 				throw new ApplicationException ("You must set the App property before calling FinishedLaunching");
 			}
+
+			useDocumentBrowser = ios11 && App.UseDocumentBrowser;
 
 			//
 			// Initialize the caches
@@ -121,26 +126,30 @@ namespace Praeclarum.UI
 				Log.Error (ex);				
 			}
 
-			//
-			// Initialize the file system manager
-			//
-			try {
-				if (Settings.IsFirstRun () && !string.IsNullOrEmpty (App.AutoOpenDocumentPath))
-					Settings.LastDocumentPath = App.AutoOpenDocumentPath;
-				
-				OpenedDocIndex = -1;
-				FileSystemManager.Shared = new FileSystemManager ();
-				FileSystemManager.Shared.ActiveFileSystem = new EmptyFileSystem {
-					Description = "Loading Storage...",
-				};
-			} catch (Exception ex) {
-				Log.Error (ex);				
-			}
+			if (!useDocumentBrowser) {
 
-			//
-			// Load the MRU
-			//
-			mru.InitializeMRU ();
+				//
+				// Initialize the file system manager
+				//
+				try {
+					if (Settings.IsFirstRun () && !string.IsNullOrEmpty (App.AutoOpenDocumentPath))
+						Settings.LastDocumentPath = App.AutoOpenDocumentPath;
+
+					OpenedDocIndex = -1;
+					FileSystemManager.Shared = new FileSystemManager ();
+					FileSystemManager.Shared.ActiveFileSystem = new EmptyFileSystem {
+						Description = "Loading Storage...",
+					};
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+				}
+
+				//
+				// Load the MRU
+				//
+				mru.InitializeMRU ();
+			}
 
 			//
 			// Patron
@@ -169,24 +178,32 @@ namespace Praeclarum.UI
 			//
 			// Construct the UI
 			//
-			try {
-				var docList = CreateDirectoryViewController ("");
-				docListNav = CreateDocumentsNavigationController (docList);
-				docListNav.NavigationBar.BarStyle = Theme.NavigationBarStyle;
-				docListNav.ToolbarHidden = false;
-				Theme.Apply (docListNav);
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			if (useDocumentBrowser) {
+				var utis = App.ContentTypes.ToArray ();
+				docBrowser = new UIDocumentBrowserViewController (utis);
+				docBrowser.Delegate = new DocumentsBrowserDelegate (App);
+			}
+			else {
+				try {
+					var docList = CreateDirectoryViewController ("");
+					docListNav = CreateDocumentsNavigationController (docList);
+					docListNav.NavigationBar.BarStyle = Theme.NavigationBarStyle;
+					docListNav.ToolbarHidden = false;
+					Theme.Apply (docListNav);
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+				}
 			}
 
 			window = new UIWindow (UIScreen.MainScreen.Bounds);
 
 			try {
-				SetRootViewController ();
-				
 				if (ios7) {
 					window.TintColor = Praeclarum.Graphics.ColorEx.GetUIColor (App.TintColor);
 				}
+
+				SetRootViewController ();
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}
@@ -204,38 +221,44 @@ namespace Praeclarum.UI
 				}
 			}
 
-			//
-			// Init the file system
-			//
-			try {
-				var uiSync = TaskScheduler.FromCurrentSynchronizationContext ();
-				initFileSystemTask = InitFileSystem ();
-					
-				initFileSystemTask.ContinueWith (async t => {
-					if (!t.IsFaulted) {
-						App.OnFileSystemInitialized ();
-						try {
-							CurrentDocumentListController.LoadDocs ().ContinueWith (tt => {
-								if (tt.IsFaulted) {
-									Log.Error (tt.Exception);
-								}
-							});
-						} catch (Exception ex) {
-							Log.Error (ex);
-						}
-						try {
-							if (scitem != null) {
-								await HandleShortcutItemAsync (scitem);
+			if (!useDocumentBrowser) {
+				//
+				// Init the file system
+				//
+				try {
+					var uiSync = TaskScheduler.FromCurrentSynchronizationContext ();
+					initFileSystemTask = InitFileSystem ();
+
+					initFileSystemTask.ContinueWith (async t => {
+						if (!t.IsFaulted) {
+							App.OnFileSystemInitialized ();
+							try {
+								CurrentDocumentListController.LoadDocs ().ContinueWith (tt => {
+									if (tt.IsFaulted) {
+										Log.Error (tt.Exception);
+									}
+								});
 							}
-						} catch (Exception ex) {
-							Log.Error (ex);
+							catch (Exception ex) {
+								Log.Error (ex);
+							}
+							try {
+								if (scitem != null) {
+									await HandleShortcutItemAsync (scitem);
+								}
+							}
+							catch (Exception ex) {
+								Log.Error (ex);
+							}
 						}
-					} else {
-						Debug.WriteLine (t.Exception);
-					}
-				}, uiSync);
-			} catch (Exception ex) {
-				Log.Error (ex);				
+						else {
+							Debug.WriteLine (t.Exception);
+						}
+					}, uiSync);
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+				}
 			}
 
 			return shouldPerformAdditionalDelegateHandling;
@@ -269,6 +292,7 @@ namespace Praeclarum.UI
 
 		protected UINavigationController docListNav;
 		protected UINavigationController detailNav;
+		protected UIDocumentBrowserViewController docBrowser;
 
 		protected virtual void SetRootViewController ()
 		{
@@ -1740,6 +1764,63 @@ namespace Praeclarum.UI
 		public virtual IEnumerable<Tuple<int, string>> GetPatronMonthlyPrices ()
 		{
 			return Enumerable.Empty<Tuple<int, string>> ();
+		}
+	}
+
+	public class DocumentsBrowserDelegate : UIDocumentBrowserViewControllerDelegate
+	{
+		readonly DocumentApplication app;
+
+		public DocumentsBrowserDelegate (DocumentApplication app)
+		{
+			this.app = app;
+		}
+
+		public override void DidRequestDocumentCreation (UIDocumentBrowserViewController controller, System.Action<NSUrl, UIDocumentBrowserImportMode> importHandler)
+		{
+			var docsDir = Path.GetTempPath ();
+			var suffix = "";//" " + DateTime.Now.ToString ("yy-MM-dd HH-mm-ss");
+			string urlPath = Path.Combine (docsDir, app.DocumentBaseName + suffix + "." + app.DefaultExtension);
+			try {
+				if (File.Exists (urlPath))
+					File.Delete (urlPath);
+			}
+			catch {
+			}
+			var url = NSUrl.FromFilename (urlPath);
+			var doc = (UIDocument)app.CreateDocument (url.AbsoluteString);
+			if (doc is TextDocument td && td.TextData.Length == 0) {
+				// We need to save some data or the creation process fails
+				td.TextData = "\n";
+			}
+			doc.Save (url, UIDocumentSaveOperation.ForCreating, saveSuccess => {
+				if (!saveSuccess) {
+					importHandler (null, UIDocumentBrowserImportMode.None);
+					return;
+				}
+				doc.Close (closeSuccess => {
+					if (!closeSuccess) {
+						importHandler (null, UIDocumentBrowserImportMode.None);
+						return;
+					}
+					importHandler (url, UIDocumentBrowserImportMode.Move);
+				});
+			});
+		}
+
+		public override void DidPickDocumentUrls (UIDocumentBrowserViewController controller, NSUrl[] documentUrls)
+		{
+			Console.WriteLine ("PICK " + documentUrls);
+		}
+
+		public override void DidImportDocument (UIDocumentBrowserViewController controller, NSUrl sourceUrl, NSUrl destinationUrl)
+		{
+			Console.WriteLine ("IMPORT " + destinationUrl);
+		}
+
+		public override void FailedToImportDocument (UIDocumentBrowserViewController controller, NSUrl documentUrl, NSError error)
+		{
+			Console.WriteLine ("FAIL " + error);
 		}
 	}
 

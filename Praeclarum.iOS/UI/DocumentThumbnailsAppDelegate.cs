@@ -11,7 +11,7 @@ namespace Praeclarum.UI
 	{
 		protected override void SetRootViewController ()
 		{
-			window.RootViewController = docListNav;
+			window.RootViewController = (UIViewController)docListNav ?? docBrowser;
 		}
 
 		protected override void ShowEditor (int docIndex, bool advance, bool animated, UIViewController newEditorVC)

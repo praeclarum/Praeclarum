@@ -12,7 +12,9 @@ namespace Praeclarum.App
 		public string LocalFilePath { get; private set; }
 
 		public TextDocument (string localFilePath)
-			: base (NSUrl.FromFilename (localFilePath))
+			: base (localFilePath.StartsWith ("file://", StringComparison.Ordinal) ?
+			        NSUrl.FromString(localFilePath) :
+			        NSUrl.FromFilename (localFilePath))
 		{
 			LocalFilePath = localFilePath;
 		}

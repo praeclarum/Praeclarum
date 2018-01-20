@@ -506,7 +506,7 @@ namespace Praeclarum.UI
 		static async Task BindEditorAsync (IDocumentEditor newEditor)
 		{
 			var docRef = newEditor.DocumentReference;
-			if (!docRef.IsOpen) {
+			if (docRef != null && !docRef.IsOpen) {
 				await docRef.Open ();
 			}
 			newEditor.BindDocument ();
@@ -516,8 +516,9 @@ namespace Praeclarum.UI
 		{
 			try {
 				var ed = viewControllerToCommit as IDocumentEditor;
-				if (ed != null) {
-					await DocumentAppDelegate.Shared.OpenDocument (ed.DocumentReference.File.Path, false);
+				var dref = ed.DocumentReference;
+				if (ed != null && dref != null) {
+					await DocumentAppDelegate.Shared.OpenDocument (dref.File.Path, false);
 				}
 			} catch (Exception ex) {
 				Log.Error (ex);

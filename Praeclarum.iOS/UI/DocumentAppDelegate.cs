@@ -126,15 +126,15 @@ namespace Praeclarum.UI
 				Log.Error (ex);				
 			}
 
+			if (Settings.IsFirstRun () && !string.IsNullOrEmpty (App.AutoOpenDocumentPath))
+				Settings.LastDocumentPath = App.AutoOpenDocumentPath;
+
 			if (!useDocumentBrowser) {
 
 				//
 				// Initialize the file system manager
 				//
 				try {
-					if (Settings.IsFirstRun () && !string.IsNullOrEmpty (App.AutoOpenDocumentPath))
-						Settings.LastDocumentPath = App.AutoOpenDocumentPath;
-
 					OpenedDocIndex = -1;
 					FileSystemManager.Shared = new FileSystemManager ();
 					FileSystemManager.Shared.ActiveFileSystem = new EmptyFileSystem {
@@ -180,8 +180,10 @@ namespace Praeclarum.UI
 			//
 			if (useDocumentBrowser) {
 				var utis = App.ContentTypes.ToArray ();
-				docBrowser = new UIDocumentBrowserViewController (utis);
-				docBrowser.Delegate = new DocumentsBrowserDelegate (App);
+				docBrowser = new UIDocumentBrowserViewController (utis) {
+					AllowsPickingMultipleItems = false,
+					Delegate = new DocumentsBrowserDelegate (App),
+				};
 			}
 			else {
 				try {
@@ -1810,17 +1812,39 @@ namespace Praeclarum.UI
 
 		public override void DidPickDocumentUrls (UIDocumentBrowserViewController controller, NSUrl[] documentUrls)
 		{
-			Console.WriteLine ("PICK " + documentUrls);
+			var url = documentUrls.FirstOrDefault ();
+			if (url != null) {
+				Console.WriteLine ("PICK " + url);
+				PresentDocument (controller, url);
+			}
 		}
 
 		public override void DidImportDocument (UIDocumentBrowserViewController controller, NSUrl sourceUrl, NSUrl destinationUrl)
 		{
-			Console.WriteLine ("IMPORT " + destinationUrl);
+			PresentDocument (controller, destinationUrl);
 		}
 
 		public override void FailedToImportDocument (UIDocumentBrowserViewController controller, NSUrl documentUrl, NSError error)
 		{
 			Console.WriteLine ("FAIL " + error);
+		}
+
+		void PresentDocument (UIDocumentBrowserViewController controller, NSUrl url)
+		{
+			var editor = app.CreateDocumentEditor (url);
+			if (editor is UIViewController vc) {
+				var nvc = vc as UINavigationController;
+				if (nvc == null)
+					nvc = new UINavigationController (vc);
+				var rvc = nvc.ViewControllers.FirstOrDefault ();
+				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (app.DocumentBaseNamePluralized, UIBarButtonItemStyle.Plain, (sender, e) => {
+					nvc.DismissViewController (true, null);
+				});
+				var v = vc.View;
+				Console.WriteLine ($"Loaded editor: {v}");
+				editor.BindDocument ();
+				controller.PresentViewController (nvc, true, null);
+			}
 		}
 	}
 

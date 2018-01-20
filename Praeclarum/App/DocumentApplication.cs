@@ -3,6 +3,7 @@ using Praeclarum.UI;
 using System.Collections.Generic;
 using Praeclarum.Graphics;
 using System.Linq;
+using Foundation;
 
 namespace Praeclarum.App
 {
@@ -22,6 +23,11 @@ namespace Praeclarum.App
 			return null;
 		}
 
+		public virtual IDocumentEditor CreateDocumentEditor (NSUrl url)
+		{
+			return null;
+		}
+
 		public virtual IEnumerable<string> FileExtensions
 		{
 			get {
@@ -31,7 +37,7 @@ namespace Praeclarum.App
 
 		public virtual IEnumerable<string> ContentTypes {
 			get {
-				yield return "public.plaint-text";
+				yield return "public.plain-text";
 			}
 		}
 

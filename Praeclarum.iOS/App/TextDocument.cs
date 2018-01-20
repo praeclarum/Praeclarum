@@ -12,14 +12,18 @@ namespace Praeclarum.App
 		public string LocalFilePath { get; private set; }
 
 		public TextDocument (string localFilePath)
-			: base (localFilePath.StartsWith ("file://", StringComparison.Ordinal) ?
-			        NSUrl.FromString(localFilePath) :
-			        NSUrl.FromFilename (localFilePath))
+			: base (NSUrl.FromFilename (localFilePath))
 		{
 			LocalFilePath = localFilePath;
 		}
 
-		public bool IsOpen { get { return DocumentState != UIDocumentState.Closed; } }
+		public TextDocument (NSUrl url)
+			: base (url)
+		{
+			LocalFilePath = url.AbsoluteString;
+		}
+
+		public bool IsOpen { get { return !DocumentState.HasFlag (UIDocumentState.Closed); } }
 
 		public event EventHandler<SavingEventArgs> Saving = delegate {};
 		public event EventHandler Loading = delegate {};

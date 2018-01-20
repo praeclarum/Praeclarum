@@ -1832,8 +1832,12 @@ namespace Praeclarum.UI
 				if (nvc == null)
 					nvc = new UINavigationController (vc);
 				var rvc = nvc.ViewControllers.FirstOrDefault ();
-				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (app.DocumentBaseNamePluralized, UIBarButtonItemStyle.Plain, (sender, e) => {
-					nvc.DismissViewController (true, null);
+				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (app.DocumentBaseNamePluralized, UIBarButtonItemStyle.Done, async (sender, e) => {
+					var saveTask = editor.SaveDocument ();
+					await nvc.DismissViewControllerAsync (true);
+					await saveTask;
+					editor.UnbindDocument ();
+					editor.UnbindUI ();
 				});
 				var v = vc.View;
 				Console.WriteLine ($"Loaded editor: {v}");

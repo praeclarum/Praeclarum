@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UIKit;
 using Praeclarum.App;
+using System.Threading.Tasks;
 
 namespace Praeclarum.UI
 {
@@ -115,6 +116,11 @@ namespace Praeclarum.UI
 		public virtual void BindDocument ()
 		{
 
+		}
+
+		public virtual Task SaveDocument ()
+		{
+			return Task.FromResult<object> (null);
 		}
 
 		public virtual void UnbindDocument ()

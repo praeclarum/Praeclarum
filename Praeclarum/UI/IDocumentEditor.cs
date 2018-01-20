@@ -1,5 +1,6 @@
 using System;
 using Praeclarum.App;
+using System.Threading.Tasks;
 
 namespace Praeclarum.UI
 {
@@ -14,6 +15,7 @@ namespace Praeclarum.UI
 		void OnCreated ();
 
 		void BindDocument ();
+		Task SaveDocument ();
 		void UnbindDocument ();
 
 		void UnbindUI ();

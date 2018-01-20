@@ -9,7 +9,10 @@ using System.Linq;
 using Praeclarum.App;
 using System.Collections.Generic;
 using System.Diagnostics;
+
+#if HAS_DROPBOX
 using Dropbox.CoreApi.iOS;
+#endif
 
 namespace Praeclarum.UI
 {
@@ -36,8 +39,7 @@ namespace Praeclarum.UI
 
 		public DocumentApplication App { get; protected set; }
 
-		public UIColor TintColor
-		{
+		public UIColor TintColor {
 			get {
 				return Praeclarum.Graphics.ColorEx.GetUIColor (App.TintColor);
 			}
@@ -76,7 +78,8 @@ namespace Praeclarum.UI
 				var docsDir = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
 				var cachesDir = Path.GetFullPath (Path.Combine (docsDir, "../Library/Caches"));
 				ThumbnailCache = new ImageCache (Path.Combine (cachesDir, "Thumbnails"));
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 			}
 
@@ -86,7 +89,8 @@ namespace Praeclarum.UI
 			try {
 				UpdateCurrentCulture ();
 				NSLocale.Notifications.ObserveCurrentLocaleDidChange ((s, e) => UpdateCurrentCulture ());
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 			}
 
@@ -98,8 +102,9 @@ namespace Praeclarum.UI
 				//			if (!UIDevice.CurrentDevice.CheckSystemVersion (7, 0)) {
 				//				app.SetStatusBarStyle (UIStatusBarStyle.BlackOpaque, false);
 				//			}
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 			//
@@ -109,8 +114,9 @@ namespace Praeclarum.UI
 				Settings = CreateSettings ();
 				Settings.RunCount++;
 				//			Console.WriteLine ("RUN COUNT = " + Settings.RunCount);
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 
@@ -122,8 +128,9 @@ namespace Praeclarum.UI
 
 				UpdateTheme ();
 
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 			if (Settings.IsFirstRun () && !string.IsNullOrEmpty (App.AutoOpenDocumentPath))
@@ -161,8 +168,9 @@ namespace Praeclarum.UI
 					}
 					StoreManager.Shared.CompletionActions.Add (PatronForm.HandlePurchaseCompletionAsync);
 					StoreManager.Shared.FailActions.Add (PatronForm.HandlePurchaseFailAsync);
-				}				
-			} catch (Exception ex) {
+				}
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 			}
 
@@ -171,8 +179,9 @@ namespace Praeclarum.UI
 			//
 			try {
 				StoreKit.SKPaymentQueue.DefaultQueue.AddTransactionObserver (StoreManager.Shared);
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 			//
@@ -206,8 +215,9 @@ namespace Praeclarum.UI
 				}
 
 				SetRootViewController ();
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 			window.MakeKeyAndVisible ();
@@ -219,7 +229,7 @@ namespace Praeclarum.UI
 				var scitemKey = UIApplication.LaunchOptionsShortcutItemKey;
 				if (launchOptions != null && launchOptions.ContainsKey (scitemKey)) {
 					shouldPerformAdditionalDelegateHandling = false;
-					scitem = launchOptions [scitemKey] as UIApplicationShortcutItem;
+					scitem = launchOptions[scitemKey] as UIApplicationShortcutItem;
 				}
 			}
 
@@ -272,7 +282,7 @@ namespace Praeclarum.UI
 		}
 
 		public override void WillTerminate (UIApplication application)
-		{			
+		{
 			StoreKit.SKPaymentQueue.DefaultQueue.RemoveTransactionObserver (StoreManager.Shared);
 		}
 
@@ -313,12 +323,14 @@ namespace Praeclarum.UI
 		{
 			try {
 				await HandleShortcutItemAsync (shortcutItem);
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 			}
 			try {
 				completionHandler (true);
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 			}
 		}
@@ -326,22 +338,20 @@ namespace Praeclarum.UI
 		async Task HandleShortcutItemAsync (UIApplicationShortcutItem scitem)
 		{
 			switch (scitem.Type) {
-			case "new":
-				{
-					await AddAndOpenNewDocument ();
-				}
-				break;
-			case "open":
-				{
-					var path = scitem.UserInfo ["path"].ToString ();
-					var fsId = scitem.UserInfo ["fsId"].ToString ();
-					if (FileSystem.Id != fsId) {
-						var fs = FileSystemManager.Shared.ChooseFileSystem (fsId);
-						await SetFileSystemAsync (fs, false);
+				case "new": {
+						await AddAndOpenNewDocument ();
 					}
-					await OpenDocument (path, false);
-				}
-				break;
+					break;
+				case "open": {
+						var path = scitem.UserInfo["path"].ToString ();
+						var fsId = scitem.UserInfo["fsId"].ToString ();
+						if (FileSystem.Id != fsId) {
+							var fs = FileSystemManager.Shared.ChooseFileSystem (fsId);
+							await SetFileSystemAsync (fs, false);
+						}
+						await OpenDocument (path, false);
+					}
+					break;
 			}
 		}
 
@@ -352,7 +362,8 @@ namespace Praeclarum.UI
 					if (t.IsFaulted)
 						Console.WriteLine ();
 				});
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Console.WriteLine ("OpenPendingUrl failed", ex);
 			}
 		}
@@ -378,8 +389,9 @@ namespace Praeclarum.UI
 				if (ed != null) {
 					ed.DidEnterBackground ();
 				}
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
@@ -387,8 +399,9 @@ namespace Praeclarum.UI
 		{
 			try {
 				UpdateFonts ();
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 			try {
@@ -396,11 +409,13 @@ namespace Praeclarum.UI
 				if (ed != null) {
 					ed.WillEnterForeground ();
 				}
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
+#if HAS_DROPBOX
 		bool HandleDropboxUrl (NSUrl url)
 		{
 			var session = Session.SharedSession;
@@ -430,29 +445,32 @@ namespace Praeclarum.UI
 			}
 			return false;
 		}
+#endif
 
 		public override bool OpenUrl (UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
 		{
+#if HAS_DROPBOX
 			try {
 				if (HandleDropboxUrl (url))
 					return true;
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}
-
+#endif
 			try {
 				if (url.Scheme == App.UrlScheme || url.Scheme == "file") {
 					// Ignore pending operation
 					Settings.LastDocumentPath = "";
-				
+
 					pendingUrl = url;
 					if (uiInitialized) {
 						OpenPendingUrl (null);
 					}
 					return true;
 				}
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 			return false;
@@ -460,7 +478,7 @@ namespace Praeclarum.UI
 
 		protected string GetPathFromTitle (string rawTitle)
 		{
-			var title = (rawTitle??"").Trim ().Replace ("/", "-").Replace ("?", "-").Replace ("*", "-").Replace(":", "-");
+			var title = (rawTitle ?? "").Trim ().Replace ("/", "-").Replace ("?", "-").Replace ("*", "-").Replace (":", "-");
 
 			var baseName = Path.GetFileNameWithoutExtension (title);
 
@@ -470,7 +488,7 @@ namespace Praeclarum.UI
 				ext = "." + App.DefaultExtension;
 
 			return Path.Combine (
-				CurrentDocumentListController.Directory, 
+				CurrentDocumentListController.Directory,
 				baseName + ext);
 		}
 
@@ -530,7 +548,7 @@ namespace Praeclarum.UI
 			var fs = FileSystemManager.Shared.ActiveFileSystem;
 
 
-			if (dir.Length > 0 && dir [0] != '/')
+			if (dir.Length > 0 && dir[0] != '/')
 				dir = "/" + dir;
 
 			var dirs = dir.Split (Path.DirectorySeparatorChar);
@@ -557,7 +575,8 @@ namespace Praeclarum.UI
 
 				if (pendingUrl != null) {
 					NSTimer.CreateScheduledTimer (0.1, OpenPendingUrl);
-				} else {
+				}
+				else {
 					await OpenLastDocument ();
 				}
 			}
@@ -603,7 +622,8 @@ namespace Praeclarum.UI
 			if (i >= 0) {
 				await OpenDocument (i, animated);
 				return true;
-			} else {
+			}
+			else {
 				Console.WriteLine ("Could not open '{0}' because it could not be found", path);
 			}
 
@@ -633,12 +653,13 @@ namespace Praeclarum.UI
 
 			fsman.Add (new DeviceFileSystemProvider ());
 
+#if HAS_DROPBOX
 			try {
 				fsman.Add (new DropboxFileSystemProvider (DropboxSyncKey, DropboxSyncSecret, DropboxAppFolder));
 			} catch (Exception ex) {
 				Debug.WriteLine (ex);
 			}
-
+#endif
 
 			//
 			// Choose the active file system
@@ -1521,7 +1542,7 @@ namespace Praeclarum.UI
 			CurrentCulture = cult;
 		}
 
-		#region Quick UI stuff
+#region Quick UI stuff
 
 		public static void Alert (string title, Exception ex)
 		{
@@ -1534,9 +1555,9 @@ namespace Praeclarum.UI
 			v.Show ();
 		}
 
-		#endregion
+#endregion
 
-		#region Thumbnails
+#region Thumbnails
 
 		public ImageCache ThumbnailCache { get; private set; }
 
@@ -1631,9 +1652,9 @@ namespace Praeclarum.UI
 			});
 		}
 
-		#endregion
+#endregion
 
-		#region Actions
+#region Actions
 
 		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController fromController, UIBarButtonItem fromButton)
 		{
@@ -1697,9 +1718,9 @@ namespace Praeclarum.UI
 		
 		}
 
-		#endregion
+#endregion
 
-		#region MRU
+#region MRU
 
 		protected class MRU
 		{
@@ -1753,7 +1774,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		#endregion
+#endregion
 
 		public async Task ShowPatronAsync ()
 		{

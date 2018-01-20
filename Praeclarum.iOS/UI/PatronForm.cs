@@ -510,7 +510,7 @@ namespace Praeclarum.UI
 		}
 	}
 
-	class BecomeAPatronSection : PFormSection
+	public class BecomeAPatronSection : PFormSection
 	{
 		public BecomeAPatronSection ()
 			: base (new Command ("Become a Patron"))

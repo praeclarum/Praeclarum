@@ -2,6 +2,8 @@
 using Praeclarum.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+
+#if HAS_DROPBOX
 using Dropbox.CoreApi.iOS;
 using System.Linq;
 using UIKit;
@@ -23,7 +25,7 @@ namespace Praeclarum.IO
 			Session.SharedSession = session;
 		}
 
-		#region IFileSystemProvider implementation
+#region IFileSystemProvider implementation
 
 		public Task ShowAddUI (object parent)
 		{
@@ -62,7 +64,7 @@ namespace Praeclarum.IO
 			}
 		}
 
-		#endregion
+#endregion
 	}
 
 	public class DropboxFileSystem : IFileSystem
@@ -264,7 +266,7 @@ namespace Praeclarum.IO
 			return tcs.Task;
 		}
 
-		#region IFileSystem implementation
+#region IFileSystem implementation
 
 		public bool JustForApp {
 			get {
@@ -427,7 +429,7 @@ namespace Praeclarum.IO
 			get;
 			private set;
 		}
-		#endregion
+#endregion
 	}
 
 	class DropboxFile : IFile
@@ -447,7 +449,7 @@ namespace Praeclarum.IO
 
 		public string Rev { get { return meta.Revision; } }
 
-		#region IFile implementation
+#region IFile implementation
 
 		public async Task<LocalFileAccess> BeginLocalAccess ()
 		{
@@ -526,7 +528,7 @@ namespace Praeclarum.IO
 			}
 		}
 
-		#endregion
+#endregion
 	}
 
 	class DropboxLocal : LocalFileAccess
@@ -553,3 +555,4 @@ namespace Praeclarum.IO
 	}
 }
 
+#endif

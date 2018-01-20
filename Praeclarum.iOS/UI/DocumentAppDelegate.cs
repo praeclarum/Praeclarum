@@ -1832,7 +1832,7 @@ namespace Praeclarum.UI
 				if (nvc == null)
 					nvc = new UINavigationController (vc);
 				var rvc = nvc.ViewControllers.FirstOrDefault ();
-				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (app.DocumentBaseNamePluralized, UIBarButtonItemStyle.Done, async (sender, e) => {
+				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (app.Name, UIBarButtonItemStyle.Done, async (sender, e) => {
 					var saveTask = editor.SaveDocument ();
 					await nvc.DismissViewControllerAsync (true);
 					await saveTask;

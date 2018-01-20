@@ -18,6 +18,11 @@ namespace Praeclarum.App
 			return null;
 		}
 
+		public virtual IDocument CreateDocument (NSUrl url)
+		{
+			return null;
+		}
+
 		public virtual IDocumentEditor CreateDocumentEditor (int docIndex, List<DocumentReference> docs)
 		{
 			return null;

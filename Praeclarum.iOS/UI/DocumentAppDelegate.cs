@@ -1781,8 +1781,7 @@ namespace Praeclarum.UI
 		public override void DidRequestDocumentCreation (UIDocumentBrowserViewController controller, System.Action<NSUrl, UIDocumentBrowserImportMode> importHandler)
 		{
 			var docsDir = Path.GetTempPath ();
-			var suffix = "";//" " + DateTime.Now.ToString ("yy-MM-dd HH-mm-ss");
-			string urlPath = Path.Combine (docsDir, app.DocumentBaseName + suffix + "." + app.DefaultExtension);
+			string urlPath = Path.Combine (docsDir, app.DocumentBaseName + "." + app.DefaultExtension);
 			try {
 				if (File.Exists (urlPath))
 					File.Delete (urlPath);
@@ -1790,11 +1789,7 @@ namespace Praeclarum.UI
 			catch {
 			}
 			var url = NSUrl.FromFilename (urlPath);
-			var doc = (UIDocument)app.CreateDocument (url.AbsoluteString);
-			if (doc is TextDocument td && td.TextData.Length == 0) {
-				// We need to save some data or the creation process fails
-				td.TextData = "\n";
-			}
+			var doc = (UIDocument)app.CreateDocument (url);
 			doc.Save (url, UIDocumentSaveOperation.ForCreating, saveSuccess => {
 				if (!saveSuccess) {
 					importHandler (null, UIDocumentBrowserImportMode.None);

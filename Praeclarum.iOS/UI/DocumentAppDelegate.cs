@@ -47,7 +47,7 @@ namespace Praeclarum.UI
 
 		public static DocumentAppDelegate Shared { get; private set; }
 
-		protected static IFileSystem ActiveFileSystem { get { return FileSystemManager.Shared.ActiveFileSystem; } }
+		protected static IFileSystem ActiveFileSystem { get { return FileSystemManager.Shared?.ActiveFileSystem; } }
 
 		public static bool IsPhone { get { return UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone; } }
 
@@ -187,12 +187,26 @@ namespace Praeclarum.UI
 			//
 			// Construct the UI
 			//
+			window = new UIWindow (UIScreen.MainScreen.Bounds);
+
 			if (useDocumentBrowser) {
 				var utis = App.ContentTypes.ToArray ();
 				docBrowser = new UIDocumentBrowserViewController (utis) {
 					AllowsPickingMultipleItems = false,
 					Delegate = new DocumentsBrowserDelegate (App),
+					BrowserUserInterfaceStyle = Settings.DarkMode ? UIDocumentBrowserUserInterfaceStyle.Dark : UIDocumentBrowserUserInterfaceStyle.Light,
 				};
+				var settingsImage = UIImage.FromBundle ("Settings.png");
+
+				if (settingsImage != null) {
+					settingsBtn = new UIBarButtonItem (settingsImage, UIBarButtonItemStyle.Plain, HandleSettings);
+				}
+				else {
+					settingsBtn = new UIBarButtonItem ("Settings", UIBarButtonItemStyle.Plain, HandleSettings);
+				}
+				docBrowser.AdditionalLeadingNavigationBarButtonItems = new UIBarButtonItem[] { settingsBtn };
+
+				window.BackgroundColor = Theme.Current.DocumentBackgroundColor;
 			}
 			else {
 				try {
@@ -206,8 +220,6 @@ namespace Praeclarum.UI
 					Log.Error (ex);
 				}
 			}
-
-			window = new UIWindow (UIScreen.MainScreen.Bounds);
 
 			try {
 				if (ios7) {
@@ -276,6 +288,17 @@ namespace Praeclarum.UI
 			return shouldPerformAdditionalDelegateHandling;
 		}
 
+		void HandleSettings (object sender, EventArgs e)
+		{
+			var sc = CreateSettingsForm ();
+			var nc = new UINavigationController (sc);
+			Theme.Current.Apply (nc);
+			nc.ModalPresentationStyle = UIModalPresentationStyle.Popover;
+			nc.PopoverPresentationController.PermittedArrowDirections = UIPopoverArrowDirection.Up;
+			nc.PopoverPresentationController.BarButtonItem = settingsBtn;
+			docBrowser.PresentViewController (nc, true, null);
+		}
+
 		protected virtual UINavigationController CreateDocumentsNavigationController (DocumentsViewController docList)
 		{
 			return new DocumentsNavigationController (docList);
@@ -299,12 +322,22 @@ namespace Praeclarum.UI
 		{
 			Theme.Current = newTheme;
 			newTheme.Apply ();
+			if (docBrowser != null) {
+				if (Settings.DarkMode) {
+					docBrowser.BrowserUserInterfaceStyle = UIDocumentBrowserUserInterfaceStyle.Dark;
+				}
+				else {
+					docBrowser.BrowserUserInterfaceStyle = UIDocumentBrowserUserInterfaceStyle.Light;
+				}
+			}
 			UpdateFonts ();
 		}
 
 		protected UINavigationController docListNav;
 		protected UINavigationController detailNav;
+
 		protected UIDocumentBrowserViewController docBrowser;
+		protected UIBarButtonItem settingsBtn;
 
 		protected virtual void SetRootViewController ()
 		{
@@ -1850,9 +1883,13 @@ namespace Praeclarum.UI
 			var editor = app.CreateDocumentEditor (url);
 			if (editor is UIViewController vc) {
 				var nvc = vc as UINavigationController;
-				if (nvc == null)
+				var theme = Theme.Current;
+				if (nvc == null) {
 					nvc = new UINavigationController (vc);
+					theme.Apply (nvc);
+				}
 				var rvc = nvc.ViewControllers.FirstOrDefault ();
+
 				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (app.Name, UIBarButtonItemStyle.Done, async (sender, e) => {
 					var saveTask = editor.SaveDocument ();
 					await nvc.DismissViewControllerAsync (true);

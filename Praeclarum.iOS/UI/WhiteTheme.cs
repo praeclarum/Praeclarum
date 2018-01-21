@@ -24,7 +24,7 @@ namespace Praeclarum.UI
 
 		static Theme ()
 		{
-			Current = new Theme (dark: false);
+			Current = new LightTheme ();
 		}
 
 		public Theme ()
@@ -42,6 +42,7 @@ namespace Praeclarum.UI
 			}
 			if (dark) {
 				StatusBarStyle = UIStatusBarStyle.LightContent;
+				PopoverBackgroundColor = UIColor.Black;
 				NavigationBackgroundColor = null;
 				NavigationTextColor = UIColor.LightGray;
 				DocumentsBackgroundColor = UIColor.FromRGB (22, 22, 22);
@@ -60,6 +61,7 @@ namespace Praeclarum.UI
 				KeyboardAppearance = UIKeyboardAppearance.Dark;
 			} else {
 				StatusBarStyle = UIStatusBarStyle.Default;
+				PopoverBackgroundColor = null;
 				NavigationBarStyle = UIBarStyle.Default;
 				TableHeadingTextColor = UIColor.Gray;
 				NavigationBackgroundColor = null;
@@ -85,6 +87,8 @@ namespace Praeclarum.UI
 				UINavigationBar.Appearance.TintColor = TintColor;
 				UIBarButtonItem.Appearance.TintColor = TintColor;
 
+				UIPopoverBackgroundView.Appearance.BackgroundColor = NavigationBackgroundColor;
+
 				UINavigationBar.Appearance.BarTintColor = NavigationBackgroundColor;
 				UINavigationBar.Appearance.TitleTextAttributes = new UIStringAttributes {
 					ForegroundColor = NavigationTextColor,
@@ -103,6 +107,11 @@ namespace Praeclarum.UI
 				return;
 			Apply (nc.NavigationBar);
 			Apply (nc.Toolbar);
+
+			var pop = nc.PopoverPresentationController;
+			if (pop != null && IsDark) {
+				pop.BackgroundColor = UIColor.Black;
+			}
 		}
 
 		public virtual void Apply (UINavigationBar navigationBar)
@@ -215,6 +224,7 @@ namespace Praeclarum.UI
 		public UIBarStyle NavigationBarStyle { get; protected set; }
 		public bool IsDark { get; protected set; }
 		public UIColor TableHeadingTextColor  { get; protected set; }
+		public UIColor PopoverBackgroundColor { get; protected set; }
 		public UIColor NavigationBackgroundColor  { get; protected set; }
 		public UIColor NavigationTextColor  { get; protected set; }
 		public UIColor DocumentsBackgroundColor  { get; protected set; }

@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UIKit;
 using Praeclarum.App;
 using System.Threading.Tasks;
+using Foundation;
 
 namespace Praeclarum.UI
 {
 	public class DocumentEditor : UIViewController, IDocumentEditor
 	{
 		protected DocumentReference docRef;
+		protected NSUrl docUrl;
 
 		public DocumentReference DocumentReference { get { return docRef; } }
 
@@ -17,6 +19,11 @@ namespace Praeclarum.UI
 		public DocumentEditor (DocumentReference docRef)
 		{
 			this.docRef = docRef;
+		}
+
+		public DocumentEditor(NSUrl url)
+		{
+			this.docUrl = url;
 		}
 
 		public override void ViewDidLoad ()

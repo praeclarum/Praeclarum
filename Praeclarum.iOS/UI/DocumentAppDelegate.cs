@@ -10,10 +10,6 @@ using Praeclarum.App;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-#if HAS_DROPBOX
-using Dropbox.CoreApi.iOS;
-#endif
-
 namespace Praeclarum.UI
 {
 	[Register ("DocumentAppDelegate")]
@@ -448,13 +444,13 @@ namespace Praeclarum.UI
 			}
 		}
 
-#if HAS_DROPBOX
+#if !NO_DROPBOX
 		bool HandleDropboxUrl (NSUrl url)
 		{
-			var session = Session.SharedSession;
+			var session = DropboxSession.SharedSession;
 			if (session.HandleOpenUrl (url) && session.IsLinked) {
 				var fman = FileSystemManager.Shared;
-				var fs = fman.FileSystems.OfType<DropboxFileSystem> ().FirstOrDefault (x => x.UserId == session.UserIds.FirstOrDefault ());
+				var fs = fman.FileSystems.OfType<DropboxFileSystem> ().FirstOrDefault (x => x.UserId == session.AccountId);
 				if (fs != null) {
 					Debug.WriteLine ("Dropbox: Existing account detected!");
 				}
@@ -482,7 +478,7 @@ namespace Praeclarum.UI
 
 		public override bool OpenUrl (UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
 		{
-#if HAS_DROPBOX
+#if !NO_DROPBOX
 			try {
 				if (HandleDropboxUrl (url))
 					return true;
@@ -686,7 +682,7 @@ namespace Praeclarum.UI
 
 			fsman.Add (new DeviceFileSystemProvider ());
 
-#if HAS_DROPBOX
+#if !NO_DROPBOX
 			try {
 				fsman.Add (new DropboxFileSystemProvider (DropboxSyncKey, DropboxSyncSecret, DropboxAppFolder));
 			} catch (Exception ex) {

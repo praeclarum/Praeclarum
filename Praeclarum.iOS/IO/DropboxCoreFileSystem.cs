@@ -1,14 +1,20 @@
 ﻿using System;
-using Praeclarum.IO;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-
-#if HAS_DROPBOX
-using Dropbox.CoreApi.iOS;
-using System.Linq;
-using UIKit;
-using System.Text;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using UIKit;
+using Foundation;
+
+using Praeclarum.IO;
+
+#if !NO_DROPBOX
+using Dropbox.Api;
+using Dropbox.Api.Files;
+using Dropbox.Api.FileRequests;
+using Dropbox.Api.Users;
 
 namespace Praeclarum.IO
 {
@@ -21,8 +27,8 @@ namespace Praeclarum.IO
 
 		public DropboxFileSystemProvider (string appKey, string appSecret, bool appFolder)
 		{
-			var session = new Session (appKey, appSecret, appFolder ? Session.RootAppFolder : Session.RootDropbox);
-			Session.SharedSession = session;
+			var session = new DropboxSession (appKey, appSecret, appFolder ? DropboxSessionRoot.App : DropboxSessionRoot.Dropbox);
+			DropboxSession.SharedSession = session;
 		}
 
 #region IFileSystemProvider implementation
@@ -33,16 +39,14 @@ namespace Praeclarum.IO
 			if (vc == null)
 				return Task.FromResult<IFileSystem> (null);
 
-			AddCompletionSource = new TaskCompletionSource<DropboxFileSystem> ();
-			Session.SharedSession.LinkFromController (vc);
-			return AddCompletionSource.Task;
+			return DropboxSession.SharedSession.LinkFromControllerAsync (vc);
 		}
 
 		public IEnumerable<IFileSystem> GetFileSystems ()
 		{
 			var fss = new List<IFileSystem> ();
 
-			var session = Session.SharedSession;
+			var session = DropboxSession.SharedSession;
 
 			if (session != null && session.IsLinked) {
 				var fs = new DropboxFileSystem (session);
@@ -67,23 +71,60 @@ namespace Praeclarum.IO
 #endregion
 	}
 
+	public enum DropboxSessionRoot
+	{
+		App,
+		Dropbox,
+	}
+
+	public class DropboxSession
+	{
+		public static DropboxSession SharedSession { get; set; }
+
+		readonly string appSecret;
+
+		public DropboxSessionRoot Root { get; }
+		public string AccessToken { get; }
+
+		public bool IsLinked { get; }
+		public string AccountId { get; }
+
+		public DropboxSession(string accessToken, string appSecret, DropboxSessionRoot root)
+		{
+			AccessToken = accessToken;
+			this.appSecret = appSecret;
+			Root = root;
+			AccountId = "";
+		}
+
+		public bool HandleOpenUrl (NSUrl url)
+		{
+			return false;
+		}
+
+		public Task LinkFromControllerAsync (UIViewController vc)
+		{
+			return Task.FromResult (0);
+		}
+	}
+
 	public class DropboxFileSystem : IFileSystem
 	{
-		readonly Session session;
-		readonly RestClient sharedClient;
+		readonly DropboxSession session;
+		readonly DropboxClient sharedClient;
 
 		public string UserId { get; private set; }
 		public string DisplayName { get; private set; }
 
-		public DropboxFileSystem (Session session)
+		public DropboxFileSystem (DropboxSession session)
 		{
 			this.session = session;
-			sharedClient = new RestClient (session);
-			UserId = session.UserIds.FirstOrDefault () ?? "Unknown";
+			sharedClient = new DropboxClient (session.AccessToken);
+			UserId = session.AccountId;
 			FileExtensions = new System.Collections.ObjectModel.Collection<string> ();
 		}
 
-		public RestClient GetClient ()
+		public DropboxClient GetClient ()
 		{
 			return sharedClient;
 		}
@@ -93,184 +134,79 @@ namespace Praeclarum.IO
 			return new DropboxFile (this, meta);
 		}
 
-		public Task<RestClientMetadataLoadedEventArgs> DropboxLoadMetadataAsync (string path)
+		public Task<Metadata> DropboxLoadMetadataAsync (string path)
 		{
 			var c = GetClient ();
-			var tcs = new TaskCompletionSource<RestClientMetadataLoadedEventArgs> ();
-			EventHandler<RestClientMetadataLoadedEventArgs> onSuccess = null;
-			EventHandler<RestClientErrorEventArgs> onFail = null;
-			onSuccess = (s, e) => {
-				if (e.Metadata.Path == path) {
-					c.MetadataLoaded -= onSuccess;
-					c.LoadMetadataFailed -= onFail;
-					tcs.SetResult (e);
-				}
-			};
-			onFail = (s, e) => {
-				c.MetadataLoaded -= onSuccess;
-				c.LoadMetadataFailed -= onFail;
-				var error = e.Error.Description ?? "";
-				tcs.SetException (new Exception (error));
-			};
-			c.MetadataLoaded += onSuccess;
-			c.LoadMetadataFailed += onFail;
-			c.LoadMetadata (path);
-			return tcs.Task;
+			return c.Files.GetMetadataAsync(path);
 		}
 
-		public Task<RestClientFileLoadedEventArgs> DropboxLoadFileAsync (string path, string destinationPath)
+		public async Task<FileRequest> DropboxLoadFileAsync (string path, string destinationPath)
 		{
+			var m = await DropboxLoadMetadataAsync(path).ConfigureAwait (false);
 			var c = GetClient ();
-			var tcs = new TaskCompletionSource<RestClientFileLoadedEventArgs> ();
-			EventHandler<RestClientFileLoadedEventArgs> onSuccess = null;
-			EventHandler<RestClientErrorEventArgs> onFail = null;
-			onSuccess = (s, e) => {
-				if (e.DestPath == destinationPath) {
-					c.FileLoaded -= onSuccess;
-					c.LoadFileFailed -= onFail;
-					tcs.SetResult (e);
-				}
-			};
-			onFail = (s, e) => {
-				c.FileLoaded -= onSuccess;
-				c.LoadFileFailed -= onFail;
-				var error = e.Error.Description ?? "";
-				tcs.SetException (new Exception (error));
-			};
-			c.FileLoaded += onSuccess;
-			c.LoadFileFailed += onFail;
-			c.LoadFile (path, destinationPath);
-			return tcs.Task;
+			return await c.FileRequests.GetAsync(m.AsFile.Id).ConfigureAwait (false);
 		}
 
-		public Task<RestClientFileUploadedEventArgs> DropboxUploadFileAsync (string path, string parentRev, string sourcePath)
+		public Task<FileMetadata> DropboxUploadFileAsync (string path, string parentRev, string sourcePath)
 		{
 			var c = GetClient ();
-			var tcs = new TaskCompletionSource<RestClientFileUploadedEventArgs> ();
-			EventHandler<RestClientFileUploadedEventArgs> onSuccess = null;
-			EventHandler<RestClientErrorEventArgs> onFail = null;
-			onSuccess = (s, e) => {
-				if (e.SrcPath == sourcePath) {
-					c.FileUploaded -= onSuccess;
-					c.UploadFileFailed -= onFail;
-					tcs.SetResult (e);
+			return Task.Run(async () =>
+			{
+				using (var inputStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+				{
+					return await c.Files.UploadAsync(path, body: inputStream).ConfigureAwait (false);
 				}
-			};
-			onFail = (s, e) => {
-				c.FileUploaded -= onSuccess;
-				c.UploadFileFailed -= onFail;
-				var error = e.Error.Description ?? "";
-				tcs.SetException (new Exception (error));
-			};
-			c.FileUploaded += onSuccess;
-			c.UploadFileFailed += onFail;
-			c.UploadFile (Path.GetFileName (path), Path.GetDirectoryName (path), parentRev, sourcePath);
-			return tcs.Task;
+			});
 		}
 
-		public Task<RestClientFolderCreatedEventArgs> DropboxCreateFolderAsync (string path, string parentRev, string sourcePath)
+		//public Task<RestClientFolderCreatedEventArgs> DropboxCreateFolderAsync (string path, string parentRev, string sourcePath)
+		//{
+		//	var c = GetClient ();
+		//	var tcs = new TaskCompletionSource<RestClientFolderCreatedEventArgs> ();
+		//	EventHandler<RestClientFolderCreatedEventArgs> onSuccess = null;
+		//	EventHandler<RestClientErrorEventArgs> onFail = null;
+		//	onSuccess = (s, e) => {
+		//		if (e.Folder.Path == path) {
+		//			c.FolderCreated -= onSuccess;
+		//			c.CreateFolderFailed -= onFail;
+		//			tcs.SetResult (e);
+		//		}
+		//	};
+		//	onFail = (s, e) => {
+		//		c.FolderCreated -= onSuccess;
+		//		c.CreateFolderFailed -= onFail;
+		//		var error = e.Error.Description ?? "";
+		//		tcs.SetException (new Exception (error));
+		//	};
+		//	c.FolderCreated += onSuccess;
+		//	c.CreateFolderFailed += onFail;
+		//	c.CreateFolder (path);
+		//	return tcs.Task;
+		//}
+
+		public Task<DeleteResult> DropboxDeletePathAsync (string path)
 		{
 			var c = GetClient ();
-			var tcs = new TaskCompletionSource<RestClientFolderCreatedEventArgs> ();
-			EventHandler<RestClientFolderCreatedEventArgs> onSuccess = null;
-			EventHandler<RestClientErrorEventArgs> onFail = null;
-			onSuccess = (s, e) => {
-				if (e.Folder.Path == path) {
-					c.FolderCreated -= onSuccess;
-					c.CreateFolderFailed -= onFail;
-					tcs.SetResult (e);
-				}
-			};
-			onFail = (s, e) => {
-				c.FolderCreated -= onSuccess;
-				c.CreateFolderFailed -= onFail;
-				var error = e.Error.Description ?? "";
-				tcs.SetException (new Exception (error));
-			};
-			c.FolderCreated += onSuccess;
-			c.CreateFolderFailed += onFail;
-			c.CreateFolder (path);
-			return tcs.Task;
+			return c.Files.DeleteV2Async(path);
 		}
 
-		public Task<RestClientPathDeletedEventArgs> DropboxDeletePathAsync (string path)
+		public Task<RelocationResult> DropboxMovePathAsync (string fromPath, string toPath)
 		{
 			var c = GetClient ();
-			var tcs = new TaskCompletionSource<RestClientPathDeletedEventArgs> ();
-			EventHandler<RestClientPathDeletedEventArgs> onSuccess = null;
-			EventHandler<RestClientErrorEventArgs> onFail = null;
-			onSuccess = (s, e) => {
-				if (e.Path == path) {
-					c.PathDeleted -= onSuccess;
-					c.DeletePathFailed -= onFail;
-					tcs.SetResult (e);
-				}
-			};
-			onFail = (s, e) => {
-				c.PathDeleted -= onSuccess;
-				c.DeletePathFailed -= onFail;
-				var error = e.Error.Description ?? "";
-				tcs.SetException (new Exception (error));
-			};
-			c.PathDeleted += onSuccess;
-			c.DeletePathFailed += onFail;
-			c.DeletePath (path);
-			return tcs.Task;
+			return c.Files.MoveV2Async(fromPath, toPath);
 		}
 
-		public Task<RestClientPathMovedEventArgs> DropboxMovePathAsync (string fromPath, string toPath)
+		public Task<BasicAccount> DropboxLoadAccountInfoAsync ()
 		{
 			var c = GetClient ();
-			var tcs = new TaskCompletionSource<RestClientPathMovedEventArgs> ();
-			EventHandler<RestClientPathMovedEventArgs> onSuccess = null;
-			EventHandler<RestClientErrorEventArgs> onFail = null;
-			onSuccess = (s, e) => {
-				if (e.From_path == fromPath) {
-					c.PathMoved -= onSuccess;
-					c.MovePathFailedWithError -= onFail;
-					tcs.SetResult (e);
-				}
-			};
-			onFail = (s, e) => {
-				c.PathMoved -= onSuccess;
-				c.MovePathFailedWithError -= onFail;
-				var error = e.Error.Description ?? "";
-				tcs.SetException (new Exception (error));
-			};
-			c.PathMoved += onSuccess;
-			c.MovePathFailedWithError += onFail;
-			c.MoveFrom (fromPath, toPath);
-			return tcs.Task;
-		}
-
-		public Task<RestClientAccountInfoLoadedEventArgs> DropboxLoadAccountInfoAsync ()
-		{
-			var c = GetClient ();
-			var tcs = new TaskCompletionSource<RestClientAccountInfoLoadedEventArgs> ();
-			EventHandler<RestClientAccountInfoLoadedEventArgs> onSuccess = null;
-			EventHandler<RestClientErrorEventArgs> onFail = null;
-			onSuccess = (s, e) => {
-				c.AccountInfoLoaded -= onSuccess;
-				c.LoadAccountInfoFailed -= onFail;
-				tcs.SetResult (e);
-			};
-			onFail = (s, e) => {
-				c.AccountInfoLoaded -= onSuccess;
-				c.LoadAccountInfoFailed -= onFail;
-				var error = e.Error.Description ?? "";
-				tcs.SetException (new Exception (error));
-			};
-			c.AccountInfoLoaded += onSuccess;
-			c.LoadAccountInfoFailed += onFail;
-			c.LoadAccountInfo ();
-			return tcs.Task;
+			return c.Users.GetAccountAsync (session.AccountId);
 		}
 
 #region IFileSystem implementation
 
 		public bool JustForApp {
 			get {
-				return session.Root == Session.RootAppFolder;
+				return session.Root == DropboxSessionRoot.App;
 			}
 		}
 
@@ -280,7 +216,7 @@ namespace Praeclarum.IO
 		{
 			try {
 				var r = await DropboxLoadAccountInfoAsync ();
-				DisplayName = r.Info.DisplayName;				
+				DisplayName = r.Name.DisplayName;
 			} catch (Exception ex) {
 				Log.Error (ex);
 				DisplayName = UserId;
@@ -291,16 +227,17 @@ namespace Praeclarum.IO
 
 		public async Task<List<IFile>> ListFiles (string directory)
 		{
+			var c = GetClient();
 			var d = directory;
 			if (!d.StartsWith ("/", StringComparison.Ordinal)) {
 				d = "/" + d;
 			}
-			var r = await DropboxLoadMetadataAsync (d);
+			var r = await c.Files.ListFolderAsync (d).ConfigureAwait (false);
 
 			var exts = FileExtensions.Select (x => "." + x).ToDictionary (x => x);
 
 			var res =
-				r.Metadata.Contents.
+				r.Entries.
 				Select (GetDropboxFile).
 				Where (x => x.IsDirectory || exts.ContainsKey (Path.GetExtension (x.Path))).
 				Cast<IFile> ().
@@ -313,9 +250,10 @@ namespace Praeclarum.IO
 			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
 				path = "/" + path;
 			}
-			var meta = await DropboxLoadMetadataAsync (path);
-			return GetDropboxFile (meta.Metadata);
+			var meta = await DropboxLoadMetadataAsync (path).ConfigureAwait (false);
+			return GetDropboxFile (meta);
 		}
+
 		public async Task<IFile> CreateFile (string path, byte[] contents)
 		{
 			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
@@ -325,9 +263,9 @@ namespace Praeclarum.IO
 				var p = Path.GetTempFileName ();
 				File.WriteAllBytes (p, contents);
 				return p;
-			});//.ConfigureAwait (false);
-			await DropboxUploadFileAsync (path, null, src);
-			return await GetFile (path);
+			}).ConfigureAwait (false);
+			await DropboxUploadFileAsync (path, null, src).ConfigureAwait (false);
+			return await GetFile (path).ConfigureAwait (false);
 		}
 		public async Task<bool> CreateDirectory (string path)
 		{
@@ -335,7 +273,7 @@ namespace Praeclarum.IO
 				path = "/" + path;
 			}
 			try {
-				await DropboxDeletePathAsync (path);
+				await DropboxDeletePathAsync (path).ConfigureAwait (false);
 				return true;
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -447,7 +385,7 @@ namespace Praeclarum.IO
 			return DropboxPath + "@" + Rev;
 		}
 
-		public string Rev { get { return meta.Revision; } }
+		public string Rev { get { return meta.IsFile ? meta.AsFile.Rev : ""; } }
 
 #region IFile implementation
 
@@ -488,31 +426,19 @@ namespace Praeclarum.IO
 			return false;
 		}
 
-		public string Path {
-			get {
-				var p = meta.Path;
-				if (p.StartsWith ("/", StringComparison.Ordinal)) {
-					p = p.Substring (1);
-				}
-				return p;
-			}
-		}
+		public string Path { get; }
 
-		public string DropboxPath {
-			get {
-				return meta.Path;
-			}
-		}
+		public string DropboxPath { get; }
 
 		public bool IsDirectory {
 			get {
-				return meta.IsDirectory;
+				return meta.IsFolder;
 			}
 		}
 
 		public DateTime ModifiedTime {
 			get {
-				return (DateTime)meta.LastModifiedDate;
+				return meta.IsFile ? meta.AsFile.ClientModified : new DateTime (1970, 1, 1);
 			}
 		}
 

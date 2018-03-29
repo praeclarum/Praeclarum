@@ -17,6 +17,7 @@ using Dropbox.Api.FileRequests;
 using Dropbox.Api.Users;
 using SafariServices;
 using System.Threading;
+using Security;
 
 namespace Praeclarum.IO
 {
@@ -83,7 +84,7 @@ namespace Praeclarum.IO
 	{
 		public static DropboxSession SharedSession { get; set; }
 
-		//readonly string appSecret;
+		const string LastDropboxAuthResponseUrlKey = "LastDropboxAuthResponseUrl";
 
 		public DropboxSessionRoot Root { get; }
 		public string AppKey { get; }
@@ -100,6 +101,9 @@ namespace Praeclarum.IO
 			Root = root;
 			AccessToken = "";
 			AccountId = "";
+
+			var lastUrl = NSUserDefaults.StandardUserDefaults.StringForKey(LastDropboxAuthResponseUrlKey);
+			LinkWithUrl (lastUrl);
 		}
 
 		public bool HandleOpenUrl (NSUrl url)
@@ -108,7 +112,11 @@ namespace Praeclarum.IO
 			if (!scheme.StartsWith ("db-", StringComparison.Ordinal))
 				return false;
 
-			LinkWithUrl (url);
+			LinkWithUrl (url.AbsoluteString);
+			if (IsLinked)
+			{
+				NSUserDefaults.StandardUserDefaults.SetString (url.AbsoluteString, LastDropboxAuthResponseUrlKey);
+			}
 
 			var tcs = linkTcs;
 			var b = browser;
@@ -127,18 +135,24 @@ namespace Praeclarum.IO
 			return true;
 		}
 
-		void LinkWithUrl (NSUrl url)
+		void LinkWithUrl (string url)
 		{
-			var parts = url.Fragment.Split('&').Select(x => x.Split('=')).ToDictionary(x => x[0], x => Uri.UnescapeDataString (x[1]));
-			if (parts.TryGetValue("access_token", out var at))
-			{
-				if (parts.TryGetValue("account_id", out var ai))
-				{
-					AccessToken = at;
-					AccountId = ai;
-					IsLinked = true;
-					return;
+			try {
+				if (!string.IsNullOrWhiteSpace(url)) {
+					var fragment = url.Substring(url.IndexOf('#') + 1);
+					var parts = fragment.Split('&').Select(x => x.Split('=')).ToDictionary(x => x[0], x => Uri.UnescapeDataString(x[1]));
+					if (parts.TryGetValue("access_token", out var at)) {
+						if (parts.TryGetValue("account_id", out var ai)) {
+							AccessToken = at;
+							AccountId = ai;
+							IsLinked = true;
+							return;
+						}
+					}
 				}
+			}
+			catch (Exception ex) {
+				Console.WriteLine (ex);
 			}
 			IsLinked = false;
 		}

@@ -341,7 +341,7 @@ namespace Praeclarum.IO
 			}
 		}
 
-		public bool ListFilesIsFast { get { return false; } }
+		public bool ListFilesIsFast => true;
 
 		public async Task<List<IFile>> ListFiles (string directory)
 		{

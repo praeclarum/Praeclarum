@@ -160,7 +160,6 @@ namespace Praeclarum.IO
 				browser = new DropboxAuthBrowserController (GetAuthUrl()) { Delegate = del };
 				await vc.PresentViewControllerAsync (browser, true);
 				await linkTcs.Task;
-				Console.WriteLine("WOW");
 			}
 			finally
 			{
@@ -203,6 +202,8 @@ namespace Praeclarum.IO
 		public string UserId { get; private set; }
 		public string DisplayName { get; private set; }
 
+		public DropboxSession Session => session;
+
 		public DropboxFileSystem (DropboxSession session)
 		{
 			this.session = session;
@@ -227,11 +228,19 @@ namespace Praeclarum.IO
 			return c.Files.GetMetadataAsync(path);
 		}
 
-		public async Task<FileRequest> DropboxLoadFileAsync (string path, string destinationPath)
+		public async Task DropboxLoadFileAsync (string path, string destinationPath)
 		{
-			var m = await DropboxLoadMetadataAsync(path).ConfigureAwait (false);
 			var c = GetClient ();
-			return await c.FileRequests.GetAsync(m.AsFile.Id).ConfigureAwait (false);
+			using (var dr = await c.Files.DownloadAsync (path).ConfigureAwait (false))
+			{
+				using (var ss = await dr.GetContentAsStreamAsync().ConfigureAwait (false))
+				{
+					using (var ds = new System.IO.FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.Read))
+					{
+						await ss.CopyToAsync(ds).ConfigureAwait (false);
+					}
+				}
+			}
 		}
 
 		public Task<FileMetadata> DropboxUploadFileAsync (string path, string parentRev, string sourcePath)
@@ -241,35 +250,16 @@ namespace Praeclarum.IO
 			{
 				using (var inputStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
 				{
-					return await c.Files.UploadAsync(path, body: inputStream).ConfigureAwait (false);
+					return await c.Files.UploadAsync(path, mode: WriteMode.Overwrite.Instance, body: inputStream).ConfigureAwait (false);
 				}
 			});
 		}
 
-		//public Task<RestClientFolderCreatedEventArgs> DropboxCreateFolderAsync (string path, string parentRev, string sourcePath)
-		//{
-		//	var c = GetClient ();
-		//	var tcs = new TaskCompletionSource<RestClientFolderCreatedEventArgs> ();
-		//	EventHandler<RestClientFolderCreatedEventArgs> onSuccess = null;
-		//	EventHandler<RestClientErrorEventArgs> onFail = null;
-		//	onSuccess = (s, e) => {
-		//		if (e.Folder.Path == path) {
-		//			c.FolderCreated -= onSuccess;
-		//			c.CreateFolderFailed -= onFail;
-		//			tcs.SetResult (e);
-		//		}
-		//	};
-		//	onFail = (s, e) => {
-		//		c.FolderCreated -= onSuccess;
-		//		c.CreateFolderFailed -= onFail;
-		//		var error = e.Error.Description ?? "";
-		//		tcs.SetException (new Exception (error));
-		//	};
-		//	c.FolderCreated += onSuccess;
-		//	c.CreateFolderFailed += onFail;
-		//	c.CreateFolder (path);
-		//	return tcs.Task;
-		//}
+		public Task<CreateFolderResult> DropboxCreateDirectoryAsync (string path)
+		{
+			var c = GetClient();
+			return c.Files.CreateFolderV2Async (path);
+		}
 
 		public Task<DeleteResult> DropboxDeletePathAsync (string path)
 		{
@@ -322,10 +312,14 @@ namespace Praeclarum.IO
 
 			var res =
 				r.Entries.
-				Select (GetDropboxFile).
-				Where (x => x.IsDirectory || exts.ContainsKey (Path.GetExtension (x.Path))).
-				Cast<IFile> ().
-				ToList ();
+				Select(GetDropboxFile).
+				 Where(x =>
+				{
+					var ext = Path.GetExtension(x.Path);
+					return x.IsDirectory || (!string.IsNullOrEmpty (ext) && exts.ContainsKey (ext));
+				}).
+				Cast<IFile>().
+				 ToList();
 			return res;
 		}
 
@@ -348,7 +342,7 @@ namespace Praeclarum.IO
 		public async Task<bool> CreateDirectory (string path)
 		{
 			try {
-				await DropboxDeletePathAsync (path).ConfigureAwait (false);
+				await DropboxCreateDirectoryAsync (path).ConfigureAwait (false);
 				return true;
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -358,8 +352,9 @@ namespace Praeclarum.IO
 		public async Task<bool> FileExists (string path)
 		{
 			try {
-				var f = await GetFile (path);
-				return f != null;
+				var c = GetClient();
+				var m = await c.Files.GetMetadataAsync (path).ConfigureAwait (false);
+				return !m.IsDeleted;
 			} catch (Exception) {
 				return false;
 			}
@@ -444,6 +439,9 @@ namespace Praeclarum.IO
 		{
 			this.FileSystem = fs;
 			this.meta = meta;
+
+			Path = meta.PathDisplay;
+			DropboxPath = Path;
 		}
 
 		public override string ToString ()
@@ -466,6 +464,10 @@ namespace Praeclarum.IO
 			var tmpDir = System.IO.Path.Combine (cachesDir, "DropboxTemp");
 
 			var filename = Path;
+			if (filename.StartsWith ("/", StringComparison.Ordinal))
+			{
+				filename = filename.Substring (1);
+			}
 			
 			var lp = System.IO.Path.Combine (tmpDir, filename);
 

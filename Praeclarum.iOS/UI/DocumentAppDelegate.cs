@@ -1157,7 +1157,7 @@ namespace Praeclarum.UI
 					else {
 						new UIAlertView (
 							"Error",
-							FileSystem.Id + " did not allow the directory to be created.",
+							FileSystem.Id + " failed to create the folder.",
 							null,
 							"OK").Show ();
 					}

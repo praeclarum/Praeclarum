@@ -239,12 +239,20 @@ namespace Praeclarum.IO
 		public Task<Metadata> DropboxLoadMetadataAsync (string path)
 		{
 			var c = GetClient ();
+			if (!path.StartsWith("/", StringComparison.Ordinal))
+			{
+				path = "/" + path;
+			}
 			return c.Files.GetMetadataAsync(path);
 		}
 
 		public async Task DropboxLoadFileAsync (string path, string destinationPath)
 		{
 			var c = GetClient ();
+			if (!path.StartsWith("/", StringComparison.Ordinal))
+			{
+				path = "/" + path;
+			}
 			using (var dr = await c.Files.DownloadAsync (path).ConfigureAwait (false))
 			{
 				using (var ss = await dr.GetContentAsStreamAsync().ConfigureAwait (false))
@@ -260,6 +268,10 @@ namespace Praeclarum.IO
 		public Task<FileMetadata> DropboxUploadFileAsync (string path, string parentRev, string sourcePath)
 		{
 			var c = GetClient ();
+			if (!path.StartsWith("/", StringComparison.Ordinal))
+			{
+				path = "/" + path;
+			}
 			return Task.Run(async () =>
 			{
 				using (var inputStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
@@ -271,18 +283,33 @@ namespace Praeclarum.IO
 
 		public Task<CreateFolderResult> DropboxCreateDirectoryAsync (string path)
 		{
+			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
+				path = "/" + path;
+			}
 			var c = GetClient();
 			return c.Files.CreateFolderV2Async (path);
 		}
 
 		public Task<DeleteResult> DropboxDeletePathAsync (string path)
 		{
+			if (!path.StartsWith("/", StringComparison.Ordinal))
+			{
+				path = "/" + path;
+			}
 			var c = GetClient ();
 			return c.Files.DeleteV2Async(path);
 		}
 
 		public Task<RelocationResult> DropboxMovePathAsync (string fromPath, string toPath)
 		{
+			if (!fromPath.StartsWith("/", StringComparison.Ordinal))
+			{
+				fromPath = "/" + fromPath;
+			}
+			if (!toPath.StartsWith("/", StringComparison.Ordinal))
+			{
+				toPath = "/" + toPath;
+			}
 			var c = GetClient ();
 			return c.Files.MoveV2Async(fromPath, toPath);
 		}
@@ -320,6 +347,10 @@ namespace Praeclarum.IO
 		{
 			var c = GetClient();
 			var d = directory;
+			if (d != "" && !d.StartsWith("/", StringComparison.Ordinal))
+			{
+				d = "/" + d;
+			}
 			var r = await c.Files.ListFolderAsync (d).ConfigureAwait (false);
 
 			var exts = FileExtensions.Select (x => "." + x).ToDictionary (x => x);
@@ -366,6 +397,10 @@ namespace Praeclarum.IO
 		public async Task<bool> FileExists (string path)
 		{
 			try {
+				if (!path.StartsWith("/", StringComparison.Ordinal))
+				{
+					path = "/" + path;
+				}
 				var c = GetClient();
 				var m = await c.Files.GetMetadataAsync (path).ConfigureAwait (false);
 				return !m.IsDeleted;

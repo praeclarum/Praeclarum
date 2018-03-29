@@ -15,6 +15,8 @@ using Dropbox.Api;
 using Dropbox.Api.Files;
 using Dropbox.Api.FileRequests;
 using Dropbox.Api.Users;
+using SafariServices;
+using System.Threading;
 
 namespace Praeclarum.IO
 {
@@ -81,30 +83,115 @@ namespace Praeclarum.IO
 	{
 		public static DropboxSession SharedSession { get; set; }
 
-		readonly string appSecret;
+		//readonly string appSecret;
 
 		public DropboxSessionRoot Root { get; }
-		public string AccessToken { get; }
+		public string AppKey { get; }
+		public string OAuthState { get; } = Guid.NewGuid ().ToString ();
 
-		public bool IsLinked { get; }
-		public string AccountId { get; }
+		public bool IsLinked { get; private set; }
+		public string AccessToken { get; private set; }
+		public string AccountId { get; private set; }
 
-		public DropboxSession(string accessToken, string appSecret, DropboxSessionRoot root)
+		public DropboxSession(string appKey, string appSecret, DropboxSessionRoot root)
 		{
-			AccessToken = accessToken;
-			this.appSecret = appSecret;
+			AppKey = appKey;
+			//this.appSecret = appSecret;
 			Root = root;
+			AccessToken = "";
 			AccountId = "";
 		}
 
 		public bool HandleOpenUrl (NSUrl url)
 		{
-			return false;
+			var scheme = url.Scheme;
+			if (!scheme.StartsWith ("db-", StringComparison.Ordinal))
+				return false;
+
+			LinkWithUrl (url);
+
+			var tcs = linkTcs;
+			var b = browser;
+
+			if (b != null)
+			{
+				b.DismissViewController(true, () =>
+				{
+					tcs?.TrySetResult(null);
+				});
+			}
+			else
+			{
+				tcs?.TrySetResult(null);
+			}
+			return true;
 		}
 
-		public Task LinkFromControllerAsync (UIViewController vc)
+		void LinkWithUrl (NSUrl url)
 		{
-			return Task.FromResult (0);
+			var parts = url.Fragment.Split('&').Select(x => x.Split('=')).ToDictionary(x => x[0], x => Uri.UnescapeDataString (x[1]));
+			if (parts.TryGetValue("access_token", out var at))
+			{
+				if (parts.TryGetValue("account_id", out var ai))
+				{
+					AccessToken = at;
+					AccountId = ai;
+					IsLinked = true;
+					return;
+				}
+			}
+			IsLinked = false;
+		}
+
+		TaskCompletionSource<object> linkTcs;
+		DropboxAuthBrowserController browser;
+
+		public async Task LinkFromControllerAsync (UIViewController vc)
+		{
+			if (linkTcs != null)
+			{
+				await linkTcs.Task;
+			}
+
+			linkTcs = new TaskCompletionSource<object> ();
+			try
+			{
+				var del = new DropboxAuthBrowserDelegate (linkTcs);
+				browser = new DropboxAuthBrowserController (GetAuthUrl()) { Delegate = del };
+				await vc.PresentViewControllerAsync (browser, true);
+				await linkTcs.Task;
+				Console.WriteLine("WOW");
+			}
+			finally
+			{
+				linkTcs = null;
+			}
+		}
+
+		string GetAuthUrl ()
+		{
+			var r = "https://www.dropbox.com/oauth2/authorize?response_type=token";
+
+			var locale = NSBundle.MainBundle.PreferredLocalizations.FirstOrDefault () ?? "en";
+
+			var queryItems = new Dictionary<string, string> {
+				{"client_id", AppKey},
+				{"redirect_uri", GetRedirectUrl ()},
+				{"disable_signup", "true"},
+				{"locale", locale},
+				{"state", OAuthState},
+			};
+			foreach (var q in queryItems)
+			{
+				r += "&" + Uri.EscapeDataString (q.Key) + "=" + Uri.EscapeDataString (q.Value);
+			}
+
+			return r;
+		}
+
+		string GetRedirectUrl ()
+		{
+			return $"db-{AppKey}://2/token";
 		}
 	}
 
@@ -229,9 +316,6 @@ namespace Praeclarum.IO
 		{
 			var c = GetClient();
 			var d = directory;
-			if (!d.StartsWith ("/", StringComparison.Ordinal)) {
-				d = "/" + d;
-			}
 			var r = await c.Files.ListFolderAsync (d).ConfigureAwait (false);
 
 			var exts = FileExtensions.Select (x => "." + x).ToDictionary (x => x);
@@ -247,18 +331,12 @@ namespace Praeclarum.IO
 
 		public async Task<IFile> GetFile (string path)
 		{
-			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
-				path = "/" + path;
-			}
 			var meta = await DropboxLoadMetadataAsync (path).ConfigureAwait (false);
 			return GetDropboxFile (meta);
 		}
 
 		public async Task<IFile> CreateFile (string path, byte[] contents)
 		{
-			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
-				path = "/" + path;
-			}
 			var src = await Task.Run(() => {
 				var p = Path.GetTempFileName ();
 				File.WriteAllBytes (p, contents);
@@ -269,9 +347,6 @@ namespace Praeclarum.IO
 		}
 		public async Task<bool> CreateDirectory (string path)
 		{
-			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
-				path = "/" + path;
-			}
 			try {
 				await DropboxDeletePathAsync (path).ConfigureAwait (false);
 				return true;
@@ -291,9 +366,6 @@ namespace Praeclarum.IO
 		}
 		public async Task<bool> DeleteFile (string path)
 		{
-			if (!path.StartsWith ("/", StringComparison.Ordinal)) {
-				path = "/" + path;
-			}
 			try {
 				await DropboxDeletePathAsync (path);
 				return true;
@@ -304,12 +376,6 @@ namespace Praeclarum.IO
 		}
 		public async Task<bool> Move (string fromPath, string toPath)
 		{
-			if (!fromPath.StartsWith ("/", StringComparison.Ordinal)) {
-				fromPath = "/" + fromPath;
-			}
-			if (!toPath.StartsWith ("/", StringComparison.Ordinal)) {
-				toPath = "/" + toPath;
-			}
 			try {
 				await DropboxMovePathAsync (fromPath, toPath);
 				return true;
@@ -477,6 +543,29 @@ namespace Praeclarum.IO
 				var newestFile = (DropboxFile)await file.FileSystem.GetFile (file.Path);
 				await file.FileSystem.DropboxUploadFileAsync (file.DropboxPath, newestFile.Rev, LocalPath);
 			}
+		}
+	}
+
+	class DropboxAuthBrowserController : SFSafariViewController
+	{
+		public DropboxAuthBrowserController(string url)
+			: base (NSUrl.FromString (url))
+		{
+		}
+	}
+
+	class DropboxAuthBrowserDelegate : SFSafariViewControllerDelegate
+	{
+		public TaskCompletionSource<object> tcs;
+
+		public DropboxAuthBrowserDelegate(TaskCompletionSource<object> tcs)
+		{
+			this.tcs = tcs;
+		}
+
+		public override void DidFinish(SFSafariViewController controller)
+		{
+			tcs.TrySetResult (null);
 		}
 	}
 }

@@ -42,7 +42,7 @@ namespace Praeclarum.UI
 		public Praeclarum.Graphics.SizeF ThumbnailSize { get; private set; }
 
 		public DocumentThumbnailsView (CGRect frame)
-			: base (frame, new UICollectionViewFlowLayout ())
+			: base (frame, new DocumentThumbnailsViewFlowLayout ())
 		{
 			Items = new List<DocumentsViewItem> ();
 			SelectedDocuments = new ObservableCollection<string> ();
@@ -217,34 +217,6 @@ namespace Praeclarum.UI
 			}
 		}
 
-		/// <summary>
-		/// Gets or sets the content inset.
-		/// http://stackoverflow.com/questions/19483511/uirefreshcontrol-with-uicollectionview-in-ios7
-		/// </summary>
-		public override UIEdgeInsets ContentInset {
-			get {
-				try {
-					return base.ContentInset;
-				} catch (Exception ex) {
-					Log.Error (ex);
-					return new UIEdgeInsets ();
-				}
-			}
-			set {
-				try {
-					if (Tracking) {
-						var diff = value.Top - base.ContentInset.Top;
-						var translation = PanGestureRecognizer.TranslationInView (this);
-						translation.Y -= diff * 3.0f / 2.0f;
-						PanGestureRecognizer.SetTranslation (translation, this);
-					}
-					base.ContentInset = value;
-				} catch (Exception ex) {
-					Log.Error (ex);					
-				}
-			}
-		}
-
 		public DocumentsViewItem GetItemAtPoint (Praeclarum.Graphics.PointF p)
 		{
 			var index = IndexPathForItemAtPoint (Praeclarum.Graphics.RectangleEx.ToPointF (p));
@@ -291,6 +263,33 @@ namespace Praeclarum.UI
 		}
 
 		#endregion
+	}
+
+	class DocumentThumbnailsViewFlowLayout : UICollectionViewFlowLayout
+	{
+		//public override UICollectionViewLayoutAttributes[] LayoutAttributesForElementsInRect (CGRect rect)
+		//{
+		//	var attributes = base.LayoutAttributesForElementsInRect(rect);
+		//	var leftMargin = SectionInset.Left;
+
+		//	nfloat maxY = -1.0f;
+		//	foreach (var layoutAttribute in attributes) {
+		//		if (layoutAttribute.IndexPath.Section == 0) continue;
+
+		//		if (layoutAttribute.Frame.Y >= maxY) {
+		//			leftMargin = SectionInset.Left;
+		//		}
+
+		//		var f = layoutAttribute.Frame;
+		//		f.X = leftMargin;
+		//		layoutAttribute.Frame = f;
+
+		//		leftMargin += layoutAttribute.Frame.Width + MinimumInteritemSpacing;
+		//		maxY = (nfloat)Math.Max(layoutAttribute.Frame.Bottom, maxY);
+		//	}
+
+		//	return attributes;
+		//}
 	}
 
 	class DocumentThumbnailsViewDelegate : UICollectionViewDelegateFlowLayout

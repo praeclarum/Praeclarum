@@ -1354,7 +1354,7 @@ namespace Praeclarum.UI
 
 			var b = Bounds;
 
-			var text = "Syncing...";
+			var text = "Loading...";
 			var font = ios7 ? UIFont.PreferredBody : UIFont.SystemFontOfSize (UIFont.SystemFontSize);
 
 			var size = text.StringSize (font);

@@ -200,6 +200,8 @@ namespace Praeclarum.UI
 				}
 			}
 
+			loadedOnce = true;
+
 			SortNewItems(newItems);
 			SetNewItems(newItems);
 		}
@@ -658,10 +660,12 @@ namespace Praeclarum.UI
 			}
 		}
 
+		bool loadedOnce = false;
+
 		bool IsSyncing {
 			get {
 				var fs = FileSystemManager.Shared.ActiveFileSystem;
-				return Docs.Count == 0 && (fs.IsSyncing || fs is EmptyFileSystem);
+				return fs.IsSyncing || !loadedOnce;
 			}
 		}
 

@@ -28,6 +28,7 @@ namespace Praeclarum.UI
 		public static float Margin = 10;
 
 		readonly bool ios8 = UIDevice.CurrentDevice.CheckSystemVersion (8, 0);
+		readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 
 		public List<DocumentsViewItem> Items {
 			get;
@@ -80,6 +81,10 @@ namespace Praeclarum.UI
 			thumbHeight = (int)(thumbHeight + 0.5f);
 
 			ThumbnailSize = new Praeclarum.Graphics.SizeF ((float)thumbWidth, (float)thumbHeight);
+
+			if (ios11) {
+				ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Always;
+			}
 
 //			Console.WriteLine ("THUMB SIZE = {0}", ThumbnailSize);
 		}

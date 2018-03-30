@@ -200,35 +200,48 @@ namespace Praeclarum.UI
 				}
 			}
 
-			//
-			// Sort them
-			//
-			if (SortOrder == DocumentsSort.Date) {
+			SortNewItems(newItems);
+			SetNewItems(newItems);
+		}
 
-				newItems.Sort ((a, b) => b.ModifiedTime.CompareTo (a.ModifiedTime));
+		void SortNewItems (List<DocumentsViewItem> newItems)
+		{
+			if (SortOrder == DocumentsSort.Date)
+			{
 
-				foreach (var item in newItems) {
-					if (item.SubReferences != null) {
-						item.SubReferences.Sort ((a, b) => b.ModifiedTime.CompareTo (a.ModifiedTime));
+				newItems.Sort((a, b) => b.ModifiedTime.CompareTo(a.ModifiedTime));
+
+				foreach (var item in newItems)
+				{
+					if (item.SubReferences != null)
+					{
+						item.SubReferences.Sort((a, b) => b.ModifiedTime.CompareTo(a.ModifiedTime));
 					}
 				}
 
-			} else {
-				newItems.Sort ((a, b) => string.Compare (a.Reference.Name, b.Reference.Name, StringComparison.OrdinalIgnoreCase));
+			}
+			else
+			{
+				newItems.Sort((a, b) => string.Compare(a.Reference.Name, b.Reference.Name, StringComparison.OrdinalIgnoreCase));
 
-				foreach (var item in newItems) {
-					if (item.SubReferences != null) {
-						item.SubReferences.Sort ((a, b) => string.Compare (a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+				foreach (var item in newItems)
+				{
+					if (item.SubReferences != null)
+					{
+						item.SubReferences.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
 					}
 				}
 			}
+		}
 
+		void SetNewItems (List<DocumentsViewItem> newItems)
+		{
 			items = newItems;
-			Docs = newItems.Select (x => x.Reference).ToList ();		
+			Docs = newItems.Select (x => x.Reference).ToList();
 
-			ReloadData ();
+			ReloadData();
 
-			UpdateToolbar (false);
+			UpdateToolbar(false);
 		}
 
 		DocumentsSort SortOrder { get { return docsView != null ? docsView.Sort : DocumentsSort.Name; } }
@@ -654,13 +667,15 @@ namespace Praeclarum.UI
 
 		bool forcingSort = false;
 
-		async void HandleSortChanged (object sender, EventArgs e)
+		void HandleSortChanged (object sender, EventArgs e)
 		{
 			if (forcingSort)
 				return;
 
 			DocumentAppDelegate.Shared.Settings.DocumentsSort = docsView.Sort;
-			await LoadDocs ();
+			var newItems = new List<DocumentsViewItem> (items);
+			SortNewItems (newItems);
+			SetNewItems (newItems);
 		}
 
 		NSTimer refreshTimer;

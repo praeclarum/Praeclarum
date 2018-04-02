@@ -1683,7 +1683,7 @@ namespace Praeclarum.UI
 			return string.Format ("{0}-{1}{2}",
 				FileSystemManager.Shared.ActiveFileSystem.Id,
 				file.Path.Replace ('/', '-').Replace ('.', '-'),
-				theme.IsDark ? "-Dark14" : "");
+				theme.IsDark ? "-Dark15" : "-Light15");
 		}
 
 		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme)

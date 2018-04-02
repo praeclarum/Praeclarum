@@ -1034,19 +1034,48 @@ namespace Praeclarum.UI
 			{
 				picker.PopoverPresentationController.BarButtonItem = addButton;
 			}
-			picker.DidPickDocumentAtUrls += Picker_DidPickDocumentAtUrls;
-			picker.AllowsMultipleSelection = false;
+
+			if (ios11)
+			{
+				picker.DidPickDocumentAtUrls += Picker_DidPickDocumentAtUrls;
+				picker.AllowsMultipleSelection = false;
+			}
+			else
+			{
+				picker.DidPickDocument += Picker_DidPickDocument;
+			}
 
 			var presenter = docListNav.TopViewController;
 
 			presenter.PresentViewController (picker, true, null);
 		}
 
-		async void Picker_DidPickDocumentAtUrls (object sender, UIDocumentPickedAtUrlsEventArgs e)
+		async void Picker_DidPickDocument (object sender, UIDocumentPickedEventArgs e)
 		{
 			try
 			{
-				var url = e.Urls.First();
+				await PickUrlAsync(e.Url);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
+		}
+
+		async void Picker_DidPickDocumentAtUrls(object sender, UIDocumentPickedAtUrlsEventArgs e)
+		{
+			try
+			{
+				await PickUrlAsync(e.Urls.First ());
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
+		}
+
+		async Task PickUrlAsync(NSUrl url)
+		{
 				var name = Path.GetFileNameWithoutExtension(url.Path);
 
 				var directory = CurrentDirectory;
@@ -1070,11 +1099,6 @@ namespace Praeclarum.UI
 					App.CreateDocument,
 					text));
 
-			}
-			catch (Exception ex)
-			{
-				Log.Error (ex);
-			}
 		}
 
 		public bool ShowAddFromClipboard { get; set; }

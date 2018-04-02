@@ -490,6 +490,10 @@ namespace Praeclarum.IO
 			this.meta = meta;
 
 			Path = meta.PathDisplay;
+			if (Path.StartsWith ("/", StringComparison.Ordinal)) {
+				Path = Path.Substring (1);
+			}
+
 			DropboxPath = Path;
 		}
 

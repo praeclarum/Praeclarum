@@ -37,7 +37,7 @@ namespace Praeclarum.UI
 
 		public UIColor TintColor {
 			get {
-				return Praeclarum.Graphics.ColorEx.GetUIColor (App.TintColor);
+				return Theme.Current.TintColor;
 			}
 		}
 
@@ -219,7 +219,7 @@ namespace Praeclarum.UI
 
 			try {
 				if (ios7) {
-					window.TintColor = Praeclarum.Graphics.ColorEx.GetUIColor (App.TintColor);
+					window.TintColor = TintColor;
 				}
 
 				SetRootViewController ();
@@ -317,6 +317,9 @@ namespace Praeclarum.UI
 		protected virtual void SetTheme (Theme newTheme)
 		{
 			Theme.Current = newTheme;
+			if (window != null)
+				window.TintColor = newTheme.TintColor;
+			
 			newTheme.Apply ();
 			if (docBrowser != null) {
 				if (Settings.DarkMode) {

@@ -18,7 +18,7 @@ namespace Praeclarum.UI
 	}
 
 	[Register ("DocumentsViewController")]
-	public class DocumentsViewController : UIViewController, IUIViewControllerPreviewingDelegate
+	public class DocumentsViewController : UIViewController, IUIViewControllerPreviewingDelegate, IThemeAware
 	{
 		IDocumentsView docsView;
 		IUIViewControllerPreviewing docsPreview;
@@ -383,11 +383,13 @@ namespace Praeclarum.UI
 		void SetNormalNavItems (bool animated)
 		{
 			if (ios7) {
-				var tint = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor);
+				var theme = Theme.Current;
+				var tint = theme.TintColor;
 
 				actionBtn.TintColor = tint;
 				addBtn.TintColor = tint;
 				EditButtonItem.TintColor = tint;
+				thereforeBtn.TintColor = tint;
 			}
 
 			NavigationItem.LeftItemsSupplementBackButton = true;
@@ -408,6 +410,7 @@ namespace Praeclarum.UI
 				dupBtn.TintColor = UIColor.White;
 				moveBtn.TintColor = UIColor.White;
 				deleteBtn.TintColor = UIColor.White;
+				thereforeBtn.TintColor = UIColor.White;
 			}
 
 			NavigationItem.LeftItemsSupplementBackButton = false;
@@ -1077,6 +1080,22 @@ namespace Praeclarum.UI
 			docsView.Items = items;
 			docsView.ShowPatron = showPatron;
 			docsView.ReloadData ();
+		}
+
+		public void ApplyTheme(Theme theme)
+		{
+			var tint = theme.TintColor;
+
+			if (selecting || Editing)
+			{
+			}
+			else
+			{
+				actionBtn.TintColor = tint;
+				addBtn.TintColor = tint;
+				EditButtonItem.TintColor = tint;
+				thereforeBtn.TintColor = tint;
+			}
 		}
 	}
 

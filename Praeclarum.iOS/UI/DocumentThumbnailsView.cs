@@ -708,13 +708,14 @@ namespace Praeclarum.UI
 		protected ThumbnailCell (IntPtr handle)
 			: base (handle)
 		{
-			ApplyTheme (DocumentAppDelegate.Shared.Theme);
+			var theme = DocumentAppDelegate.Shared.Theme;
+			ApplyTheme (theme);
 
 			var b = Bounds;
 
 			label = new UILabel (new CGRect (0, b.Bottom - DocumentThumbnailsView.LabelHeight+1, b.Width, DocumentThumbnailsView.LabelHeight-1)) {
 				Text = "",
-				TextColor = Praeclarum.Graphics.ColorEx.GetUIColor (DocumentAppDelegate.Shared.App.TintColor),
+				TextColor = theme.TintColor,
 				Font = ios7 ? UIFont.PreferredCaption2 : UIFont.SystemFontOfSize (10),
 				Lines = 2,
 				TextAlignment = UITextAlignment.Center,
@@ -732,6 +733,7 @@ namespace Praeclarum.UI
 			BackgroundColor = theme.DocumentsBackgroundColor;
 			if (label != null) {
 				label.BackgroundColor = theme.DocumentsBackgroundColor;
+				label.TextColor = theme.TintColor;
 			}
 		}
 
@@ -841,7 +843,7 @@ namespace Praeclarum.UI
 					
 					c.SetLineWidth (2.0f);
 					
-					var color = Praeclarum.Graphics.ColorEx.GetUIColor (appdel.App.TintColor);
+					var color = theme.TintColor;
 					
 					color.SetStroke ();
 					

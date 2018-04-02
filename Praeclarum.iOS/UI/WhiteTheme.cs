@@ -37,14 +37,16 @@ namespace Praeclarum.UI
 			IsDark = dark;
 			TintColor = UIColor.Red;
 			var appdel = DocumentAppDelegate.Shared;
-			if (appdel != null && appdel.App != null) {
-				TintColor = Praeclarum.Graphics.ColorEx.GetUIColor (appdel.App.TintColor);
-			}
+
 			if (dark) {
+				if (appdel != null && appdel.App != null)
+				{
+					TintColor = Praeclarum.Graphics.ColorEx.GetUIColor(appdel.App.VibrantTintColor);
+				}
 				StatusBarStyle = UIStatusBarStyle.LightContent;
 				PopoverBackgroundColor = UIColor.Black;
 				NavigationBackgroundColor = null;
-				NavigationTextColor = UIColor.Gray;
+				NavigationTextColor = UIColor.White;
 				DocumentsBackgroundColor = UIColor.FromRGB (42, 42, 42);
 				DocumentsFolderColor = UIColor.FromRGB(92, 92, 92);
 				DocumentsFrameSideColor = UIColor.Black;
@@ -57,9 +59,13 @@ namespace Praeclarum.UI
 				TableCellTextColor = UIColor.White;
 				TableCellDetailTextColor = UIColor.LightGray;
 				TableSeparatorColor = UIColor.FromWhiteAlpha (0.25f, 1.0f);
-				DocumentBackgroundColor = new UIColor ((nfloat)0x22 / 255.0f, (nfloat)0x22 / 255.0f, (nfloat)0x22 / 255.0f, 1);
+				DocumentBackgroundColor = UIColor.FromRGB(0, 0, 0);
 				KeyboardAppearance = UIKeyboardAppearance.Dark;
 			} else {
+				if (appdel != null && appdel.App != null)
+				{
+					TintColor = Praeclarum.Graphics.ColorEx.GetUIColor(appdel.App.TintColor);
+				}
 				StatusBarStyle = UIStatusBarStyle.Default;
 				PopoverBackgroundColor = null;
 				NavigationBarStyle = UIBarStyle.Default;

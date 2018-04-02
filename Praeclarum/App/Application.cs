@@ -11,6 +11,7 @@ namespace Praeclarum.App
 		public virtual string Name { get { return "App"; } }
 		public virtual string UrlScheme { get { return "app"; } }
 		public virtual Color TintColor { get { return Colors.Blue; } }
+		public virtual Color VibrantTintColor { get { return Colors.Blue; } }
 	}
 }
 

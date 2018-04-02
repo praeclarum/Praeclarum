@@ -1020,6 +1020,60 @@ namespace Praeclarum.UI
 				GetNewDocumentText ()));
 		}
 
+		public async Task ImportAndOpenDocument (UIBarButtonItem addButton)
+		{
+			DismissSheetsAndPopovers();
+
+			var utis = App.ContentTypes.ToArray ();
+			var picker = new UIDocumentPickerViewController(utis, UIDocumentPickerMode.Import);
+
+			if (picker.PopoverPresentationController != null)
+			{
+				picker.PopoverPresentationController.BarButtonItem = addButton;
+			}
+			picker.DidPickDocumentAtUrls += Picker_DidPickDocumentAtUrls;
+			picker.AllowsMultipleSelection = false;
+
+			var presenter = docListNav.TopViewController;
+
+			presenter.PresentViewController (picker, true, null);
+		}
+
+		async void Picker_DidPickDocumentAtUrls (object sender, UIDocumentPickedAtUrlsEventArgs e)
+		{
+			try
+			{
+				var url = e.Urls.First();
+				var name = Path.GetFileNameWithoutExtension(url.Path);
+
+				var directory = CurrentDirectory;
+
+				var text = await Task.Run(() =>
+			   {
+				   using (var d = NSData.FromUrl(url))
+				   {
+					   using (var r = new StreamReader(d.AsStream()))
+					   {
+						   return r.ReadToEnd();
+					   }
+				   }
+			   });
+
+				await AddAndOpenDocRef(await DocumentReference.New(
+					directory,
+					name,
+					App.DefaultExtension,
+					ActiveFileSystem,
+					App.CreateDocument,
+					text));
+
+			}
+			catch (Exception ex)
+			{
+				Log.Error (ex);
+			}
+		}
+
 		public bool ShowAddFromClipboard { get; set; }
 
 		public void ShowAddUI (UIBarButtonItem addButton, bool dup, bool folder)
@@ -1065,9 +1119,13 @@ namespace Praeclarum.UI
 
 			if (folder && GetDirectoryDepth (directory) < ActiveFileSystem.MaxDirectoryDepth) {
 				form.Add (new FormAction (
-					"Folder",
+					"Create Folder",
 					AddFolder));
 			}
+
+			form.Add(new FormAction(
+					"Import...",
+					async () => await ImportAndOpenDocument(addButton)));
 
 			if (form.Count > 1) {
 				form.Title = "Add";

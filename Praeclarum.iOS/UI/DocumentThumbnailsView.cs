@@ -777,7 +777,7 @@ namespace Praeclarum.UI
 		{
 			frameView = new AddFrameView ();
 
-			label.Text = "Create New";
+			label.Text = "New " + DocumentAppDelegate.Shared.App.DocumentBaseName;
 			label.TextColor = DocumentAppDelegate.Shared.Theme.NavigationTextColor;
 
 			SetThumbnail ();

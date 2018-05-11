@@ -221,6 +221,7 @@ namespace Praeclarum.Graphics
 		public List<Color> Colors = new List<Color> (2);
 		public PointF Start;
 		public PointF End;
+        public object Tag;
 		public void Add (float location, Color color) {
 			Locations.Add (location);
 			Colors.Add (color);

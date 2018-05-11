@@ -31,7 +31,7 @@ namespace Praeclarum.Graphics
 
         System.Drawing.Pen pen = new System.Drawing.Pen (System.Drawing.Color.Black, 1);
         Color color = Colors.Black;
-        //Gradient gradient = null;
+        Gradient gradient = null;
         GdipFontMetrics font = null;
 
         public GdipGraphics (System.Drawing.Graphics g)
@@ -49,11 +49,13 @@ namespace Praeclarum.Graphics
         public void SetColor (Color c)
         {
             this.color = c;
+            gradient = null;
         }
 
-        public void SetGradient (Gradient g)
+        public void SetGradient (Gradient grad)
         {
-            color = g.Colors.First ();
+            gradient = grad;
+            color = grad.Colors.First ();
         }
 
         public void Clear (Color c)
@@ -63,11 +65,22 @@ namespace Praeclarum.Graphics
 
         public void FillPolygon (Polygon poly)
         {
+            var minX = float.MaxValue;
+            var minY = float.MaxValue;
+            var maxX = float.MinValue;
+            var maxY = float.MinValue;
             var points = new System.Drawing.PointF[poly.Points.Count];
             for (var i = 0; i < points.Length; i++) {
-                points[i] = new System.Drawing.PointF (poly.Points[i].X, poly.Points[i].Y);
+                float x = poly.Points[i].X;
+                float y = poly.Points[i].Y;
+                minX = Math.Min (minX, x);
+                minY = Math.Min (minY, y);
+                maxX = Math.Max (maxX, x);
+                maxY = Math.Max (maxY, y);
+                points[i] = new System.Drawing.PointF (x, y);
             }
-            g.FillPolygon (color.GetBrush (), points);
+            var bounds = new System.Drawing.RectangleF (minX, minY, maxX - minX, maxY - minY);
+            g.FillPolygon (GetBrush (bounds), points);
         }
 
         public void DrawPolygon (Polygon poly, float w)
@@ -81,17 +94,21 @@ namespace Praeclarum.Graphics
 
         public void FillRoundedRect (float x, float y, float width, float height, float radius)
         {
-            g.FillRectangle (color.GetBrush (), new System.Drawing.RectangleF (x, y, width, height));
+            var rect = new System.Drawing.RectangleF (x, y, width, height);
+            var path = CreateRoundedRectPath (x, y, width, height, radius);
+            g.FillPath (GetBrush (rect), path);
         }
 
         public void DrawRoundedRect (float x, float y, float width, float height, float radius, float w)
         {
-            g.DrawRectangle (color.GetPen (w), x, y, width, height);
+            var path = CreateRoundedRectPath (x, y, width, height, radius);
+            g.DrawPath (color.GetPen (w), path);
         }
 
         public void FillRect (float x, float y, float width, float height)
         {
-            g.FillRectangle (color.GetBrush (), new System.Drawing.RectangleF (x, y, width, height));
+            var rect = new System.Drawing.RectangleF (x, y, width, height);
+            g.FillRectangle (GetBrush (rect), rect);
         }
 
         public void FillOval (float x, float y, float width, float height)
@@ -133,12 +150,12 @@ namespace Praeclarum.Graphics
 
         public void DrawString (string s, float x, float y)
         {
-            g.DrawString (s, font.Font, color.GetBrush (), new System.Drawing.PointF (x, y - font.Height * 0.25f));
+            g.DrawString (s, font.Font, color.GetBrush (), new System.Drawing.PointF (x, y - font.Height * 0.175f));
         }
 
         public void DrawString (string s, float x, float y, float width, float height, LineBreakMode lineBreak, TextAlignment align)
         {
-            g.DrawString (s, font.Font, color.GetBrush (), new System.Drawing.PointF (x, y - font.Height * 0.25f));
+            g.DrawString (s, font.Font, GetBrush (new System.Drawing.RectangleF (x, y, width, height)), new System.Drawing.PointF (x, y - font.Height * 0.175f));
         }
 
         public IFontMetrics GetFontMetrics ()
@@ -177,6 +194,74 @@ namespace Praeclarum.Graphics
 
         public void BeginEntity (object entity)
         {
+        }
+
+        System.Drawing.Brush GetBrush (System.Drawing.RectangleF bounds)
+        {
+            if (gradient != null) {
+                if (gradient.Tag is System.Drawing.Brush brush)
+                    return brush;
+
+                var n = gradient.Colors.Count;
+                var p1 = new System.Drawing.PointF (gradient.Start.X, gradient.Start.Y);
+                var p2 = new System.Drawing.PointF (gradient.End.X, gradient.End.Y);
+                var c1 = gradient.Colors[0].GetGdipColor ();
+                var c2 = gradient.Colors[n-1].GetGdipColor ();
+
+                var distance = gradient.Start.DistanceTo (gradient.End);
+
+                var blend = new System.Drawing.Drawing2D.ColorBlend (n);
+                blend.Colors[0] = c1;
+                for (var i = 1; i < n - 1; i++) {
+                    blend.Colors[i] = gradient.Colors[i].GetGdipColor ();
+                }
+                blend.Colors[n-1] = c2;
+                blend.Positions[0] = 0;
+                for (var i = 1; i < n - 1; i++) {
+                    blend.Positions[i] = gradient.Locations[i];
+                }
+                blend.Positions[n-1] = 1;
+
+                var b = new System.Drawing.Drawing2D.LinearGradientBrush (p1, p2, c1, c2);
+                b.InterpolationColors = blend;
+                gradient.Tag = b;
+                return b;
+            }
+            return color.GetBrush ();
+        }
+
+        public static System.Drawing.Drawing2D.GraphicsPath CreateRoundedRectPath (float x, float y, float width, float height, float radius)
+        {
+            var xw = x + width;
+            var yh = y + height;
+            var xwr = xw - radius;
+            var yhr = yh - radius;
+            var xr = x + radius;
+            var yr = y + radius;
+            var r2 = radius * 2;
+            var xwr2 = xw - r2;
+            var yhr2 = yh - r2;
+
+            var p = new System.Drawing.Drawing2D.GraphicsPath ();
+            p.StartFigure ();
+
+            p.AddArc (x, y, r2, r2, 180, 90);
+
+            p.AddLine (xr, y, xwr, y);
+
+            p.AddArc (xwr2, y, r2, r2, 270, 90);
+
+            p.AddLine (xw, yr, xw, yhr);
+
+            p.AddArc (xwr2, yhr2, r2, r2, 0, 90);
+
+            p.AddLine (xwr, yh, xr, yh);
+
+            p.AddArc (x, yhr2, r2, r2, 90, 90);
+            p.AddLine (x, yhr, x, yr);
+
+            p.CloseFigure ();
+            return p;
         }
     }
 

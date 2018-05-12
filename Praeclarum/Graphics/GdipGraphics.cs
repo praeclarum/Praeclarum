@@ -199,7 +199,8 @@ namespace Praeclarum.Graphics
         System.Drawing.Brush GetBrush (System.Drawing.RectangleF bounds)
         {
             if (gradient != null) {
-                if (gradient.Tag is System.Drawing.Brush brush)
+                var brush = gradient.Tag as System.Drawing.Brush;
+                if (brush != null)
                     return brush;
 
                 var n = gradient.Colors.Count;
@@ -339,11 +340,11 @@ namespace Praeclarum.Graphics
             Font = new System.Drawing.Font ("Arial", sourceFont.Size / (1.1f * scale), style);
         }
 
-        public int Height => Font.Height;
+        public int Height { get { return Font.Height; } }
 
-        public int Ascent => Height;
+        public int Ascent { get { return Height; } }
 
-        public int Descent => 0;
+        public int Descent { get { return 0; } }
 
         public int StringWidth (string s, int startIndex, int length)
         {

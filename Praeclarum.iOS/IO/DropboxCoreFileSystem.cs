@@ -102,7 +102,8 @@ namespace Praeclarum.IO
 			AccessToken = "";
 			AccountId = "";
 
-			var lastUrl = NSUserDefaults.StandardUserDefaults.StringForKey(LastDropboxAuthResponseUrlKey);
+			// .Result is used because the implementation Just does Task.FromResult
+			var lastUrl = Xamarin.Essentials.SecureStorage.GetAsync (LastDropboxAuthResponseUrlKey).Result;
 			LinkWithUrl (lastUrl);
 		}
 
@@ -115,7 +116,7 @@ namespace Praeclarum.IO
 			LinkWithUrl (url.AbsoluteString);
 			if (IsLinked)
 			{
-				NSUserDefaults.StandardUserDefaults.SetString (url.AbsoluteString, LastDropboxAuthResponseUrlKey);
+				Xamarin.Essentials.SecureStorage.SetAsync (LastDropboxAuthResponseUrlKey, url.AbsoluteString);
 			}
 
 			var tcs = linkTcs;

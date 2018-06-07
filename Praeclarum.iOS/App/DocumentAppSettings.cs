@@ -105,6 +105,15 @@ namespace Praeclarum.App
 			}
 		}
 
+		public bool DisableAnalytics {
+			get {
+				return defs.BoolForKey ("DisableAnalytics");
+			}
+			set {
+				defs.SetBool (value, "DisableAnalytics");
+			}
+		}
+
 		public bool AskedToUseCloud {
 			get {
 				return defs.BoolForKey ("AskedToUseCloud");

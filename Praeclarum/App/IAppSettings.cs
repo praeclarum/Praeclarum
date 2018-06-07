@@ -31,6 +31,8 @@ namespace Praeclarum.App
 			get;
 			set;
 		}
+
+		bool DisableAnalytics { get; set; }
 	}
 
 	public interface IAppSettings

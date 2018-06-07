@@ -50,5 +50,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)App\StoreManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\PatronForm.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\StorageSection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\AnalyticsSection.cs" />
   </ItemGroup>
 </Project>

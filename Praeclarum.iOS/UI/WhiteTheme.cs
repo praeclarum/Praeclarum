@@ -55,11 +55,13 @@ namespace Praeclarum.UI
 				NavigationBarStyle = UIBarStyle.Black;
 				TableHeadingTextColor = UIColor.Gray;
 				GroupedTableBackgroundColor = UIColor.FromRGB(42, 42, 42);
+				PlainTableBackgroundColor = UIColor.FromRGB (32, 32, 32);
 				TableCellBackgroundColor = UIColor.FromRGB(64, 64, 64);
 				TableCellTextColor = UIColor.White;
 				TableCellDetailTextColor = UIColor.LightGray;
 				TableSeparatorColor = UIColor.FromWhiteAlpha (0.25f, 1.0f);
 				DocumentBackgroundColor = UIColor.FromRGB(0, 0, 0);
+				DocumentTextColor = UIColor.LightTextColor;
 				KeyboardAppearance = UIKeyboardAppearance.Dark;
 			} else {
 				if (appdel != null && appdel.App != null)
@@ -78,11 +80,13 @@ namespace Praeclarum.UI
 				DocumentsFrameSideColor = UIColor.FromRGB ((nfloat)202 / 255.0f, (nfloat)202 / 255.0f, (nfloat)202 / 255.0f);
 				DocumentsFrameBottomColor = UIColor.FromRGB ((nfloat)176 / 255.0f, (nfloat)176 / 255.0f, (nfloat)176 / 255.0f);
 				GroupedTableBackgroundColor = UIColor.GroupTableViewBackgroundColor;
+				PlainTableBackgroundColor = UIColor.White;
 				TableCellBackgroundColor = UIColor.White;
 				TableCellTextColor = UIColor.DarkTextColor;
 				TableCellDetailTextColor = UIColor.LightGray;
 				TableSeparatorColor = UIColor.FromWhiteAlpha (0.85f, 1.0f);
 				DocumentBackgroundColor = UIColor.White;
+				DocumentTextColor = UIColor.DarkTextColor;
 				KeyboardAppearance = UIKeyboardAppearance.Default;
 			}
 		}
@@ -239,17 +243,19 @@ namespace Praeclarum.UI
 		public UIColor DocumentsFrameSideColor  { get; protected set; }
 		public UIColor DocumentsFrameBottomColor  { get; protected set; }
 		public UIColor GroupedTableBackgroundColor  { get; protected set; }
+		public UIColor PlainTableBackgroundColor { get; protected set; }
 		public UIColor TableCellBackgroundColor  { get; protected set; }
 		public UIColor TableCellTextColor  { get; protected set; }
 		public UIColor TableCellDetailTextColor  { get; protected set; }
 		public UIColor TableSeparatorColor  { get; protected set; }
 		public UIColor DocumentBackgroundColor { get; protected set; }
+		public UIColor DocumentTextColor { get; protected set; }
 		public UIKeyboardAppearance KeyboardAppearance { get; protected set; }
 		public UIColor TintColor { get; protected set; }
 
 		public virtual void Apply (UITableView tableView)
 		{
-			var c = GroupedTableBackgroundColor;
+			var c = tableView.Style == UITableViewStyle.Grouped ? GroupedTableBackgroundColor : PlainTableBackgroundColor;
 			if (tableView.BackgroundView == null) {
 				tableView.BackgroundView = new UIView { BackgroundColor = c };
 			} else {

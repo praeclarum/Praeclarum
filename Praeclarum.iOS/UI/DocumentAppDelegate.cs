@@ -9,6 +9,7 @@ using System.Linq;
 using Praeclarum.App;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Praeclarum.UI
 {
@@ -1686,6 +1687,8 @@ namespace Praeclarum.UI
 				theme.IsDark ? "-Dark15" : "-Light15");
 		}
 
+		readonly SemaphoreSlim thumbGate = new SemaphoreSlim (4);
+
 		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme)
 		{
 			UIImage r = null;
@@ -1698,25 +1701,31 @@ namespace Praeclarum.UI
 			// Draw the document
 			//
 			try {
-				local = await docRef.File.BeginLocalAccess ();
+				await thumbGate.WaitAsync ().ConfigureAwait (false);
+
+				local = await docRef.File.BeginLocalAccess ().ConfigureAwait (false);
 				var f = local.LocalPath;
 
 				doc = App.CreateDocument (f);
-				await doc.OpenAsync ();
+				await doc.OpenAsync ().ConfigureAwait (false);
 				opened = true;
 
-//				Console.WriteLine ("GenerateThumbnail: " + docRef.File.Path + " " + docRef.File.ModifiedTime);
+				//				Console.WriteLine ("GenerateThumbnail: " + docRef.File.Path + " " + docRef.File.ModifiedTime);
 
 				r = await GenerateDocumentThumbnailAsync (doc, size, theme);
 
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Debug.WriteLine ("FAILED to genenerate thumbnail for {0}, {1}", docRef.File.Path, ex.Message);
-//				Debug.WriteLine (ex);
+				//				Debug.WriteLine (ex);
+			}
+			finally {
+				thumbGate.Release ();
 			}
 
 			if (opened) {
 				try {
-					await doc.CloseAsync ();					
+					await doc.CloseAsync ().ConfigureAwait (false);
 				} catch (Exception ex) {
 					Console.WriteLine (ex);
 				}
@@ -1724,7 +1733,7 @@ namespace Praeclarum.UI
 
 			if (local != null) {
 				try {
-					await local.End ();
+					await local.End ().ConfigureAwait (false);
 				} catch (Exception ex) {
 					Console.WriteLine (ex);
 				}

@@ -1689,7 +1689,7 @@ namespace Praeclarum.UI
 
 		readonly SemaphoreSlim thumbGate = new SemaphoreSlim (4);
 
-		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme)
+		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme, nfloat scale)
 		{
 			UIImage r = null;
 
@@ -1712,12 +1712,12 @@ namespace Praeclarum.UI
 
 				//				Console.WriteLine ("GenerateThumbnail: " + docRef.File.Path + " " + docRef.File.ModifiedTime);
 
-				r = await GenerateDocumentThumbnailAsync (doc, size, theme);
+				r = await GenerateDocumentThumbnailAsync (doc, size, theme, scale);
 
 			}
 			catch (Exception ex) {
-				Debug.WriteLine ("FAILED to genenerate thumbnail for {0}, {1}", docRef.File.Path, ex.Message);
-				//				Debug.WriteLine (ex);
+				Console.WriteLine ("FAILED to genenerate thumbnail for {0}, {1}", docRef.File.Path, ex.Message);
+				Console.WriteLine (ex);
 			}
 			finally {
 				thumbGate.Release ();
@@ -1742,9 +1742,8 @@ namespace Praeclarum.UI
 			return r;
 		}
 
-		async Task<UIImage> GenerateDocumentThumbnailAsync (IDocument s, Praeclarum.Graphics.SizeF size, Theme theme)
+		async Task<UIImage> GenerateDocumentThumbnailAsync (IDocument s, Praeclarum.Graphics.SizeF size, Theme theme, nfloat scale)
 		{
-			var scale = UIScreen.MainScreen.Scale;
 			return await Task.Run (() => {
 
 				var width = (int)(size.Width * scale);

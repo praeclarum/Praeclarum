@@ -1030,6 +1030,8 @@ namespace Praeclarum.UI
 
 			var theme = DocumentAppDelegate.Shared.Theme;
 
+			var scale = UIScreen.MainScreen.Scale;
+
 			var thumbKey = appDel.GetThumbnailKey (doc.File, theme);
 
 			var memImage = Cache.GetMemoryImage (thumbKey);
@@ -1041,7 +1043,7 @@ namespace Praeclarum.UI
 			var thumbImage = await Cache.GetImageAsync (thumbKey, doc.ModifiedTime);
 
 			if (thumbImage == null) {
-				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme);
+				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme, scale);
 				if (thumbImage != null) {
 					if (doc != null && path == doc.File.Path) {
 						SetThumbnail (thumbImage);
@@ -1234,9 +1236,11 @@ namespace Praeclarum.UI
 			var startDir = Item.Reference.File.Path;
 			UIImage[] thumbnails = null;
 
+			var scale = UIScreen.MainScreen.Scale;
+
 			try {
 				var fileTasks = from dr in item.SubReferences.Take (9)
-					select GetThumbnail (new DocumentReference (dr.File, DocumentAppDelegate.Shared.App.CreateDocument, false), appDel.Theme);
+					select GetThumbnail (new DocumentReference (dr.File, DocumentAppDelegate.Shared.App.CreateDocument, false), appDel.Theme, scale);
 
 				thumbnails = await Task.WhenAll (fileTasks);
 
@@ -1250,7 +1254,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		async Task<UIImage> GetThumbnail (DocumentReference doc, Theme theme)
+		async Task<UIImage> GetThumbnail (DocumentReference doc, Theme theme, nfloat scale)
 		{
 			var appDel = DocumentAppDelegate.Shared;
 			var Cache = appDel.ThumbnailCache;
@@ -1260,7 +1264,7 @@ namespace Praeclarum.UI
 			var thumbImage = await Cache.GetImageAsync (thumbKey, doc.ModifiedTime);
 
 			if (thumbImage == null) {
-				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme);
+				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme, scale);
 				if (thumbImage != null) {
 					await Cache.SetGeneratedImageAsync (thumbKey, thumbImage, saveToDisk: true);
 				}

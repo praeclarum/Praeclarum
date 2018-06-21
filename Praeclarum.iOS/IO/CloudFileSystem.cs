@@ -60,7 +60,7 @@ namespace Praeclarum.IO
 			var askCloudAlert = new UIAlertView (
 				"iCloud",
 				"Should documents be stored in iCloud and made available on all your devices?",
-				null,
+				(IUIAlertViewDelegate)null,
 				"Local Only",
 				"Use iCloud");
 
@@ -194,31 +194,22 @@ namespace Praeclarum.IO
 			var f = new CloudFile (path, documentsUrl);
 
 			if (contents != null) {
-				Task.Factory.StartNew (() => {
-					var c = new NSFileCoordinator (filePresenterOrNil: null);
-					NSError coordErr;
-					c.CoordinateWrite (f.LocalUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl => {
-
-						var newPath = newUrl.Path;
-
-//						Console.WriteLine ("CLOUD WRITE TO " + newUrl + "    from: " + f.LocalUrl + "    at: " + newPath);
-
-						var dir = Path.GetDirectoryName (newPath);
-						if (!string.IsNullOrEmpty (dir) && dir != "/" && !Directory.Exists (dir)) {
-							Directory.CreateDirectory (dir);
+				var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
+				NSError coordErr;
+				c.CoordinateWrite (f.LocalUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl => {
+					using (var d = NSData.FromArray (contents)) {
+						NSError error;
+						if (d.Save (newUrl, false, out error)) {
+							tcs.SetResult (f);
 						}
-
-						try {
-							File.WriteAllBytes (newPath, contents);
-							tcs.SetResult (f);							
-						} catch (Exception ex) {
-							tcs.SetException (ex);
+						else {
+							tcs.SetException (new CloudException ("Failed to create new file", error));
 						}
-					});
-					if (coordErr != null) {
-						tcs.SetException (new Exception ("Could not coordinate iCloud write for CreateFile: " + coordErr.DebugDescription));
 					}
 				});
+				if (coordErr != null) {
+					tcs.TrySetException (new CloudException ("Could not coordinate iCloud write for CreateFile", coordErr));
+				}
 			} else {
 				tcs.SetResult (f);
 			}
@@ -234,30 +225,26 @@ namespace Praeclarum.IO
 
 			var url = NSUrl.FromFilename (localPath);
 
+			var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
+			NSError coordErr;
+			c.CoordinateWrite (url, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl => {
+				try {
+					var man = new NSFileManager ();
+					NSError mkdirErr;
+					var r = man.CreateDirectory (newUrl, true, null, out mkdirErr);
+					Debug.WriteLineIf (!r, mkdirErr);
 
-			Task.Factory.StartNew (() => {
-				var c = new NSFileCoordinator (filePresenterOrNil: null);
-				NSError coordErr;
-				c.CoordinateWrite (url, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl => {
-					try {
-						if (Directory.Exists (newUrl.Path)) {
-							tcs.SetResult (true);
-							return;
-						}
+					tcs.SetResult (r);
 
-						var man = new NSFileManager ();
-						NSError mkdirErr;
-						var r = man.CreateDirectory (newUrl, false, null, out mkdirErr);
-						Debug.WriteLineIf (!r, mkdirErr);
-
-						tcs.SetResult (r);
-
-					} catch (Exception ex) {
-						Debug.WriteLine (ex);
-						tcs.SetResult (false);
-					}
-				});
+				} catch (Exception ex) {
+					Console.WriteLine (ex);
+					tcs.SetResult (false);
+				}
 			});
+			if (coordErr != null) {
+				Console.WriteLine (coordErr.DebugDescription);
+				tcs.TrySetResult (false);
+			}
 
 			return tcs.Task;
 		}
@@ -272,27 +259,51 @@ namespace Praeclarum.IO
 			var fromUrl = NSUrl.FromFilename (fromLocalPath);
 			var toUrl = NSUrl.FromFilename (toLocalPath);
 
-			Task.Run (() => {
-				var c = new NSFileCoordinator (filePresenterOrNil: null);
-				NSError coordErr;
-				c.CoordinateReadWrite (fromUrl, NSFileCoordinatorReadingOptions.WithoutChanges, toUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, (newFromUrl, newToUrl) => {
-					try {
-						var man = new NSFileManager ();
-						NSError moveErr;
+			var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
+			NSError coordErr;
+			c.CoordinateReadWrite (fromUrl, NSFileCoordinatorReadingOptions.WithoutChanges, toUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, (newFromUrl, newToUrl) => {
+				try {
+					var man = new NSFileManager ();
+					NSError moveErr;
 
-						var r = man.Move (newFromUrl, newToUrl, out moveErr);
-						Debug.WriteLineIf (!r, moveErr);
+					var r = man.Move (newFromUrl, newToUrl, out moveErr);
+					Debug.WriteLineIf (!r, moveErr);
 
-						needsRefresh = true;
+					needsRefresh = true;
 
-						tcs.SetResult (r);
+					tcs.SetResult (r);
 
-					} catch (Exception ex) {
-						Debug.WriteLine (ex);
-						tcs.SetResult (false);
-					}
-				});
+				} catch (Exception ex) {
+					Debug.WriteLine (ex);
+					tcs.SetResult (false);
+				}
 			});
+			if (coordErr != null) {
+				tcs.TrySetResult (false);
+			}
+
+			return tcs.Task;
+		}
+
+		public Task<bool> DeleteFile (string path)
+		{
+			var localUrl = documentsUrl.Append (path, false);
+
+			var tcs = new TaskCompletionSource<bool> ();
+
+			var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
+			NSError coordErr;
+			c.CoordinateWrite (localUrl, NSFileCoordinatorWritingOptions.ForDeleting, out coordErr, newUrl => {
+				bool r = false;
+				using (var m = new NSFileManager ()) {
+					NSError remErr;
+					r = m.Remove (newUrl, out remErr);
+				}
+				tcs.SetResult (r);
+			});
+			if (coordErr != null) {
+				tcs.TrySetResult (false);
+			}
 
 			return tcs.Task;
 		}
@@ -408,31 +419,6 @@ namespace Praeclarum.IO
 				ev (this, EventArgs.Empty);
 			}
 		}
-
-		public Task<bool> DeleteFile (string path)
-		{
-			var localUrl = documentsUrl.Append (path, false);
-
-			var tcs = new TaskCompletionSource<bool> ();
-
-			Task.Factory.StartNew (() => {
-				var c = new NSFileCoordinator (filePresenterOrNil: null);
-				NSError coordErr;
-				c.CoordinateWrite (localUrl, NSFileCoordinatorWritingOptions.ForDeleting, out coordErr, newUrl => {
-					bool r = false;
-					using (var m = new NSFileManager ()) {
-						NSError remErr;
-						r = m.Remove (newUrl, out remErr);
-					}
-					tcs.SetResult (r);
-				});
-				if (coordErr != null) {
-					tcs.SetResult (false);
-				}
-			});
-
-			return tcs.Task;
-		}
 	}
 
 	public class CloudFile : IFile
@@ -510,18 +496,19 @@ namespace Praeclarum.IO
 		{
 			var tcs = new TaskCompletionSource<bool> ();
 
-			Task.Factory.StartNew (() => {
-				var c = new NSFileCoordinator (filePresenterOrNil: null);
-				NSError coordErr;
-				c.CoordinateWrite (LocalUrl, NSFileCoordinatorWritingOptions.ForDeleting, out coordErr, newUrl => {
-					bool r = false;
-					using (var m = new NSFileManager ()) {
-						NSError remErr;
-						r = m.Remove (newUrl, out remErr);
-					}
-					tcs.SetResult (r);
-				});
+			var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
+			NSError coordErr;
+			c.CoordinateWrite (LocalUrl, NSFileCoordinatorWritingOptions.ForDeleting, out coordErr, newUrl => {
+				bool r = false;
+				using (var m = new NSFileManager ()) {
+					NSError remErr;
+					r = m.Remove (newUrl, out remErr);
+				}
+				tcs.SetResult (r);
 			});
+			if (coordErr != null) {
+				tcs.TrySetResult (false);
+			}
 
 			return tcs.Task;
 		}
@@ -532,23 +519,24 @@ namespace Praeclarum.IO
 
 			NSUrl newUrl = documentsUrl.Append (newPath, false);
 
-			Task.Factory.StartNew (() => {
-				var c = new NSFileCoordinator (filePresenterOrNil: null);
-				NSError coordErr;
-				c.CoordinateWriteWrite (LocalUrl, NSFileCoordinatorWritingOptions.ForMoving, newUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, (url1, url2) => {
-					bool r = false;
-					using (var m = new NSFileManager ()) {
-						NSError remErr;
-						r = m.Move (url1, url2, out remErr);
-						if (r) {
-							Path = newPath;
-							LocalUrl = newUrl;
-							LocalPath = LocalUrl.Path;
-						}
+			var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
+			NSError coordErr;
+			c.CoordinateWriteWrite (LocalUrl, NSFileCoordinatorWritingOptions.ForMoving, newUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, (url1, url2) => {
+				bool r = false;
+				using (var m = new NSFileManager ()) {
+					NSError remErr;
+					r = m.Move (url1, url2, out remErr);
+					if (r) {
+						Path = newPath;
+						LocalUrl = newUrl;
+						LocalPath = LocalUrl.Path;
 					}
-					tcs.SetResult (r);
-				});
+				}
+				tcs.SetResult (r);
 			});
+			if (coordErr != null) {
+				tcs.TrySetResult (false);
+			}
 
 			return tcs.Task;
 		}
@@ -571,8 +559,8 @@ namespace Praeclarum.IO
 	{
 		public CloudErrorCode ErrorCode { get; private set; }
 
-		public CloudException (NSError error)
-			: base (((CloudErrorCode)(int)error.Code) + " (" + error.Code + ")")
+		public CloudException (string message, NSError error)
+			: base (message + ": " + error.LocalizedDescription + " " + ((CloudErrorCode)(int)error.Code) + " (" + error.Code + ")")
 		{
 			ErrorCode = (CloudErrorCode)(int)error.Code;
 		}

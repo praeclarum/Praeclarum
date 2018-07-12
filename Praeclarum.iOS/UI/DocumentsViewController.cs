@@ -815,9 +815,9 @@ namespace Praeclarum.UI
 			DocumentAppDelegate.Shared.ShowSettings (this);
 		}
 
-		async void HandlePatron (object sender, EventArgs e)
+		void HandlePatron (object sender, EventArgs e)
 		{
-			await DocumentAppDelegate.Shared.ShowPatronAsync ();
+			DocumentAppDelegate.Shared.HandlePatron (sender, e);
 		}
 
 		void HandleStorage (object sender, EventArgs e)

@@ -201,7 +201,9 @@ namespace Praeclarum.UI
 				else {
 					settingsBtn = new UIBarButtonItem ("Settings", UIBarButtonItemStyle.Plain, HandleSettings);
 				}
-				docBrowser.AdditionalLeadingNavigationBarButtonItems = new UIBarButtonItem[] { settingsBtn };
+				patronBtn = new UIBarButtonItem ("Support " + App.Name, UIBarButtonItemStyle.Plain, HandlePatron);
+
+				UpdateBrowserToolbar (false);
 
 				window.BackgroundColor = Theme.Current.DocumentBackgroundColor;
 			}
@@ -285,6 +287,41 @@ namespace Praeclarum.UI
 			return shouldPerformAdditionalDelegateHandling;
 		}
 
+		void UpdateBrowserToolbar (bool animated)
+		{
+			try {
+				var appdel = this;
+
+				var items = new List<UIBarButtonItem> ();
+
+				items.Add (settingsBtn);
+
+				var needsPatronBar = false;
+				if (appdel.App.IsPatronSupported) {
+					needsPatronBar = !appdel.Settings.IsPatron;
+				}
+				if (needsPatronBar) {
+					items.Add (new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace));
+					items.Add (patronBtn);
+				}
+
+				docBrowser.AdditionalLeadingNavigationBarButtonItems = items.ToArray ();
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
+		public async void HandlePatron (object sender, EventArgs e)
+		{
+			try {
+				await ShowPatronAsync ();
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
 		void HandleSettings (object sender, EventArgs e)
 		{
 			var sc = CreateSettingsForm ();
@@ -338,6 +375,7 @@ namespace Praeclarum.UI
 
 		protected UIDocumentBrowserViewController docBrowser;
 		protected UIBarButtonItem settingsBtn;
+		protected UIBarButtonItem patronBtn;
 
 		protected virtual void SetRootViewController ()
 		{
@@ -748,7 +786,13 @@ namespace Praeclarum.UI
 
 		public DocumentsViewController CurrentDocumentListController {
 			get {
-				return docListNav.ViewControllers.OfType<DocumentsViewController> ().LastOrDefault ();
+				return docListNav?.ViewControllers.OfType<DocumentsViewController> ().LastOrDefault ();
+			}
+		}
+
+		public UIViewController PresenterController {
+			get {
+				return (UIViewController)docBrowser ?? CurrentDocumentListController;
 			}
 		}
 
@@ -1903,7 +1947,7 @@ namespace Praeclarum.UI
 			var pform = new PatronForm (GetPatronMonthlyPrices ());
 			var nav = new UINavigationController (pform);
 			nav.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
-			await CurrentDocumentListController.PresentViewControllerAsync (nav, true);
+			await PresenterController.PresentViewControllerAsync (nav, true);
 		}
 
 		public virtual IEnumerable<Tuple<int, string>> GetPatronMonthlyPrices ()

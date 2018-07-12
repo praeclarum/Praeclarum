@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Praeclarum
 {
@@ -8,10 +9,16 @@ namespace Praeclarum
 
 		public static void Error (string context, Exception ex)
 		{
-			try
-			{
+			try {
 				if (ex == null)
 					return;
+#if HAS_APP_CENTER
+				var props = new Dictionary<string, string> ();
+				if (!string.IsNullOrWhiteSpace (context)) {
+					props["Context"] = context;
+				}
+				Microsoft.AppCenter.Crashes.Crashes.TrackError (ex, props);
+#endif
 				WriteLine("E", ex.ToString());
 			}
 			catch

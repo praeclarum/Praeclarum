@@ -15,6 +15,8 @@ namespace Praeclarum.UI
 
 		PatronAboutSection aboutSection;
 
+		const bool allowForcePurchase = false;
+
 		PatronForceSubscriptionSection forceSection;
 
 		static PatronSubscriptionPrice[] prices = new PatronSubscriptionPrice[0];
@@ -175,7 +177,7 @@ namespace Praeclarum.UI
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
 
-			if (n == 0 && !error) {
+			if (n == 0 && !error && allowForcePurchase) {
 				if (!Sections.Contains (forceSection)) {
 					Sections.Add (forceSection);
 				}

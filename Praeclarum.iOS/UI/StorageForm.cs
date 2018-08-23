@@ -65,7 +65,10 @@ namespace Praeclarum.UI
 				var f = item as IFileSystemProvider;
 				if (f != null) {
 
-					AddFileSystemAsync (f);
+					AddFileSystemAsync (f).ContinueWith (t => {
+						if (t.IsFaulted)
+							Log.Error (t.Exception);
+					});
 
 					return false;
 				}
@@ -196,9 +199,15 @@ namespace Praeclarum.UI
 
 				var fs = item as IFileSystem;
 				SetNeedsFormat ();
-				if (Form != null)
-					Form.DismissAsync (true);
-				DocumentAppDelegate.Shared.SetFileSystemAsync (fs, true);
+
+				Form?.DismissAsync (true).ContinueWith (t => {
+					if (t.IsFaulted)
+						Log.Error (t.Exception);
+				});
+				DocumentAppDelegate.Shared.SetFileSystemAsync (fs, true).ContinueWith (t => {
+					if (t.IsFaulted)
+						Log.Error (t.Exception);
+				});
 
 				return true;
 			}

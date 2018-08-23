@@ -71,7 +71,9 @@ namespace Praeclarum.IO
 		public bool IsSyncing { get { return false; } }
 		public string SyncStatus { get { return ""; } }
 
+#pragma warning disable 67
 		public event EventHandler FilesChanged;
+#pragma warning restore 67
 
 		public Task<IFile> GetFile (string path)
 		{

@@ -233,6 +233,7 @@ namespace Praeclarum.UI
 				Log.Error (ex2);
 			}
 		}
+#pragma warning disable 1998
 		public static async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
 		{
 			try {
@@ -248,6 +249,7 @@ namespace Praeclarum.UI
 				Log.Error (ex);
 			}
 		}
+#pragma warning restore 1998
 		static async Task AddSubscriptionAsync (string transactionId, DateTime transactionDate, PatronSubscriptionPrice p)
 		{
 			var sub = new PatronSubscription ();

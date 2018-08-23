@@ -103,7 +103,7 @@ namespace Praeclarum
 							var alert = new UIKit.UIAlertView (
 								title,
 								message,
-								null,
+								(UIKit.IUIAlertViewDelegate)null,
 								"OK");
 							alert.Show ();
 						} catch (Exception ex3) {

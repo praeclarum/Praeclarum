@@ -42,7 +42,7 @@ namespace Praeclarum.App
 			SKPaymentQueue.DefaultQueue.RestoreCompletedTransactions ();
 		}
 
-		public override void PaymentQueueRestoreCompletedTransactionsFinished (SKPaymentQueue queue)
+		public override void RestoreCompletedTransactionsFinished (SKPaymentQueue queue)
 		{
 			Console.WriteLine ("STORE RestoreCompleted()");
 		}

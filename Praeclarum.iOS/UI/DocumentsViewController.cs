@@ -593,7 +593,7 @@ namespace Praeclarum.UI
 					}
 				}
 				else {
-					alert = new UIAlertView ("Failed to Rename", "You may not have permission.", null, "OK");
+					alert = new UIAlertView ("Failed to Rename", "You may not have permission.", (IUIAlertViewDelegate)null, "OK");
 					alert.Show ();
 				}
 
@@ -800,7 +800,7 @@ namespace Praeclarum.UI
 			var alert = new UIAlertView (
 				"", 
 				"Syncing is taking more than " + (int)(SyncTimeout.TotalSeconds+0.5) + " seconds.",
-				null,
+				(IUIAlertViewDelegate)null,
 				"OK");
 			alert.Show ();
 		}
@@ -1051,7 +1051,7 @@ namespace Praeclarum.UI
 							DocumentAppDelegate.Shared.Settings.SetWorkingDirectory (FileSystem, Directory);
 						}
 						else {
-							var alert = new UIAlertView ("Rename Error", FileSystem.Id + " did not allow the folder to be renamed.", null, "OK");
+							var alert = new UIAlertView ("Rename Error", FileSystem.Id + " did not allow the folder to be renamed.", (IUIAlertViewDelegate)null, "OK");
 							alert.Show ();
 						}
 

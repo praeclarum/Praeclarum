@@ -349,8 +349,6 @@ namespace Praeclarum.UI
 
 	public class WhiteTheme : Theme
 	{
-		public static UIColor TintColor = UIColor.Black;
-
 		public static UIColor PaperColor = UIColor.White;
 
 		public static UIColor ValueTextColor = UIColor.FromRGB (56, 84, 135);
@@ -377,8 +375,6 @@ namespace Praeclarum.UI
 				return IsModern ? 18 : 20;
 			}
 		}
-
-		public static UIColor GroupedTableBackgroundColor = UIColor.FromWhiteAlpha (0.92f, 1);
 
 		public static string TitleFontName {
 			get {
@@ -408,7 +404,6 @@ namespace Praeclarum.UI
 				() => UIImage.FromBundle ("Clone.png"));
 		}
 
-		public static UIColor TableHeadingTextColor = UIColor.FromWhiteAlpha (0.0f, 1);
 		public static string TableFontName {
 			get {
 				if (tableFontName == null) {

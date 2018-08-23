@@ -15,7 +15,9 @@ namespace Praeclarum.IO
 			Description = "Empty";
 		}
 
+#pragma warning disable 67
 		public event EventHandler FilesChanged;
+#pragma warning restore 67
 
 		public Task Initialize ()
 		{

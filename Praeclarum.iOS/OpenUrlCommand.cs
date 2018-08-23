@@ -104,7 +104,7 @@ namespace Praeclarum
 
 			UIPasteboard.General.String = Text ?? "";
 
-			new UIAlertView ("Copied", Text ?? "", null, "OK").Show ();
+			new UIAlertView ("Copied", Text ?? "", (IUIAlertViewDelegate)null, "OK").Show ();
 		}
 	}
 }

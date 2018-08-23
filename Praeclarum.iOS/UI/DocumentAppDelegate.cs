@@ -256,11 +256,13 @@ namespace Praeclarum.UI
 						if (!t.IsFaulted) {
 							App.OnFileSystemInitialized ();
 							try {
+#pragma warning disable 4014
 								CurrentDocumentListController.LoadDocs ().ContinueWith (tt => {
 									if (tt.IsFaulted) {
 										Log.Error (tt.Exception);
 									}
 								});
+#pragma warning restore 4014
 							}
 							catch (Exception ex) {
 								Log.Error (ex);
@@ -991,7 +993,7 @@ namespace Praeclarum.UI
 				while (ex.InnerException != null)
 					ex = ex.InnerException;
 
-				openErrorAlert = new UIAlertView ("Cannot Open", ex.Message, null, "OK");
+				openErrorAlert = new UIAlertView ("Cannot Open", ex.Message, (IUIAlertViewDelegate)null, "OK");
 				openErrorAlert.Clicked +=  async (sender, e) => {
 					try {
 						await CloseOpenedDoc ();
@@ -1068,6 +1070,7 @@ namespace Praeclarum.UI
 				GetNewDocumentText ()));
 		}
 
+#pragma warning disable 1998
 		public async Task ImportAndOpenDocument (UIBarButtonItem addButton)
 		{
 			DismissSheetsAndPopovers();
@@ -1094,6 +1097,7 @@ namespace Praeclarum.UI
 
 			presenter.PresentViewController (picker, true, null);
 		}
+#pragma warning restore 1998
 
 		async void Picker_DidPickDocument (object sender, UIDocumentPickedEventArgs e)
 		{
@@ -1288,7 +1292,7 @@ namespace Praeclarum.UI
 						new UIAlertView (
 							"Error",
 							FileSystem.Id + " failed to create the folder.",
-							null,
+							(IUIAlertViewDelegate)null,
 							"OK").Show ();
 					}
 
@@ -1623,7 +1627,7 @@ namespace Praeclarum.UI
 						var alert = new UIAlertView (
 							           "Unable to Delete", 
 							           "An error occured while trying to delete. If the problem persists, try restarting " + App.Name + ".",
-							           null, "OK");
+									   (IUIAlertViewDelegate)null, "OK");
 						alert.Show ();
 					}
 
@@ -1709,7 +1713,7 @@ namespace Praeclarum.UI
 			var v = new UIAlertView (
 				        title,
 				        ex.Message,
-				        null,
+						(IUIAlertViewDelegate)null,
 				        "OK");
 			v.Show ();
 		}

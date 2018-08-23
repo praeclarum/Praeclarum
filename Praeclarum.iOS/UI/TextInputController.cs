@@ -81,7 +81,7 @@ namespace Praeclarum.UI
 				if (ValidateFunc != null) {
 					var error = await ValidateFunc (InputText);
 					if (error != null) {
-						noAlert = new UIAlertView ("", error, null, "OK");
+						noAlert = new UIAlertView ("", error, (IUIAlertViewDelegate)null, "OK");
 						noAlert.Show ();
 						return false;
 					}

@@ -329,7 +329,9 @@ namespace Praeclarum.IO
 			}
 		}
 
+#pragma warning disable 67
 		public event EventHandler FilesChanged;
+#pragma warning restore 67
 
 		public async Task Initialize ()
 		{

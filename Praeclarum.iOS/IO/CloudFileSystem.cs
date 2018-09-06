@@ -552,6 +552,7 @@ namespace Praeclarum.IO
 	public enum CloudErrorCode
 	{
 		SourceNotFound = 4,
+		UnknownWriteError = 512,
 		DestinationAlreadyExists = 516,
 	}
 

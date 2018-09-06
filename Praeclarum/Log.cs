@@ -12,7 +12,7 @@ namespace Praeclarum
 			try {
 				if (ex == null)
 					return;
-#if HAS_APP_CENTER
+#if HAS_APPCENTER
 				var props = new Dictionary<string, string> ();
 				if (!string.IsNullOrWhiteSpace (context)) {
 					props["Context"] = context;
@@ -23,6 +23,19 @@ namespace Praeclarum
 			}
 			catch
 			{
+			}
+		}
+
+		public static void Error (string message)
+		{
+			try {
+#if HAS_APPCENTER
+				Microsoft.AppCenter.Analytics.Analytics.TrackEvent ("Error", new Dictionary<string, string>{{
+						"Message", message}});
+#endif
+				WriteLine ("E", message);
+			}
+			catch {
 			}
 		}
 

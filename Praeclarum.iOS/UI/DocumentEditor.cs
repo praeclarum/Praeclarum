@@ -37,7 +37,12 @@ namespace Praeclarum.UI
 
 				viewLoaded = true;
 				foreach (var a in this.viewLoadedActions) {
-					a();
+					try {
+						a ();
+					}
+					catch (Exception aex) {
+						Log.Error (aex);
+					}
 				}
 				viewLoadedActions.Clear ();
 
@@ -104,7 +109,12 @@ namespace Praeclarum.UI
 		List<Action> viewLoadedActions = new List<Action>();
 		protected void WhenViewLoaded(Action action) {
 			if (viewLoaded) {
-				action ();
+				try {
+					action ();
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+				}
 			} else {
 				viewLoadedActions.Add (action);
 			}

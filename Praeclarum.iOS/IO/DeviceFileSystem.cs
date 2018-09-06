@@ -136,8 +136,11 @@ namespace Praeclarum.IO
 				var r = new DeviceFile (path, documentsPath);
 				if (contents != null) {
 					var dir = Path.GetDirectoryName (r.LocalPath);
-					if (!Directory.Exists (dir))
+					if (!Directory.Exists (dir)) {
+						if (File.Exists (dir))
+							File.Delete (dir);
 						Directory.CreateDirectory (dir);
+					}
 					File.WriteAllBytes (r.LocalPath, contents);
 				}
 				return r;
@@ -149,8 +152,11 @@ namespace Praeclarum.IO
 			return Task.Run (() => {
 				try {
 					var dir = GetLocalPath (path);
-					if (!Directory.Exists (dir))
+					if (!Directory.Exists (dir)) {
+						if (File.Exists (dir))
+							File.Delete (dir);
 						Directory.CreateDirectory (dir);
+					}
 					return true;
 				} catch (Exception ex) {
 					Debug.WriteLine (ex);

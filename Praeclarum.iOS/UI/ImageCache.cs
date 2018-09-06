@@ -177,12 +177,16 @@ namespace Praeclarum.UI
 			//
 			if (saveToDisk) {
 				await Task.Run (() => {
-					FileSystemManager.EnsureDirectoryExists (cacheDirectory);
-					var cachePath = GetCachePath (key);
-					NSError err;
-					uiImage.AsPNG ().Save (cachePath, false, out err);
-					if (err != null) {
-						Debug.WriteLine (err);
+					try {
+						FileSystemManager.EnsureDirectoryExists (cacheDirectory);
+						var cachePath = GetCachePath (key);
+						uiImage.AsPNG ().Save (cachePath, false, out var err);
+						if (err != null) {
+							Log.Error ("Failed to save thumbnail: " + err);
+						}
+					}
+					catch (Exception ex) {
+						Log.Error (ex);
 					}
 				});
 			}

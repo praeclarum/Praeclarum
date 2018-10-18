@@ -662,6 +662,11 @@ namespace Praeclarum.UI
 		{
 			var lastPath = Settings.LastDocumentPath;
 
+			if (lastPath.StartsWith ("file://", StringComparison.Ordinal) && !App.UseDocumentBrowser) {
+				lastPath = "";
+				Settings.LastDocumentPath = lastPath;
+			}
+
 			if (string.IsNullOrEmpty (lastPath)) {
 				openedLastDocument = true;
 				return;

@@ -40,7 +40,10 @@ namespace Praeclarum.App
 
 		public string GetWorkingDirectory (IFileSystem fileSystem)
 		{
-			return defs.StringForKey (fileSystem.Id + " CWD") ?? "";
+			var path = defs.StringForKey (fileSystem.Id + " CWD") ?? "";
+			if (path.StartsWith ("file:", StringComparison.Ordinal))
+				return "";
+			return path;
 		}
 
 		public void SetWorkingDirectory (IFileSystem fileSystem, string directory)

@@ -39,6 +39,18 @@ namespace Praeclarum
 			}
 		}
 
+		public static void Analytics (string message)
+		{
+			try {
+#if HAS_APPCENTER
+				Microsoft.AppCenter.Analytics.Analytics.TrackEvent (message);
+#endif
+				WriteLine ("A", message);
+			}
+			catch {
+			}
+		}
+
 		public static void Error (Exception ex)
 		{
 			Error("", ex);

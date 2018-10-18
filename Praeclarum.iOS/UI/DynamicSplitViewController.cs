@@ -140,6 +140,7 @@ namespace Praeclarum.UI
 				nav.NavigationBar.BarStyle = DocumentAppDelegate.Shared.Theme.NavigationBarStyle;
 				nav.ModalPresentationStyle = UIModalPresentationStyle.Popover;
 				nav.PopoverPresentationController.BarButtonItem = toggleButton;
+				Log.Analytics ("Open Plot");
 				await PresentViewControllerAsync (nav, true);
 			}
 		}

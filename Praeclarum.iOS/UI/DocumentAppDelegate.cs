@@ -1742,7 +1742,7 @@ namespace Praeclarum.UI
 
 		readonly SemaphoreSlim thumbGate = new SemaphoreSlim (4);
 
-		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme, nfloat scale)
+		public virtual async Task<UIImage> GenerateThumbnailAsync (DocumentReference docRef, Praeclarum.Graphics.SizeF size, Theme theme, nfloat scale, CancellationToken cancellationToken)
 		{
 			UIImage r = null;
 
@@ -1755,6 +1755,9 @@ namespace Praeclarum.UI
 			//
 			try {
 				await thumbGate.WaitAsync ().ConfigureAwait (false);
+				if (cancellationToken.IsCancellationRequested) {
+					return null;
+				}
 
 				local = await docRef.File.BeginLocalAccess ().ConfigureAwait (false);
 				var f = local.LocalPath;

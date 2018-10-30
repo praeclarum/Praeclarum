@@ -11,6 +11,7 @@ using Praeclarum.IO;
 using CoreGraphics;
 using System.Collections.ObjectModel;
 using Praeclarum.Graphics;
+using System.Threading;
 
 namespace Praeclarum.UI
 {
@@ -1007,16 +1008,21 @@ namespace Praeclarum.UI
 			RefreshThumbnail ();
 		}
 
+		CancellationTokenSource refreshCancelSource;
+
 		public void RefreshThumbnail ()
 		{
-			RefreshThumbnailAsync ().ContinueWith (t => {
+			refreshCancelSource?.Cancel ();
+			refreshCancelSource = new CancellationTokenSource ();
+
+			RefreshThumbnailAsync (refreshCancelSource.Token).ContinueWith (t => {
 				if (t.IsFaulted) {
 					Debug.WriteLine (t.Exception);
 				}
 			});
 		}
 
-		async Task RefreshThumbnailAsync ()
+		async Task RefreshThumbnailAsync (CancellationToken cancellationToken)
 		{
 			var appDel = DocumentAppDelegate.Shared;
 			var Cache = appDel.ThumbnailCache;
@@ -1040,10 +1046,16 @@ namespace Praeclarum.UI
 				SetThumbnail (memImage);
 			}
 
+			if (cancellationToken.IsCancellationRequested)
+				return;
+
 			var thumbImage = await Cache.GetImageAsync (thumbKey, doc.ModifiedTime);
 
+			if (cancellationToken.IsCancellationRequested)
+				return;
+
 			if (thumbImage == null) {
-				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme, scale);
+				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme, scale, cancellationToken);
 				if (thumbImage != null) {
 					if (doc != null && path == doc.File.Path) {
 						SetThumbnail (thumbImage);
@@ -1142,6 +1154,8 @@ namespace Praeclarum.UI
 			}
 		}
 
+		CancellationTokenSource refreshCancellationTokenSource;
+
 		public DocumentsViewItem Item {
 			get {
 				return item;
@@ -1159,7 +1173,9 @@ namespace Praeclarum.UI
 				if (newDir)
 					SetThumbnails (null);
 
-				RefreshThumbnails ().ContinueWith (t => {
+				refreshCancellationTokenSource?.Cancel ();
+				refreshCancellationTokenSource = new CancellationTokenSource ();
+				RefreshThumbnails (refreshCancellationTokenSource.Token).ContinueWith (t => {
 					if (t.IsFaulted)
 						Debug.WriteLine (t.Exception);
 				});
@@ -1224,7 +1240,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		async Task RefreshThumbnails ()
+		async Task RefreshThumbnails (CancellationToken cancellationToken)
 		{
 			var appDel = DocumentAppDelegate.Shared;
 			var Cache = appDel.ThumbnailCache;
@@ -1240,9 +1256,9 @@ namespace Praeclarum.UI
 
 			try {
 				var fileTasks = from dr in item.SubReferences.Take (9)
-					select GetThumbnail (new DocumentReference (dr.File, DocumentAppDelegate.Shared.App.CreateDocument, false), appDel.Theme, scale);
+                               select GetThumbnail (new DocumentReference (dr.File, DocumentAppDelegate.Shared.App.CreateDocument, false), appDel.Theme, scale, cancellationToken);
 
-				thumbnails = await Task.WhenAll (fileTasks);
+				thumbnails = (await Task.WhenAll (fileTasks)).Where (x => x != null).ToArray ();
 
 			} catch (Exception ex) {
 				Debug.WriteLine (ex);				
@@ -1254,7 +1270,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		async Task<UIImage> GetThumbnail (DocumentReference doc, Theme theme, nfloat scale)
+		async Task<UIImage> GetThumbnail (DocumentReference doc, Theme theme, nfloat scale, CancellationToken cancellationToken)
 		{
 			var appDel = DocumentAppDelegate.Shared;
 			var Cache = appDel.ThumbnailCache;
@@ -1264,7 +1280,7 @@ namespace Praeclarum.UI
 			var thumbImage = await Cache.GetImageAsync (thumbKey, doc.ModifiedTime);
 
 			if (thumbImage == null) {
-				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme, scale);
+				thumbImage = await appDel.GenerateThumbnailAsync (doc, ThumbnailSize, theme, scale, cancellationToken);
 				if (thumbImage != null) {
 					await Cache.SetGeneratedImageAsync (thumbKey, thumbImage, saveToDisk: true);
 				}
@@ -1300,7 +1316,7 @@ namespace Praeclarum.UI
 		public override void ApplyTheme (Theme theme)
 		{
 			base.ApplyTheme (theme);
-			RefreshThumbnails ().ContinueWith (t => {
+			RefreshThumbnails (CancellationToken.None).ContinueWith (t => {
 				if (t.IsFaulted) {
 					Console.WriteLine (t.Exception);
 				}

@@ -141,9 +141,7 @@ namespace Praeclarum.UI
 				try {
 					OpenedDocIndex = -1;
 					FileSystemManager.Shared = new FileSystemManager ();
-					FileSystemManager.Shared.ActiveFileSystem = new EmptyFileSystem {
-						Description = "Loading Storage...",
-					};
+					FileSystemManager.Shared.ActiveFileSystem = new LoadingFileSystem ();
 				}
 				catch (Exception ex) {
 					Log.Error (ex);

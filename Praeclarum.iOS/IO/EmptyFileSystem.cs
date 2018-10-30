@@ -42,7 +42,7 @@ namespace Praeclarum.IO
 		public bool IsAvailable { get { return true; } }
 		public string AvailabilityReason { get { return ""; } }
 
-		public bool IsSyncing { get { return false; } }
+		public virtual bool IsSyncing => false;
 		public string SyncStatus { get { return ""; } }
 
 		public string GetLocalPath (string path)
@@ -88,6 +88,16 @@ namespace Praeclarum.IO
 		public Task<bool> FileExists (string path)
 		{
 			return Task.FromResult (false);
+		}
+	}
+
+	public class LoadingFileSystem : EmptyFileSystem
+	{
+		public override bool IsSyncing => true;
+
+		public LoadingFileSystem ()
+		{
+			Description = "Loading Storage...";
 		}
 	}
 }

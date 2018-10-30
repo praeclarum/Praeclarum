@@ -128,7 +128,7 @@ namespace Praeclarum.IO
 		public CloudFileSystem ()
 		{
 			FileExtensions = new Collection<string> ();
-			IsSyncing = false;
+			IsSyncing = true;
 		}
 
 		public string Id {

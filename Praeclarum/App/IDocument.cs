@@ -14,7 +14,7 @@ namespace Praeclarum.App
 		Done,
 	}
 
-	public interface IDocument
+	public interface IDocument : IDisposable
 	{
 		bool IsOpen { get; }
 		Task OpenAsync ();

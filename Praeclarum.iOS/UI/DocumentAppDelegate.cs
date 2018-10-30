@@ -1782,6 +1782,7 @@ namespace Praeclarum.UI
 			if (opened) {
 				try {
 					await doc.CloseAsync ().ConfigureAwait (false);
+					doc.Dispose ();
 				} catch (Exception ex) {
 					Console.WriteLine (ex);
 				}

@@ -63,5 +63,7 @@ namespace Praeclarum.UI
 		ObservableCollection<string> SelectedDocuments { get; }
 
 		bool ShowPatron { get; set; }
+
+		void StopLoadingThumbnails ();
 	}
 }

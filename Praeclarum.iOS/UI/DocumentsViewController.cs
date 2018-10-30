@@ -752,6 +752,8 @@ namespace Praeclarum.UI
 					refreshTimer.Invalidate ();
 					refreshTimer = null;
 				}
+
+				docsView?.StopLoadingThumbnails ();
 			} catch (Exception ex) {
 				Log.Error (ex);				
 			}

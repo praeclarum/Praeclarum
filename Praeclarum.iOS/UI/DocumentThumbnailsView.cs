@@ -269,6 +269,13 @@ namespace Praeclarum.UI
 		}
 
 		#endregion
+
+		public void StopLoadingThumbnails ()
+		{
+			foreach (var c in VisibleCells.OfType<DocumentThumbnailCell> ()) {
+				c.StopLoading ();
+			}
+		}
 	}
 
 	class DocumentThumbnailsViewFlowLayout : UICollectionViewFlowLayout
@@ -307,17 +314,18 @@ namespace Praeclarum.UI
 			try {
 				if (indexPath.Section == 0)
 					return sortSize;
-				
+
 				var controller = (DocumentThumbnailsView)collectionView;
-				
+
 				var s = controller.ThumbnailSize;
 
 				var itemSize = new CGSize (s.Width, s.Height + DocumentThumbnailsView.LabelHeight);
 
-//				Console.WriteLine ("ITEM SIZE = {0}", itemSize);
+				//				Console.WriteLine ("ITEM SIZE = {0}", itemSize);
 
 				return itemSize;
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 				return new CGSize (44, 44);
 			}
@@ -329,21 +337,23 @@ namespace Praeclarum.UI
 				nfloat h = 0.0f;
 				var t = DocumentThumbnailsView.Margin / 2;
 				var b = 0.0f;
-				
+
 				var controller = (DocumentThumbnailsView)collectionView;
-				
+
 				var frameW = collectionView.Frame.Width;
-				
+
 				if (section == 0) {
 					h = (frameW - sortSize.Width) / 2 - 44; // - 44 because of insets
 					t = 15;
 					b = 11;
-				} else {
+				}
+				else {
 					h = controller.IsSyncing ? ((frameW - controller.ThumbnailSize.Width) / 2 - 44) : DocumentThumbnailsView.Margin;
-				} 
-				
+				}
+
 				return new UIEdgeInsets (t, h, b, h);
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 				return new UIEdgeInsets ();
 			}
@@ -362,7 +372,7 @@ namespace Praeclarum.UI
 			if (indexPath.Section == 0)
 				return;
 
-//			Console.WriteLine ("SELECT {0}", indexPath.Row);
+			//			Console.WriteLine ("SELECT {0}", indexPath.Row);
 
 			var controller = (DocumentThumbnailsView)collectionView;
 
@@ -375,13 +385,14 @@ namespace Praeclarum.UI
 
 				if (row == 0) {
 					// Add
-				} else if (row > controller.Items.Count) {
+				}
+				else if (row > controller.Items.Count) {
 					await DocumentAppDelegate.Shared.ShowPatronAsync ();
 				}
 				else {
 					row--;
 
-					var item = controller.Items [row];
+					var item = controller.Items[row];
 
 					var d = item.Reference;
 
@@ -389,36 +400,42 @@ namespace Praeclarum.UI
 
 						controller.SelectedDocuments.Remove (d.File.Path);
 
-					} else {
+					}
+					else {
 
 						controller.SelectedDocuments.Add (d.File.Path);
 
 					}
 				}
 
-			} else {
+			}
+			else {
 
 				try {
 					if (row == 0) {
 						// Add
 						await DocumentAppDelegate.Shared.AddAndOpenNewDocument ();
-					} else if (row > controller.Items.Count) {
+					}
+					else if (row > controller.Items.Count) {
 						await DocumentAppDelegate.Shared.ShowPatronAsync ();
-					} else {
+					}
+					else {
 						row--;
 
 
 
-						var d = controller.Items [row].Reference;
+						var d = controller.Items[row].Reference;
 
 						if (d.File.IsDirectory) {
 							DocumentAppDelegate.Shared.OpenDirectory (row, animated: true);
-						} else {
+						}
+						else {
 							await DocumentAppDelegate.Shared.OpenDocument (row, animated: true);
 						}
 					}
 
-				} catch (Exception ex) {
+				}
+				catch (Exception ex) {
 					Debug.WriteLine (ex);
 				}
 			}
@@ -451,27 +468,28 @@ namespace Praeclarum.UI
 				var backColor = Praeclarum.Graphics.ColorEx.GetUIColor (appDel.App.GetThumbnailBackgroundColor (appDel.Theme));
 				backColor.SetFill ();
 				c.FillRect (rect);
-				
+
 				var b = Bounds;
 				c.SetLineWidth (1.0f);
-				
+
 				appDel.Theme.DocumentsFrameSideColor.SetStroke ();
 
 				c.MoveTo (0, 0);
 				c.AddLineToPoint (0, b.Height);
 				c.StrokePath ();
-				
+
 				c.MoveTo (b.Width, 0);
 				c.AddLineToPoint (b.Width, b.Height);
 				c.StrokePath ();
-				
+
 				appDel.Theme.DocumentsFrameBottomColor.SetStroke ();
-				
+
 				c.MoveTo (0, b.Height);
 				c.AddLineToPoint (b.Width, b.Height);
 				c.StrokePath ();
-			} catch (Exception ex) {
-				Log.Error (ex);				
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 	}
@@ -513,7 +531,7 @@ namespace Praeclarum.UI
 
 		void Initialize ()
 		{
-			segs = new UISegmentedControl (new [] { "Date", "Name" }) {
+			segs = new UISegmentedControl (new[] { "Date", "Name" }) {
 
 			};
 
@@ -594,10 +612,10 @@ namespace Praeclarum.UI
 		void Initialize ()
 		{
 			button = new ButtonView ();
-//			ContentView.BackgroundColor = UIColor.Red;
+			//			ContentView.BackgroundColor = UIColor.Red;
 			button.Frame = ContentView.Bounds;
 			button.AutoresizingMask = UIViewAutoresizing.FlexibleDimensions;
-//			button.SetTitle ("Support Calca Development", UIControlState.Normal);
+			//			button.SetTitle ("Support Calca Development", UIControlState.Normal);
 			ContentView.AddSubview (button);
 			ApplyTheme (DocumentAppDelegate.Shared.Theme);
 		}
@@ -611,7 +629,7 @@ namespace Praeclarum.UI
 
 			public void ApplyTheme (Theme theme)
 			{
-//				var appdel = DocumentAppDelegate.Shared;
+				//				var appdel = DocumentAppDelegate.Shared;
 				BackgroundColor = UIColor.Clear;// appdel.App.GetThumbnailBackgroundColor (appdel.Theme).GetUIColor ().ColorWithAlpha (0.5f);
 			}
 
@@ -655,9 +673,10 @@ namespace Praeclarum.UI
 
 	abstract class ThumbnailCell : UICollectionViewCell, IThemeAware
 	{
-		public static UIColor GetNotSelectableColor (Theme theme) {
+		public static UIColor GetNotSelectableColor (Theme theme)
+		{
 			if (theme.IsDark) {
-				return UIColor.FromWhiteAlpha (1.0f - 0.875f, 0.5961f);;
+				return UIColor.FromWhiteAlpha (1.0f - 0.875f, 0.5961f); ;
 			}
 			return UIColor.FromWhiteAlpha (0.875f, 0.5961f);
 		}
@@ -666,13 +685,12 @@ namespace Praeclarum.UI
 
 		protected UILabel label;
 
-		protected CGRect ThumbnailFrame
-		{
+		protected CGRect ThumbnailFrame {
 			get {
 				var b = Bounds;
 				var w = ThumbnailSize.Width;
 				var h = ThumbnailSize.Height;
-				return new CGRect ((b.Width - w)/2, 0, w, h);
+				return new CGRect ((b.Width - w) / 2, 0, w, h);
 			}
 		}
 
@@ -714,7 +732,7 @@ namespace Praeclarum.UI
 
 			var b = Bounds;
 
-			label = new UILabel (new CGRect (0, b.Bottom - DocumentThumbnailsView.LabelHeight+1, b.Width, DocumentThumbnailsView.LabelHeight-1)) {
+			label = new UILabel (new CGRect (0, b.Bottom - DocumentThumbnailsView.LabelHeight + 1, b.Width, DocumentThumbnailsView.LabelHeight - 1)) {
 				Text = "",
 				TextColor = theme.TintColor,
 				Font = ios7 ? UIFont.PreferredCaption2 : UIFont.SystemFontOfSize (10),
@@ -1009,6 +1027,12 @@ namespace Praeclarum.UI
 		}
 
 		CancellationTokenSource refreshCancelSource;
+
+		public void StopLoading ()
+		{
+			refreshCancelSource?.Cancel ();
+			refreshCancelSource = null;
+		}
 
 		public void RefreshThumbnail ()
 		{

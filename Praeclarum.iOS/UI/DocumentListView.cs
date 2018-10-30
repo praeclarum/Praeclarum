@@ -119,6 +119,10 @@ namespace Praeclarum.UI
 			var index = NSIndexPath.FromRowSection (docIndex, 0);
 			ScrollToRow (index, UITableViewScrollPosition.Middle, animated);
 		}
+
+		public void StopLoadingThumbnails ()
+		{
+		}
 	}
 
 	class DocumentListViewSource : UITableViewSource

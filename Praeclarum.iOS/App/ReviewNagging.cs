@@ -31,27 +31,39 @@ namespace Praeclarum.App
 			MinNumPositiveActions = minNumPositiveActions;
 		}
 
+		public void Reset ()
+		{
+			defs.SetInt (0, numPositiveKey);
+			defs.SetBool (false, shownKey);
+		}
+
 		public void RegisterPositiveAction ()
 		{
-			defs.SetInt (NumPositiveActions + 1, numPositiveKey);
-			Log.Info ("Num Review Actions = " + NumPositiveActions);
+			try {
+				defs.SetInt (NumPositiveActions + 1, numPositiveKey);
+				Log.Info ("Num Review Actions = " + NumPositiveActions);
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 
 		public void PresentIfAppropriate ()
 		{
-			var osok = UIDevice.CurrentDevice.CheckSystemVersion (10, 3);
-			var shouldPresent = osok && !Shown && NumPositiveActions >= MinNumPositiveActions;
-
-			Log.Info ("Present Review = " + shouldPresent);
-			if (!shouldPresent)
-				return;
-
 			try {
 
-				defs.SetBool (true, shownKey);
+				var osok = UIDevice.CurrentDevice.CheckSystemVersion (10, 3);
+				var shouldPresent = osok && !Shown && NumPositiveActions >= MinNumPositiveActions;
 
-				SKStoreReviewController.RequestReview ();
+				Log.Info ($"Present Review (os={osok}, s={Shown}, n={NumPositiveActions}) = {shouldPresent}");
 
+				if (shouldPresent) {
+
+					defs.SetBool (true, shownKey);
+
+					SKStoreReviewController.RequestReview ();
+
+				}
 			}
 			catch (Exception ex) {
 				Log.Error (ex);

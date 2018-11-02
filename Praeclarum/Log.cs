@@ -51,6 +51,15 @@ namespace Praeclarum
 			}
 		}
 
+		public static void Info (string message)
+		{
+			try {
+				WriteLine ("I", message);
+			}
+			catch {
+			}
+		}
+
 		public static void Error (Exception ex)
 		{
 			Error("", ex);
@@ -65,7 +74,7 @@ namespace Praeclarum
 			else {
 				Android.Util.Log.Info (Domain, line);
 			}
-#elif MONOMAC
+#elif __MACOS__ || __IOS__
 			if (type == "E") {
 				Console.WriteLine ("ERROR: " + line);
 			}

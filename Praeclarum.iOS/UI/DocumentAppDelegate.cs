@@ -20,6 +20,8 @@ namespace Praeclarum.UI
 		static readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
 		static readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 
+		public ReviewNagging ReviewNagging { get; private set; }
+
 		protected UIWindow window;
 
 		protected readonly MRU mru = new MRU ();
@@ -151,6 +153,18 @@ namespace Praeclarum.UI
 				// Load the MRU
 				//
 				mru.InitializeMRU ();
+			}
+
+			//
+			// Load the review nagging
+			//
+			try {
+				if (App.NagForReviews) {
+					ReviewNagging = new ReviewNagging ();
+				}
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 
 			//
@@ -1064,6 +1078,8 @@ namespace Praeclarum.UI
 		{
 			var directory = CurrentDirectory;
 
+			ReviewNagging?.RegisterPositiveAction ();
+
 			await AddAndOpenDocRef (await DocumentReference.New (
 				directory, 
 				App.DocumentBaseName, 
@@ -1932,7 +1948,7 @@ namespace Praeclarum.UI
 				entries.Insert (0, key);
 
 
-				Console.WriteLine ("SAVE MRU {0}", entries);
+				Console.WriteLine ("SAVE MRU {0}: {1}", entries.Count, docRef);
 
 				if (ios9) {
 					var icon = UIApplicationShortcutIcon.FromType (UIApplicationShortcutIconType.Compose);

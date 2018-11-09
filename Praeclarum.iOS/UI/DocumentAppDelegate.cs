@@ -2052,6 +2052,9 @@ namespace Praeclarum.UI
 					if (doc != null)
 						await doc.CloseAsync ();
 					Console.WriteLine (doc);
+					var ni = rvc?.NavigationItem;
+					if (ni != null)
+						ni.LeftBarButtonItem = null;
 				});
 
 				Log.Info ($"Loaded editor: {vc}");

@@ -13,6 +13,7 @@ namespace Praeclarum.UI
 		protected NSUrl docUrl;
 
 		public DocumentReference DocumentReference { get { return docRef; } }
+		public virtual IDocument Document => DocumentReference?.Document;
 
 		public bool IsPreviewing { get; set; }
 

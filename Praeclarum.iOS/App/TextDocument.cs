@@ -111,9 +111,11 @@ namespace Praeclarum.App
 
 		async Task IDocument.CloseAsync ()
 		{
-			var ok = await CloseAsync ();
-			if (!ok)
-				throw new Exception ("UIDocument.CloseAsync failed");
+			if (DocumentState != UIDocumentState.Closed) {
+				var ok = await CloseAsync ();
+				if (!ok)
+					throw new Exception ("UIDocument.CloseAsync failed");
+			}
 		}
 
 		#endregion

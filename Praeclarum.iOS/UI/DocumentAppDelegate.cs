@@ -2039,16 +2039,22 @@ namespace Praeclarum.UI
 					theme.Apply (nvc);
 				}
 				var rvc = nvc.ViewControllers.FirstOrDefault ();
+				nvc.ModalPresentationStyle = UIModalPresentationStyle.OverCurrentContext;
+				nvc.ModalTransitionStyle = UIModalTransitionStyle.CrossDissolve;
 
-				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (app.Name, UIBarButtonItemStyle.Done, async (sender, e) => {
+				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (UIBarButtonSystemItem.Done, async (sender, e) => {
+					var doc = editor.Document;
 					var saveTask = editor.SaveDocument ();
 					await nvc.DismissViewControllerAsync (true);
 					await saveTask;
 					editor.UnbindDocument ();
 					editor.UnbindUI ();
+					if (doc != null)
+						await doc.CloseAsync ();
+					Console.WriteLine (doc);
 				});
-				var v = vc.View;
-				Console.WriteLine ($"Loaded editor: {v}");
+
+				Log.Info ($"Loaded editor: {vc}");
 				editor.BindDocument ();
 				controller.PresentViewController (nvc, true, null);
 			}

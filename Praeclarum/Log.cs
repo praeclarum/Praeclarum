@@ -7,18 +7,24 @@ namespace Praeclarum
 	{
 		public static string Domain = "Praeclarum";
 
+		public class LogExtras
+		{
+			public Action<string, Dictionary<string, string>> TrackEvent;
+			public Action<Exception, Dictionary<string, string>> TrackError;
+		}
+
+		public static LogExtras Logger;
+
 		public static void Error (string context, Exception ex)
 		{
 			try {
 				if (ex == null)
 					return;
-#if HAS_APPCENTER
 				var props = new Dictionary<string, string> ();
 				if (!string.IsNullOrWhiteSpace (context)) {
 					props["Context"] = context;
 				}
-				Microsoft.AppCenter.Crashes.Crashes.TrackError (ex, props);
-#endif
+				Logger?.TrackError (ex, props);
 				WriteLine("E", ex.ToString());
 			}
 			catch
@@ -29,10 +35,8 @@ namespace Praeclarum
 		public static void Error (string message)
 		{
 			try {
-#if HAS_APPCENTER
-				Microsoft.AppCenter.Analytics.Analytics.TrackEvent ("Error", new Dictionary<string, string>{{
+				Logger?.TrackEvent ("Error", new Dictionary<string, string>{{
 						"Message", message}});
-#endif
 				WriteLine ("E", message);
 			}
 			catch {
@@ -42,9 +46,7 @@ namespace Praeclarum
 		public static void Analytics (string message)
 		{
 			try {
-#if HAS_APPCENTER
-				Microsoft.AppCenter.Analytics.Analytics.TrackEvent (message);
-#endif
+				Logger?.TrackEvent (message, null);
 				WriteLine ("A", message);
 			}
 			catch {

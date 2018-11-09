@@ -147,6 +147,15 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public virtual void Apply (UITextField textField)
+		{
+			if (textField == null)
+				return;
+			textField.KeyboardAppearance = KeyboardAppearance;
+			textField.BackgroundColor = TableCellBackgroundColor;
+			textField.TextColor = TableCellTextColor;
+		}
+
 		void ApplyToVC (UIViewController vc, HashSet<IntPtr> visited)
 		{
 			if (vc == null)

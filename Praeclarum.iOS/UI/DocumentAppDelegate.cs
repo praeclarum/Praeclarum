@@ -2051,7 +2051,7 @@ namespace Praeclarum.UI
 					editor.UnbindUI ();
 					if (doc != null)
 						await doc.CloseAsync ();
-					Console.WriteLine (doc);
+					//Console.WriteLine (doc);
 					var ni = rvc?.NavigationItem;
 					if (ni != null)
 						ni.LeftBarButtonItem = null;

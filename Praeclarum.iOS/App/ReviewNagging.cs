@@ -20,6 +20,8 @@ namespace Praeclarum.App
 
 		bool Shown => defs.BoolForKey (shownKey);
 
+		public bool NeedsReview => !Shown;
+
 		public ReviewNagging (int minNumPositiveActions = 5)
 		{
 			var appVersionFull = NSBundle.MainBundle.InfoDictionary["CFBundleShortVersionString"]?.ToString () ?? "1.0";

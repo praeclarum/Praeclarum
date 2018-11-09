@@ -137,17 +137,7 @@ namespace Praeclarum.UI
 
 			if (!useDocumentBrowser) {
 
-				//
-				// Initialize the file system manager
-				//
-				try {
-					OpenedDocIndex = -1;
-					FileSystemManager.Shared = new FileSystemManager ();
-					FileSystemManager.Shared.ActiveFileSystem = new LoadingFileSystem ();
-				}
-				catch (Exception ex) {
-					Log.Error (ex);
-				}
+				OpenedDocIndex = -1;
 
 				//
 				// Load the MRU
@@ -504,7 +494,7 @@ namespace Praeclarum.UI
 		bool HandleDropboxUrl (NSUrl url)
 		{
 			var session = DropboxSession.SharedSession;
-			if (session.HandleOpenUrl (url) && session.IsLinked) {
+			if (session != null && session.HandleOpenUrl (url) && session.IsLinked) {
 				var fman = FileSystemManager.Shared;
 				var fs = fman.FileSystems.OfType<DropboxFileSystem> ().FirstOrDefault (x => x.UserId == session.AccountId);
 				if (fs != null) {

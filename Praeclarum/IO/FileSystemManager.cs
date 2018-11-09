@@ -16,7 +16,9 @@ namespace Praeclarum.IO
 			set;
 		}
 
-		public static FileSystemManager Shared { get; set; }
+		public static FileSystemManager Shared { get; } = new FileSystemManager {
+			ActiveFileSystem = new LoadingFileSystem (),
+		};
 
 		public FileSystemManager ()
 		{

@@ -1824,7 +1824,7 @@ namespace Praeclarum.UI
 						c.ScaleCTM (scale, -scale);
 
 						var g = new Praeclarum.Graphics.CoreGraphicsGraphics (c, true);
-						App.DrawThumbnail (s, g, size, theme);
+						App.DrawThumbnail (s, g, size, theme, readOnlyDoc: false);
 
 						//
 						// Create the bitmap

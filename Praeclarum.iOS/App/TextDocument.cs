@@ -100,7 +100,7 @@ namespace Praeclarum.App
 				var c = UIGraphics.GetCurrentContext ();
 				var g = new Graphics.CoreGraphicsGraphics (c, true);
 
-				DocumentAppDelegate.Shared.App.DrawThumbnail (this, g, size, DocumentAppDelegate.Shared.Theme);
+				DocumentAppDelegate.Shared.App.DrawThumbnail (this, g, size, DocumentAppDelegate.Shared.Theme, readOnlyDoc: true);
 
 				var image = UIGraphics.GetImageFromCurrentImageContext ();
 				UIGraphics.EndImageContext ();

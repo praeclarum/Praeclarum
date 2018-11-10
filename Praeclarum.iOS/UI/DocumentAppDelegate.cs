@@ -246,7 +246,10 @@ namespace Praeclarum.UI
 				}
 			}
 
-			if (!useDocumentBrowser) {
+			if (useDocumentBrowser) {
+				uiInitialized = true;
+			}
+			else {
 				//
 				// Init the file system
 				//
@@ -449,7 +452,8 @@ namespace Praeclarum.UI
 			pendingUrl = null;
 
 			if (url != null) {
-				await initFileSystemTask;
+				if (initFileSystemTask != null)
+					await initFileSystemTask;
 				await OpenUrlAsync (url);
 			}
 		}
@@ -807,8 +811,8 @@ namespace Praeclarum.UI
 
 		public IDocumentEditor CurrentDocumentEditor {
 			get {
-				var vcs = (detailNav ?? docListNav).ViewControllers;
-				return vcs.OfType<IDocumentEditor> ().LastOrDefault ();
+				var vcs = (detailNav ?? docListNav ?? (PresenterController?.PresentedViewController as UINavigationController))?.ViewControllers;
+				return vcs?.OfType<IDocumentEditor> ().LastOrDefault ();
 			}
 		}
 
@@ -2028,7 +2032,7 @@ namespace Praeclarum.UI
 			Console.WriteLine ("FAIL " + error);
 		}
 
-		void PresentDocument (UIDocumentBrowserViewController controller, NSUrl url)
+		public void PresentDocument (UIDocumentBrowserViewController controller, NSUrl url)
 		{
 			var editor = app.CreateDocumentEditor (url);
 			if (editor is UIViewController vc) {

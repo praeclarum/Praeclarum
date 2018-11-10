@@ -248,6 +248,8 @@ namespace Praeclarum.UI
 
 			if (useDocumentBrowser) {
 				uiInitialized = true;
+				if (FileSystemManager.Shared != null)
+					FileSystemManager.Shared.ActiveFileSystem = new DeviceFileSystem ();
 			}
 			else {
 				//

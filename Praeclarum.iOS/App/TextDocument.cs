@@ -4,6 +4,8 @@ using Foundation;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Praeclarum.UI;
+using Praeclarum.Graphics;
 
 namespace Praeclarum.App
 {
@@ -88,12 +90,41 @@ namespace Praeclarum.App
 			}
 		}
 
+		public override NSDictionary GetFileAttributesToWrite (NSUrl forUrl, UIDocumentSaveOperation saveOperation, out NSError outError)
+		{
+			try {
+				var imageScale = (nfloat)1.0;
+				var size = new SizeF (1024, 1024);
+
+				UIGraphics.BeginImageContextWithOptions (new CoreGraphics.CGSize (size.Width, size.Height), true, imageScale);
+				var c = UIGraphics.GetCurrentContext ();
+				var g = new Graphics.CoreGraphicsGraphics (c, true);
+
+				DocumentAppDelegate.Shared.App.DrawThumbnail (this, g, size, DocumentAppDelegate.Shared.Theme);
+
+				var image = UIGraphics.GetImageFromCurrentImageContext ();
+				UIGraphics.EndImageContext ();
+
+				outError = null;
+				var images = NSDictionary.FromObjectsAndKeys (
+					new NSObject[] { image },
+					new NSObject[] { new NSString ("NSThumbnail1024x1024SizeKey") });
+				return NSDictionary.FromObjectsAndKeys (
+					new NSObject[] { NSNumber.FromBoolean (true), images },
+					new NSObject[] { NSUrl.HasHiddenExtensionKey, NSUrl.ThumbnailDictionaryKey });
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+				return base.GetFileAttributesToWrite (forUrl, saveOperation, out outError);
+			}
+		}
+
 		#region IDocument implementation
 
 		async Task IDocument.OpenAsync ()
 		{
 			var ok = await OpenAsync ();
-//			Console.WriteLine ("OpenAsync? {0}", ok);
+			//			Console.WriteLine ("OpenAsync? {0}", ok);
 			if (!ok)
 				throw new Exception ("UIDocument.OpenAsync failed");
 		}
@@ -101,7 +132,7 @@ namespace Praeclarum.App
 		async Task IDocument.SaveAsync (string path, DocumentSaveOperation operation)
 		{
 			var ok = await SaveAsync (
-				NSUrl.FromFilename (path), 
+				NSUrl.FromFilename (path),
 				operation == DocumentSaveOperation.ForCreating ?
 				UIDocumentSaveOperation.ForCreating :
 				UIDocumentSaveOperation.ForOverwriting);

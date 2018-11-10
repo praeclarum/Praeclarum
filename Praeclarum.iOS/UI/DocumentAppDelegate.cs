@@ -16,9 +16,9 @@ namespace Praeclarum.UI
 	[Register ("DocumentAppDelegate")]
 	public class DocumentAppDelegate : UIApplicationDelegate
 	{
-		static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
-		static readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
-		static readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
+		protected static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
+		protected static readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
+		protected static readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 
 		public ReviewNagging ReviewNagging { get; private set; }
 

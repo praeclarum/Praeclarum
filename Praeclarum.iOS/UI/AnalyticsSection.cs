@@ -9,11 +9,11 @@ namespace Praeclarum.UI
 		public AnalyticsSection (Action disable)
 		{
 			this.disable = disable;
-			Hint = "In order to improve iCircuit, anonymous usage data can be collected and sent to the developer. " +
+			Hint = ("In order to improve iCircuit, anonymous usage data can be collected and sent to the developer. " +
 				"This data includes which elements you add, which properties you set (not including values), and what errors occur. " +
-				"To opt out of this, tap the option to turn it off (unchecked).";
+				"To opt out of this, tap the option to turn it off (unchecked).").Localize ();
 			
-			Items.Add ("Enable Anonymous Analytics");
+			Items.Add ("Enable Anonymous Analytics".Localize ());
 		}
 
 		public override bool GetItemChecked (object item)

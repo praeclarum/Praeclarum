@@ -41,5 +41,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\IView.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\UserInterface.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\Point.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Localization.cs" />
   </ItemGroup>
 </Project>

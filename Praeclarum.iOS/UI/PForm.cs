@@ -16,7 +16,7 @@ namespace Praeclarum.UI
 		public PForm (string title = "")
 			: base (UIKit.UITableViewStyle.Grouped)
 		{
-			Title = title ?? "";
+			Title = (title ?? "").Localize ();
 
 			sections = new ObservableCollection<PFormSection> ();
 			sections.CollectionChanged += HandleSectionsChanged;

@@ -19,10 +19,10 @@ namespace Praeclarum.UI
 
 		public DarkModeSection (Func<bool> isDark, Action toggle)
 		{
-			Title = "Theme";
+			Title = "Theme".Localize ();
 
-			Items.Add ("Light Mode");
-			Items.Add ("Dark Mode");
+			Items.Add ("Light Mode".Localize ());
+			Items.Add ("Dark Mode".Localize ());
 
 			this.isDarkFunc = isDark;
 			this.toggleAction = toggle;

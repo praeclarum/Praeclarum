@@ -8,7 +8,7 @@ namespace Praeclarum.UI
 		public StorageSection ()
 			: base (new Command ("Storage"))
 		{
-			Title = "Storage";
+			Title = "Storage".Localize ();
 //			Hint = "Select where to save documents.";
 		}
 
@@ -36,7 +36,7 @@ namespace Praeclarum.UI
 			var isp = DocumentAppDelegate.Shared.FileSystem;
 			return isp != null ?
 				isp.Description :
-				"Storage";
+				"Storage".Localize ();
 		}
 	}
 }

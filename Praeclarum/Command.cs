@@ -15,7 +15,7 @@ namespace Praeclarum
 
 		public Command (string name, AsyncAction action = null)
 		{
-			Name = name;
+			Name = name.Localize ();
 			Action = action;
 		}
 

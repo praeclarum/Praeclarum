@@ -2023,13 +2023,13 @@ namespace Praeclarum.UI
 			var url = documentUrls.FirstOrDefault ();
 			if (url != null) {
 				Console.WriteLine ("PICK " + url);
-				PresentDocument (controller, url);
+				PresentDocument (controller, url, true);
 			}
 		}
 
 		public override void DidImportDocument (UIDocumentBrowserViewController controller, NSUrl sourceUrl, NSUrl destinationUrl)
 		{
-			PresentDocument (controller, destinationUrl);
+			PresentDocument (controller, destinationUrl, true);
 		}
 
 		public override void FailedToImportDocument (UIDocumentBrowserViewController controller, NSUrl documentUrl, NSError error)
@@ -2037,7 +2037,9 @@ namespace Praeclarum.UI
 			Console.WriteLine ("FAIL " + error);
 		}
 
-		public void PresentDocument (UIDocumentBrowserViewController controller, NSUrl url)
+		Func<bool, Task> dismissLastDocument;
+
+		public void PresentDocument (UIDocumentBrowserViewController controller, NSUrl url, bool animated)
 		{
 			var editor = app.CreateDocumentEditor (url);
 			if (editor is UIViewController vc) {
@@ -2051,25 +2053,56 @@ namespace Praeclarum.UI
 				nvc.ModalPresentationStyle = UIModalPresentationStyle.OverCurrentContext;
 				nvc.ModalTransitionStyle = UIModalTransitionStyle.CrossDissolve;
 
-				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (UIBarButtonSystemItem.Done, async (sender, e) => {
-					var doc = editor.Document;
-					var saveTask = editor.SaveDocument ();
-					await nvc.DismissViewControllerAsync (true);
-					await saveTask;
-					editor.UnbindDocument ();
-					editor.UnbindUI ();
-					if (doc != null)
-						await doc.CloseAsync ();
-					//Console.WriteLine (doc);
-					var ni = rvc?.NavigationItem;
-					if (ni != null)
-						ni.LeftBarButtonItem = null;
+				Func<bool, Task> dismiss = a => DismissEditor (editor, nvc, a);
+
+				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (UIBarButtonSystemItem.Done, (sender, e) => {
+					dismiss (true);
+					Interlocked.CompareExchange (ref dismissLastDocument, null, dismiss);
 				});
 
-				Log.Info ($"Loaded editor: {vc}");
-				editor.BindDocument ();
-				controller.PresentViewController (nvc, true, null);
+				var d = dismissLastDocument;
+				if (d != null) {
+					dismissLastDocument = null;
+					d (animated).ContinueWith (x => BeginInvokeOnMainThread (Present));
+				}
+				else {
+					Present ();
+				}
+
+				void Present ()
+				{
+					try {
+						Log.Info ($"Loaded editor: {vc}");
+						editor.BindDocument ();
+						controller.PresentViewController (nvc, animated, null);
+						dismissLastDocument = dismiss;
+					}
+					catch (Exception ex) {
+						Log.Error (ex);
+					}
+				}
 			}
+		}
+
+		async Task DismissEditor (IDocumentEditor editor, UINavigationController nvc, bool animated)
+		{
+			var doc = editor.Document;
+			var saveTask = editor.SaveDocument ();
+			var dismissTask = nvc.DismissViewControllerAsync (animated);
+
+			var rvc = nvc?.ViewControllers.FirstOrDefault ();
+			var ni = rvc?.NavigationItem;
+			if (ni != null)
+				ni.LeftBarButtonItem = null;
+
+			await saveTask;
+			await dismissTask;
+
+			editor.UnbindDocument ();
+			editor.UnbindUI ();
+			if (doc != null)
+				await doc.CloseAsync ();
+			//Console.WriteLine (doc);
 		}
 	}
 

@@ -250,6 +250,9 @@ namespace Praeclarum.UI
 				uiInitialized = true;
 				if (FileSystemManager.Shared != null)
 					FileSystemManager.Shared.ActiveFileSystem = new DeviceFileSystem ();
+				if (ShouldRestoreDocs ()) {
+					RestoreDocumentation ();
+				}
 			}
 			else {
 				//

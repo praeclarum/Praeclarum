@@ -250,8 +250,16 @@ namespace Praeclarum.UI
 				uiInitialized = true;
 				if (FileSystemManager.Shared != null)
 					FileSystemManager.Shared.ActiveFileSystem = new DeviceFileSystem ();
+				var del = docBrowser?.Delegate as DocumentsBrowserDelegate;
 				if (ShouldRestoreDocs ()) {
-					RestoreDocumentation ();
+					RestoreDocumentation ().ContinueWith (t => {
+						if (!t.IsFaulted)
+							BeginInvokeOnMainThread (() =>
+								del?.PresentLastDocument (docBrowser, false));
+					});
+				}
+				else {
+					del?.PresentLastDocument (docBrowser, false);
 				}
 			}
 			else {
@@ -1980,6 +1988,8 @@ namespace Praeclarum.UI
 		{
 			return Enumerable.Empty<Tuple<int, string>> ();
 		}
+
+		public virtual NSUrl GetFirstRunOpenUrl () => null;
 	}
 
 	public class DocumentsBrowserDelegate : UIDocumentBrowserViewControllerDelegate
@@ -2072,10 +2082,12 @@ namespace Praeclarum.UI
 				void Present ()
 				{
 					try {
-						Log.Info ($"Loaded editor: {vc}");
+						Log.Info ($"Loading editor: {editor}");
+
 						editor.BindDocument ();
 						controller.PresentViewController (nvc, animated, null);
 						dismissLastDocument = dismiss;
+						SaveLastUrl (url);
 					}
 					catch (Exception ex) {
 						Log.Error (ex);
@@ -2086,6 +2098,10 @@ namespace Praeclarum.UI
 
 		async Task DismissEditor (IDocumentEditor editor, UINavigationController nvc, bool animated)
 		{
+			Log.Info ($"Closing editor: {editor}");
+
+			ClearLastUrl ();
+
 			var doc = editor.Document;
 			var saveTask = editor.SaveDocument ();
 			var dismissTask = nvc.DismissViewControllerAsync (animated);
@@ -2103,6 +2119,43 @@ namespace Praeclarum.UI
 			if (doc != null)
 				await doc.CloseAsync ();
 			//Console.WriteLine (doc);
+		}
+
+		static readonly NSString lastUrlKey = new NSString ("com.praeclarum.last-url");
+
+		void SaveLastUrl (NSUrl url)
+		{
+			if (url == null)
+				return;
+			var data = url.CreateBookmarkData (NSUrlBookmarkCreationOptions.SecurityScopeAllowOnlyReadAccess, Array.Empty<string> (), null, out var error);
+			if (error == null && data != null)
+				NSUserDefaults.StandardUserDefaults.SetValueForKey (data, lastUrlKey);
+		}
+
+		void ClearLastUrl ()
+		{
+			NSUserDefaults.StandardUserDefaults.RemoveObject (lastUrlKey);
+		}
+
+		public void PresentLastDocument (UIDocumentBrowserViewController controller, bool animated)
+		{
+			NSUrl url = null;
+
+			if (DocumentAppDelegate.Shared.Settings.IsFirstRun ()) {
+				url = DocumentAppDelegate.Shared.GetFirstRunOpenUrl ();
+			}
+
+			if (url == null) {
+				if (NSUserDefaults.StandardUserDefaults.ValueForKey (lastUrlKey) is NSData data) {
+					var durl = NSUrl.FromBookmarkData (data, NSUrlBookmarkResolutionOptions.WithSecurityScope, null, out var isStale, out var error);
+					if (error == null && !isStale) {
+						url = durl;
+					}
+				}
+			}
+
+			if (url != null)
+				PresentDocument (controller, url, animated);
 		}
 	}
 

@@ -110,12 +110,14 @@ namespace Praeclarum.UI
 		List<Action> viewLoadedActions = new List<Action>();
 		protected void WhenViewLoaded(Action action) {
 			if (viewLoaded) {
-				try {
-					action ();
-				}
-				catch (Exception ex) {
-					Log.Error (ex);
-				}
+				BeginInvokeOnMainThread (() => {
+					try {
+						action ();
+					}
+					catch (Exception ex) {
+						Log.Error (ex);
+					}
+				});
 			} else {
 				viewLoadedActions.Add (action);
 			}

@@ -52,5 +52,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\StorageSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\AnalyticsSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\ReviewNagging.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TranslateSection.cs" />
   </ItemGroup>
 </Project>

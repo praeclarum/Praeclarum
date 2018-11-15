@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Praeclarum.UI
 {
-	public partial class PForm : UITableViewController
+	public partial class PForm : UITableViewController, IThemeAware
 	{
 		/// <summary>
 		/// Automatically show a done button?
@@ -20,10 +20,16 @@ namespace Praeclarum.UI
 		/// </summary>
 		public bool AutoCancelButton { get; set; }
 
+		readonly bool useBlur = !UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
+		UIBlurEffect blurEffect;
+
 		partial void InitializeUI ()
 		{
 			AutoCancelButton = false;
 			AutoDoneButton = true;
+
+			if (useBlur)
+				blurEffect = UIBlurEffect.FromStyle (Theme.Current.IsDark ? UIBlurEffectStyle.Dark : UIBlurEffectStyle.Light);
 		}
 
 		public override void ViewDidLoad ()
@@ -46,7 +52,14 @@ namespace Praeclarum.UI
 						HandleDone);
 				}
 
-				Theme.Current.Apply (TableView);
+				if (useBlur) {
+					TableView.BackgroundColor = UIColor.Clear;
+					TableView.BackgroundView = new UIVisualEffectView (effect: blurEffect);
+					TableView.SeparatorEffect = UIVibrancyEffect.FromBlurEffect (blurEffect);
+				}
+				else {
+					Theme.Current.Apply (this.TableView);
+				}
 			}
 			catch (Exception ex) {
 				Log.Error (ex);
@@ -57,10 +70,13 @@ namespace Praeclarum.UI
 		{
 			base.ViewWillAppear (animated);
 			try {
-				var nc = NavigationController;
-				if (nc != null) {
-					Theme.Current.Apply (nc);
+				Theme.Current.Apply (NavigationController);
+				if (useBlur) {
+					var popover = NavigationController?.PopoverPresentationController;
+					if (popover != null)
+						popover.BackgroundColor = UIColor.Clear;
 				}
+
 				TableView.ReloadData ();
 			} catch (Exception ex) {
 				Log.Error (ex);
@@ -155,11 +171,11 @@ namespace Praeclarum.UI
 
 				for (int row = 0; row < section.Items.Count; row++) {
 					var item = section.Items [row];
-					var c = TableView.CellAt (NSIndexPath.FromRowSection (row, si)) as PFormCell;
-					if (c != null) {
+					if (TableView.CellAt (NSIndexPath.FromRowSection (row, si)) is PFormCell c) {
 						try {
-							ds.FormatCell (c, section, item);
-						} catch (Exception ex) {
+							c.Format (section, item);
+						}
+						catch (Exception ex) {
 							Debug.WriteLine (ex);
 						}
 					}
@@ -170,8 +186,22 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public void ApplyTheme (Theme theme)
+		{
+			if (useBlur && IsViewLoaded) {
+				blurEffect = UIBlurEffect.FromStyle (theme.IsDark ? UIBlurEffectStyle.Dark : UIBlurEffectStyle.Light);
+				TableView.BackgroundView = new UIVisualEffectView (effect: blurEffect);
+				TableView.SeparatorEffect = UIVibrancyEffect.FromBlurEffect (blurEffect);
+			}
+		}
+
 		public class PFormCell : UITableViewCell, IThemeAware
 		{
+			static readonly Dictionary<string, UIImage> imageCache =
+				new Dictionary<string, UIImage> ();
+
+			readonly bool useBlur = !UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
+
 			public PFormCell (PFormItemDisplay display, string reuseId)
 				: base (
 					(display == PFormItemDisplay.Title) ? UITableViewCellStyle.Default
@@ -181,11 +211,74 @@ namespace Praeclarum.UI
 				ApplyTheme (Theme.Current);
 			}
 
+			public void Format (PFormSection section, object item)
+			{
+				var cell = this;
+				var theme = Theme.Current;
+				theme.Apply (cell);
+				if (useBlur)
+					BackgroundColor = theme.TableCellBackgroundColor.ColorWithAlpha (0.5f);
+
+				var itemTitle = section.GetItemTitle (item);
+				cell.TextLabel.Text = itemTitle;
+				cell.TextLabel.AccessibilityLabel = itemTitle;
+				cell.TextLabel.BackgroundColor = UIColor.Clear;
+
+				var display = section.GetItemDisplay (item);
+				if (display != PFormItemDisplay.Title) {
+					cell.DetailTextLabel.Text = section.GetItemDetails (item) ?? "";
+					if (display == PFormItemDisplay.TitleAndValue) {
+						cell.DetailTextLabel.TextColor = UIApplication.SharedApplication.KeyWindow.TintColor;
+					}
+				}
+
+				var imageUrl = section.GetItemImage (item);
+				if (string.IsNullOrEmpty (imageUrl)) {
+					cell.ImageView.Image = null;
+				}
+				else {
+					UIImage image;
+					if (!imageCache.TryGetValue (imageUrl, out image)) {
+						image = UIImage.FromBundle (imageUrl);
+						imageCache.Add (imageUrl, image);
+					}
+					cell.ImageView.Image = image;
+				}
+
+				if (section.GetItemChecked (item)) {
+					cell.Accessory = UITableViewCellAccessory.Checkmark;
+
+					theme.ApplyChecked (cell);
+
+
+				}
+				else {
+					cell.Accessory = section.GetItemNavigates (item) ?
+								 UITableViewCellAccessory.DisclosureIndicator :
+								 UITableViewCellAccessory.None;
+				}
+
+				if (section.GetItemEnabled (item)) {
+					var cmd = item as Command;
+					if (cmd != null) {
+						theme.ApplyCommand (cell);
+					}
+					cell.SelectionStyle = UITableViewCellSelectionStyle.Blue;
+				}
+				else {
+					cell.TextLabel.TextColor = UIColor.LightGray;
+					cell.SelectionStyle = UITableViewCellSelectionStyle.None;
+				}
+			}
+
 			#region IThemeAware implementation
 
 			public void ApplyTheme (Theme theme)
 			{
-				BackgroundColor = theme.TableCellBackgroundColor;
+				if (useBlur)
+					BackgroundColor = theme.TableCellBackgroundColor.ColorWithAlpha (0.5f);
+				else
+					BackgroundColor = theme.TableCellBackgroundColor;
 				TextLabel.TextColor = theme.TableCellTextColor;
 			}
 
@@ -258,7 +351,7 @@ namespace Praeclarum.UI
 					}
 
 					try {
-						FormatCell (cell, section, item);
+						cell.Format (section, item);
 					} catch (Exception ex) {
 						Debug.WriteLine (ex);
 					}
@@ -269,64 +362,6 @@ namespace Praeclarum.UI
 					return new UITableViewCell ();
 				}
 
-			}
-
-			static readonly Dictionary<string, UIImage> imageCache = 
-				new Dictionary<string, UIImage> ();
-
-			public void FormatCell (PFormCell cell, PFormSection section, object item)
-			{
-				var theme = Theme.Current;
-				theme.Apply (cell);
-
-				var itemTitle = section.GetItemTitle (item);
-				cell.TextLabel.Text = itemTitle;
-				cell.TextLabel.AccessibilityLabel = itemTitle;
-				cell.TextLabel.BackgroundColor = UIColor.Clear;
-
-				var display = section.GetItemDisplay (item);
-				if (display != PFormItemDisplay.Title) {
-					cell.DetailTextLabel.Text = section.GetItemDetails (item) ?? "";
-					if (display == PFormItemDisplay.TitleAndValue) {
-						cell.DetailTextLabel.TextColor = UIApplication.SharedApplication.KeyWindow.TintColor;
-					}
-				}
-
-				var imageUrl = section.GetItemImage (item);
-				if (string.IsNullOrEmpty (imageUrl)) {
-					cell.ImageView.Image = null;
-				} else {
-					UIImage image;
-					if (!imageCache.TryGetValue (imageUrl, out image)) {
-						image = UIImage.FromBundle (imageUrl);
-						imageCache.Add (imageUrl, image);
-					}
-					cell.ImageView.Image = image;
-				}
-
-				if (section.GetItemChecked (item)) {
-					cell.Accessory = UITableViewCellAccessory.Checkmark;
-
-					theme.ApplyChecked (cell);
-
-
-				} else {
-					cell.Accessory = section.GetItemNavigates (item) ?
-					             UITableViewCellAccessory.DisclosureIndicator :
-					             UITableViewCellAccessory.None;
-				}
-
-				if (section.GetItemEnabled (item)) {
-					var cmd = item as Command;
-					if (cmd != null) {
-						theme.ApplyCommand (cell);
-					}
-					cell.SelectionStyle = UITableViewCellSelectionStyle.Blue;
-				}
-				else {
-					cell.TextLabel.TextColor = UIColor.LightGray;
-					cell.SelectionStyle = UITableViewCellSelectionStyle.None;
-				}
 			}
 
 			public override void RowSelected (UITableView tableView, NSIndexPath indexPath)
@@ -340,10 +375,7 @@ namespace Praeclarum.UI
 						if (!sel) {
 							tableView.DeselectRow (indexPath, true);
 							var cell = tableView.CellAt (indexPath) as PFormCell;
-							var source = tableView.Source as FormSource;
-							if (source != null) {
-								source.FormatCell (cell, section, item);
-							}
+							cell.Format (section, item);
 						}
 					}
 					else {

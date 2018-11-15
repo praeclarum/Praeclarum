@@ -1703,30 +1703,52 @@ namespace Praeclarum.UI
 			CultureInfo cult = null;
 
 			var current = NSLocale.CurrentLocale;
-			var id = current.LocaleIdentifier;
+			var localeId = current.LocaleIdentifier;
+			var regionId = "";
+			var languageId = localeId;
+
+			var u = localeId.IndexOf ('_');
+			if (u > 0) {
+				regionId = localeId.Substring (u + 1);
+				languageId = localeId.Substring (0, u);
+			}
+
+			Log.Info ($"Locale: {languageId} in {regionId}");
 
 			try {
-				var fullName = id.Replace ('_', '-');
-				cult = CultureInfo.GetCultureInfo (fullName);
+				cult = CultureInfo.GetCultureInfo (languageId + "-" + regionId);
 			} catch (Exception) {
 				cult = null;
 			}
 
 			if (cult == null) {
 				try {
-					var justRegionFormat = id.Substring (id.IndexOf ('_') + 1);
-					cult = CultureInfo.GetCultureInfo (justRegionFormat);
-				} catch (Exception) {
+					cult = CultureInfo.GetCultures (CultureTypes.SpecificCultures).FirstOrDefault (x => {
+						var n = x.Name;
+						var d = n.LastIndexOf ('-');
+						return d > 0 && n.Substring (d + 1) == regionId;
+					});
+				}
+				catch (Exception) {
 					cult = null;
 				}
 			}
 
 			if (cult == null) {
-				Debug.WriteLine ("Failed to recognize locale: " + id);
+				try {
+					cult = CultureInfo.GetCultureInfo (languageId);
+				}
+				catch (Exception) {
+					cult = null;
+				}
+			}
+
+			if (cult == null) {
+				Log.Error ("Failed to recognize locale: " + localeId);
 				cult = CultureInfo.InvariantCulture;
 			}
 
-			Console.WriteLine ("Culture set to: " + cult);
+			Log.Info ("Culture set to: " + cult);
 
 			CurrentCulture = cult;
 		}

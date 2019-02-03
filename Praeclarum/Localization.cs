@@ -10,17 +10,29 @@ namespace Praeclarum
 			if (obj == null)
 				return "";
 			var english = obj.ToString ();
-			return Note (english, Foundation.NSBundle.MainBundle.LocalizedString (key: english, comment: ""));
+			var t = Translate (english);
+			return Note (english, t);
 		}
 
 		public static string Localize (this string english)
 		{
-			return Note (english, Foundation.NSBundle.MainBundle.LocalizedString (key: english, comment: ""));
+			var t = Translate (english);
+			return Note (english, t);
 		}
 
 		public static string Localize (this string format, params object[] args)
 		{
-			return string.Format (Note (format, Foundation.NSBundle.MainBundle.LocalizedString (key: format, comment: "")), args);
+			var t = Translate (format);
+			return string.Format (Note (format, t), args);
+		}
+
+		static string Translate (string english)
+		{
+#if __IOS__ || __MACOS__
+			return Foundation.NSBundle.MainBundle.LocalizedString (key: english, comment: "");
+#else
+			return english;
+#endif
 		}
 
 #if DEBUG

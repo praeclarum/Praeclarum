@@ -18,7 +18,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\CoreGraphicsGraphics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\CloudFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\DeviceFileSystem.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)IO\EmptyFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ActivityIndicator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Canvas.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentAppDelegate.cs" />

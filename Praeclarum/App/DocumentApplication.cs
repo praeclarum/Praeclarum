@@ -108,3 +108,15 @@ namespace Praeclarum.App
 	}
 }
 
+
+#if !(__IOS__ || __MACOS__)
+
+namespace Foundation
+{
+    public class NSUrl
+    {
+    }
+}
+
+#endif
+

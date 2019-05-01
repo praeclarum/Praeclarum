@@ -43,5 +43,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\Point.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Localization.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\EmptyFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Theme.cs" />
   </ItemGroup>
 </Project>

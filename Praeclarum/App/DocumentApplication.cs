@@ -5,7 +5,6 @@ using Praeclarum.Graphics;
 using System.Linq;
 using Foundation;
 using System.Threading.Tasks;
-using UIKit;
 
 namespace Praeclarum.App
 {

@@ -57,10 +57,8 @@ namespace Praeclarum.IO
 
 		public Task<IFile> CreateFile (string path, byte[] contents)
 		{
-			var tcs = new TaskCompletionSource<IFile> ();
-			tcs.SetResult (new DeviceFile (path, path));
-			return tcs.Task;
-		}
+            throw new Exception ("Empty File System cannot hold files");
+        }
 
 		public Task<bool> CreateDirectory (string path)
 		{

@@ -29,7 +29,9 @@ namespace Praeclarum
 		static string Translate (string english)
 		{
 #if __IOS__ || __MACOS__
+#pragma warning disable CS0618 // Type or member is obsolete
 			return Foundation.NSBundle.MainBundle.LocalizedString (key: english, comment: "");
+#pragma warning restore CS0618 // Type or member is obsolete
 #else
 			return english;
 #endif

@@ -19,6 +19,7 @@ namespace Praeclarum.UI
 		protected static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 		protected static readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
 		protected static readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
+		protected static readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
 
 		public ReviewNagging ReviewNagging { get; private set; }
 
@@ -193,7 +194,7 @@ namespace Praeclarum.UI
 				docBrowser = new UIDocumentBrowserViewController (utis) {
 					AllowsPickingMultipleItems = false,
 					Delegate = new DocumentsBrowserDelegate (App),
-					BrowserUserInterfaceStyle = Settings.DarkMode ? UIDocumentBrowserUserInterfaceStyle.Dark : UIDocumentBrowserUserInterfaceStyle.Light,
+					BrowserUserInterfaceStyle = DarkMode ? UIDocumentBrowserUserInterfaceStyle.Dark : UIDocumentBrowserUserInterfaceStyle.Light,
 				};
 				var settingsImage = UIImage.FromBundle ("Settings.png");
 
@@ -367,9 +368,25 @@ namespace Praeclarum.UI
 
 		public Theme Theme { get { return Praeclarum.UI.Theme.Current; } set { SetTheme (value); } }
 
+		public bool DarkMode {
+			get {				
+				if (ios13) {
+					try {
+						var c = UIColor.LabelColor;
+						c.GetRGBA (out var r, out var g, out var b, out var a);
+						return r > 0.5f;
+					}
+					catch (Exception ex) {
+						Log.Error (ex);
+					}
+				}
+				return Settings.DarkMode;
+			}
+		}
+
 		public void UpdateTheme ()
 		{
-			SetTheme (Settings.DarkMode ? (Theme)new DarkTheme () : new LightTheme ());
+			SetTheme (DarkMode ? (Theme)new DarkTheme () : new LightTheme ());
 		}
 
 		protected virtual void SetTheme (Theme newTheme)
@@ -380,7 +397,7 @@ namespace Praeclarum.UI
 			
 			newTheme.Apply ();
 			if (docBrowser != null) {
-				if (Settings.DarkMode) {
+				if (DarkMode) {
 					docBrowser.BrowserUserInterfaceStyle = UIDocumentBrowserUserInterfaceStyle.Dark;
 				}
 				else {

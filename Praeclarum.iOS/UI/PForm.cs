@@ -72,6 +72,12 @@ namespace Praeclarum.UI
 				Form.ReloadSection (this);
 		}
 
+		public virtual void SetNeedsReloadAll ()
+		{
+			if (Form != null)
+				Form.ReloadAll (this);
+		}
+
 		public virtual void SetNeedsFormat ()
 		{
 			if (Form != null)

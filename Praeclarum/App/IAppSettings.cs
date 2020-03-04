@@ -38,6 +38,7 @@ namespace Praeclarum.App
 	public interface IAppSettings
 	{
 		int RunCount { get; set; }
+		bool UseEnglish { get; set; }
 	}
 
 	public static class AppSettingsEx

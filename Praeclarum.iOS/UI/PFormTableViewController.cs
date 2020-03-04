@@ -157,6 +157,13 @@ namespace Praeclarum.UI
 			TableView.ReloadData ();//.ReloadSections (NSIndexSet.FromIndex (si), UITableViewRowAnimation.Automatic);
 		}
 
+		public virtual void ReloadAll (PFormSection section)
+		{
+			if (!IsViewLoaded)
+				return;
+			TableView.ReloadData ();
+		}
+
 		public virtual void FormatSection (PFormSection section)
 		{
 			if (!IsViewLoaded)

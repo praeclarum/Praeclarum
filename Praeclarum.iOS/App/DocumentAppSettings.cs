@@ -126,6 +126,15 @@ namespace Praeclarum.App
 			}
 		}
 
+		public bool UseEnglish {
+			get {
+				return defs.BoolForKey ("UseEnglish");
+			}
+			set {
+				defs.SetBool (value, "UseEnglish");
+			}
+		}
+
 		public bool UseCloud {
 			get {
 				return defs.BoolForKey ("UseCloud");

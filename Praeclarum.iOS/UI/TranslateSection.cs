@@ -17,7 +17,7 @@ namespace Praeclarum.UI
 		readonly List<Contrib> contribs = new List<Contrib> ();
 
 		public TranslateSection ()
-			: base (new Command ("Help Translate"))
+			: base ("Use English", new Command ("Help Translate"))
 		{
 			try {
 				var path = NSBundle.MainBundle.PathForResource ("LanguageCredits", "txt");
@@ -31,25 +31,39 @@ namespace Praeclarum.UI
 			}
 			catch (Exception ex) {
 				Log.Error (ex);
-			}
+			}			
 			Hint = "iCircuit is translated into several languages thanks to volunteers.".Localize ();
 		}
 
 		public override bool GetItemNavigates (object item)
 		{
-			return true;
+			return "Use English" != item.ToString ();
+		}
+
+		public override bool GetItemChecked (object item)
+		{
+			if ("Use English" == item.ToString ()) {
+				return DocumentAppDelegate.Shared.Settings.UseEnglish;
+			}
+			return false;
 		}
 
 		public override bool SelectItem (object item)
 		{
-			var f = new TranslateForm (contribs);
-			f.NavigationItem.RightBarButtonItem = new UIKit.UIBarButtonItem (UIKit.UIBarButtonSystemItem.Done, (s, e) => {
-				if (f != null && f.PresentingViewController != null) {
-					f.DismissViewController (true, null);
+			if (item.ToString () == "Use English") {
+				DocumentAppDelegate.Shared.Settings.UseEnglish = !DocumentAppDelegate.Shared.Settings.UseEnglish;
+				SetNeedsReloadAll ();
+			}
+			else {
+				var f = new TranslateForm (contribs);
+				f.NavigationItem.RightBarButtonItem = new UIKit.UIBarButtonItem (UIKit.UIBarButtonSystemItem.Done, (s, e) => {
+					if (f != null && f.PresentingViewController != null) {
+						f.DismissViewController (true, null);
+					}
+				});
+				if (this.Form.NavigationController != null) {
+					this.Form.NavigationController.PushViewController (f, true);
 				}
-			});
-			if (this.Form.NavigationController != null) {
-				this.Form.NavigationController.PushViewController (f, true);
 			}
 			return false;
 		}

@@ -10,6 +10,7 @@ using Praeclarum.App;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using WebKit;
 
 namespace Praeclarum.UI
 {
@@ -197,12 +198,18 @@ namespace Praeclarum.UI
 					BrowserUserInterfaceStyle = DarkMode ? UIDocumentBrowserUserInterfaceStyle.Dark : UIDocumentBrowserUserInterfaceStyle.Light,
 				};
 				var settingsImage = UIImage.FromBundle ("Settings.png");
-
 				if (settingsImage != null) {
 					settingsBtn = new UIBarButtonItem (settingsImage, UIBarButtonItemStyle.Plain, HandleSettings);
 				}
 				else {
-					settingsBtn = new UIBarButtonItem ("Settings", UIBarButtonItemStyle.Plain, HandleSettings);
+					settingsBtn = new UIBarButtonItem ("Settings".Localize (), UIBarButtonItemStyle.Plain, HandleSettings);
+				}
+				var galleryImage = UIImage.FromBundle ("Gallery.png");
+				if (galleryImage != null) {
+					galleryBtn = new UIBarButtonItem (galleryImage, UIBarButtonItemStyle.Plain, HandleSettings);
+				}
+				else {
+					galleryBtn = new UIBarButtonItem ("Gallery".Localize (), UIBarButtonItemStyle.Plain, HandleGallery);
 				}
 				patronBtn = new UIBarButtonItem ("Support " + App.Name, UIBarButtonItemStyle.Plain, HandlePatron);
 
@@ -315,7 +322,7 @@ namespace Praeclarum.UI
 
 				var items = new List<UIBarButtonItem> ();
 
-				items.Add (settingsBtn);
+				items.Add (settingsBtn);				
 
 				var needsPatronBar = false;
 				if (appdel.App.IsPatronSupported) {
@@ -327,6 +334,10 @@ namespace Praeclarum.UI
 				}
 
 				docBrowser.AdditionalLeadingNavigationBarButtonItems = items.ToArray ();
+
+				if (appdel.App.HasGallery) {
+					docBrowser.AdditionalTrailingNavigationBarButtonItems = new[] { galleryBtn };
+				}
 			}
 			catch (Exception ex) {
 				Log.Error (ex);
@@ -352,6 +363,32 @@ namespace Praeclarum.UI
 			nc.PopoverPresentationController.PermittedArrowDirections = UIPopoverArrowDirection.Up;
 			nc.PopoverPresentationController.BarButtonItem = settingsBtn;
 			docBrowser.PresentViewController (nc, true, null);
+		}
+
+		void HandleGallery (object sender, EventArgs e)
+		{
+			var vc = new GalleryViewController (App.GalleryUrl, new System.Text.RegularExpressions.Regex (App.GalleryDownloadUrlPattern));
+			var nc = new UINavigationController (vc);
+			vc.DownloadUrl += async urlAndMatch => {
+				try {
+					var dataTask = Task.Run (() => NSData.FromUrl (urlAndMatch.Item1));
+					await nc.DismissViewControllerAsync (true);
+					var data = await dataTask;
+					await AddDocumentFromDataAsync (data);
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+				}
+			};
+
+			Theme.Current.Apply (nc);
+			nc.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
+			docBrowser.PresentViewController (nc, true, null);
+		}
+
+		async Task AddDocumentFromDataAsync (NSData data)
+		{
+			Console.WriteLine (data);
 		}
 
 		protected virtual UINavigationController CreateDocumentsNavigationController (DocumentsViewController docList)
@@ -412,6 +449,7 @@ namespace Praeclarum.UI
 
 		protected UIDocumentBrowserViewController docBrowser;
 		protected UIBarButtonItem settingsBtn;
+		protected UIBarButtonItem galleryBtn;
 		protected UIBarButtonItem patronBtn;
 
 		protected virtual void SetRootViewController ()

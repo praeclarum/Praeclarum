@@ -99,6 +99,9 @@ namespace Praeclarum.App
 			return word + "s";
 		}
 
+		public bool HasGallery => !string.IsNullOrEmpty (GalleryUrl);
+		public virtual string GalleryUrl => "";
+		public virtual string GalleryDownloadUrlPattern => "";
 		public virtual bool IsPatronSupported {
 			get { return false; }
 		}

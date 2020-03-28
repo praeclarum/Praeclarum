@@ -369,7 +369,10 @@ namespace Praeclarum.UI
 		public Theme Theme { get { return Praeclarum.UI.Theme.Current; } set { SetTheme (value); } }
 
 		public bool DarkMode {
-			get {				
+			get {
+				var d = Settings.DarkMode;
+				if (d.HasValue)
+					return d.Value;
 				if (ios13) {
 					try {
 						var c = UIColor.LabelColor;
@@ -380,7 +383,7 @@ namespace Praeclarum.UI
 						Log.Error (ex);
 					}
 				}
-				return Settings.DarkMode;
+				return false;
 			}
 		}
 

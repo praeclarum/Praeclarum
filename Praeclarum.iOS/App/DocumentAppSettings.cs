@@ -150,12 +150,20 @@ namespace Praeclarum.App
 			}
 		}
 
-		public bool DarkMode {
+		public bool? DarkMode {
 			get {
+				if (defs.BoolForKey ("OverrideDarkMode"))
+					return null;
 				return defs.BoolForKey ("DarkMode");
 			}
 			set {
-				defs.SetBool (value, "DarkMode");
+				if (value.HasValue) {
+					defs.SetBool (true, "OverrideDarkMode");
+					defs.SetBool (value.Value, "DarkMode");
+				}
+				else {
+					defs.SetBool (false, "OverrideDarkMode");
+				}
 			}
 		}
 

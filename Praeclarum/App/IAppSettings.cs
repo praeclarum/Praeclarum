@@ -20,7 +20,7 @@ namespace Praeclarum.App
 
 		string DocumentationVersion { get; set; }
 
-		bool DarkMode { get; set; }
+		bool? DarkMode { get; set; }
 
 		bool IsPatron {
 			get;

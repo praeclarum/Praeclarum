@@ -6,23 +6,28 @@ namespace Praeclarum.UI
 	public class DarkModeSection : PFormSection
 	{		
 		public DarkModeSection ()
-			: this (() => DocumentAppDelegate.Shared.Settings.DarkMode, () => {
+			: this (() => DocumentAppDelegate.Shared.Settings.DarkMode, v => {
 				var appdel = DocumentAppDelegate.Shared;
-				appdel.Settings.DarkMode = !appdel.Settings.DarkMode;
+				appdel.Settings.DarkMode = v;
 				appdel.UpdateTheme ();
 			})
 		{
 		}
 
-		readonly Func<bool> isDarkFunc;
-		readonly Action toggleAction;
+		readonly Func<bool?> isDarkFunc;
+		readonly Action<bool?> toggleAction;
 
-		public DarkModeSection (Func<bool> isDark, Action toggle)
+		readonly string autoTitle = "Automatic".Localize ();
+		readonly string darkTitle = "Dark Mode".Localize ();
+		readonly string lightTitle = "Light Mode".Localize ();
+
+		public DarkModeSection (Func<bool?> isDark, Action<bool?> toggle)
 		{
 			Title = "Theme".Localize ();
 
-			Items.Add ("Light Mode".Localize ());
+			Items.Add ("Automatic".Localize ());
 			Items.Add ("Dark Mode".Localize ());
+			Items.Add ("Light Mode".Localize ());
 
 			this.isDarkFunc = isDark;
 			this.toggleAction = toggle;
@@ -31,7 +36,7 @@ namespace Praeclarum.UI
 		public override bool GetItemChecked (object item)
 		{
 			var isDark = isDarkFunc ();
-			if ("Dark Mode" == item.ToString ()) {
+			if ("Dark Mode".Localize () == item.ToString ()) {
 				return isDark;
 			}
 			return !isDark;

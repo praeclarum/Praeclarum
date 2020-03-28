@@ -322,7 +322,12 @@ namespace Praeclarum.UI
 
 				var items = new List<UIBarButtonItem> ();
 
-				items.Add (settingsBtn);				
+				items.Add (settingsBtn);
+
+				if (appdel.App.HasGallery) {
+					items.Add (new UIBarButtonItem (UIBarButtonSystemItem.FlexibleSpace));
+					items.Add (galleryBtn);
+				}
 
 				var needsPatronBar = false;
 				if (appdel.App.IsPatronSupported) {
@@ -334,10 +339,6 @@ namespace Praeclarum.UI
 				}
 
 				docBrowser.AdditionalLeadingNavigationBarButtonItems = items.ToArray ();
-
-				if (appdel.App.HasGallery) {
-					docBrowser.AdditionalTrailingNavigationBarButtonItems = new[] { galleryBtn };
-				}
 			}
 			catch (Exception ex) {
 				Log.Error (ex);
@@ -370,11 +371,21 @@ namespace Praeclarum.UI
 			var vc = new GalleryViewController (App.GalleryUrl, new System.Text.RegularExpressions.Regex (App.GalleryDownloadUrlPattern));
 			var nc = new UINavigationController (vc);
 			vc.DownloadUrl += async urlAndMatch => {
+				vc.DownloadUrl = null;
 				try {
-					var dataTask = Task.Run (() => NSData.FromUrl (urlAndMatch.Item1));
+					var url = urlAndMatch.Item1;
+					var name = url.LastPathComponent.Replace ('_', ' ');
+					var path = System.IO.Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments), name);
+					var fileUrl = NSUrl.FromFilename (path);
+					var dataTask = Task.Run (() => {
+						var d = NSData.FromUrl (url);
+						d.Save (fileUrl, atomically: true);
+					});
 					await nc.DismissViewControllerAsync (true);
-					var data = await dataTask;
-					await AddDocumentFromDataAsync (data);
+					await dataTask;
+					if (docBrowser?.Delegate is Praeclarum.UI.DocumentsBrowserDelegate del) {
+						del.PresentDocument (docBrowser, fileUrl, true);
+					}
 				}
 				catch (Exception ex) {
 					Log.Error (ex);
@@ -384,11 +395,6 @@ namespace Praeclarum.UI
 			Theme.Current.Apply (nc);
 			nc.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
 			docBrowser.PresentViewController (nc, true, null);
-		}
-
-		async Task AddDocumentFromDataAsync (NSData data)
-		{
-			Console.WriteLine (data);
 		}
 
 		protected virtual UINavigationController CreateDocumentsNavigationController (DocumentsViewController docList)
@@ -406,7 +412,7 @@ namespace Praeclarum.UI
 		public Theme Theme { get { return Praeclarum.UI.Theme.Current; } set { SetTheme (value); } }
 
 		public bool DarkMode {
-			get {				
+			get {
 				if (ios13) {
 					try {
 						var c = UIColor.LabelColor;
@@ -431,7 +437,7 @@ namespace Praeclarum.UI
 			Theme.Current = newTheme;
 			if (window != null)
 				window.TintColor = newTheme.TintColor;
-			
+
 			newTheme.Apply ();
 			if (docBrowser != null) {
 				if (DarkMode) {
@@ -582,7 +588,7 @@ namespace Praeclarum.UI
 					DropboxFileSystemProvider.AddCompletionSource = null;
 				}
 				if (fs.IsAvailable) {
-					SetFileSystemAsync (fs, true).ContinueWith (t =>  {
+					SetFileSystemAsync (fs, true).ContinueWith (t => {
 						if (t.IsFaulted) {
 							Debug.WriteLine (t.Exception);
 						}
@@ -600,7 +606,8 @@ namespace Praeclarum.UI
 			try {
 				if (HandleDropboxUrl (url))
 					return true;
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 			}
 #endif
@@ -808,7 +815,8 @@ namespace Praeclarum.UI
 #if !NO_DROPBOX
 			try {
 				fsman.Add (new DropboxFileSystemProvider (DropboxSyncKey, DropboxSyncSecret, DropboxAppFolder));
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Debug.WriteLine (ex);
 			}
 #endif
@@ -850,7 +858,7 @@ namespace Praeclarum.UI
 
 		async void HandleFilesChanged (object sender, EventArgs e)
 		{
-//			Console.WriteLine ("FILES CHANGED");
+			//			Console.WriteLine ("FILES CHANGED");
 
 			foreach (var dl in docListNav.ViewControllers.OfType<DocumentsViewController> ()) {
 				await dl.LoadDocs ();
@@ -861,7 +869,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public string Version { 
+		public string Version {
 			get { return NSBundle.MainBundle.ObjectForInfoDictionary ("CFBundleVersion").ToString (); }
 		}
 
@@ -895,21 +903,20 @@ namespace Praeclarum.UI
 
 		public string OpenedDocPath { get { return openedDocPath; } }
 
-		public int OpenedDocIndex
-		{
+		public int OpenedDocIndex {
 			get {
 				if (string.IsNullOrEmpty (openedDocPath))
 					return -1;
 
 				for (var i = 0; i < Docs.Count; i++)
-					if (Docs [i].File.Path == openedDocPath)
+					if (Docs[i].File.Path == openedDocPath)
 						return i;
 
 				return -1;
 			}
 			set {
 				if (0 <= value && value < Docs.Count)
-					openedDocPath = Docs [value].File.Path;
+					openedDocPath = Docs[value].File.Path;
 				else
 					openedDocPath = null;
 			}
@@ -934,7 +941,7 @@ namespace Praeclarum.UI
 			var docRef = editor.DocumentReference;
 			if (docRef == null)
 				return;
-			
+
 			var doc = docRef.Document;
 			if (doc == null)
 				return;
@@ -955,9 +962,10 @@ namespace Praeclarum.UI
 					editor.UnbindUI ();
 				}
 
-				InvalidateThumbnail (docRef.File, deleteThumbnail:deleteThumbnail, reloadThumbnail:reloadThumbnail);
+				InvalidateThumbnail (docRef.File, deleteThumbnail: deleteThumbnail, reloadThumbnail: reloadThumbnail);
 
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Debug.WriteLine (ex);
 			}
 		}
@@ -978,13 +986,13 @@ namespace Praeclarum.UI
 			if (docIndex < 0 || docIndex >= ds.Count)
 				return false;
 
-			var docRef = ds [docIndex];
+			var docRef = ds[docIndex];
 			return !docRef.File.IsDirectory;
 		}
 
 		public void OpenDirectory (int docIndex, bool animated)
 		{
-			var d = Docs [docIndex];
+			var d = Docs[docIndex];
 
 			var dlist = CreateDirectoryViewController (d.File.Path);
 
@@ -1009,13 +1017,13 @@ namespace Praeclarum.UI
 			//
 			// Close the doc
 			//
-			await CloseOpenedDoc ();				
+			await CloseOpenedDoc ();
 
 			//
 			// Create the new editor
 			//
-			var docRef = Docs [docIndex];
-//			Debug.WriteLine ("CREATING EDITOR C");
+			var docRef = Docs[docIndex];
+			//			Debug.WriteLine ("CREATING EDITOR C");
 			var newEditor = App.CreateDocumentEditor (docIndex, Docs);
 			if (newEditor == null)
 				throw new ApplicationException ("CreateDocumentEditor must return an editor");
@@ -1042,8 +1050,9 @@ namespace Praeclarum.UI
 
 				await docRef.Open ();
 				newEditor.BindDocument ();
-				
-			} catch (Exception ex) {
+
+			}
+			catch (Exception ex) {
 				ShowErrorAndExit (ex);
 			}
 
@@ -1052,7 +1061,8 @@ namespace Praeclarum.UI
 			//
 			try {
 				mru.AddToMRU (FileSystem, docRef);
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 			}
 		}
@@ -1073,16 +1083,18 @@ namespace Praeclarum.UI
 					ex = ex.InnerException;
 
 				openErrorAlert = new UIAlertView ("Cannot Open", ex.Message, (IUIAlertViewDelegate)null, "OK");
-				openErrorAlert.Clicked +=  async (sender, e) => {
+				openErrorAlert.Clicked += async (sender, e) => {
 					try {
 						await CloseOpenedDoc ();
-					} catch (Exception ex2) {
-						Log.Error (ex2);						
+					}
+					catch (Exception ex2) {
+						Log.Error (ex2);
 					}
 				};
 				openErrorAlert.Show ();
 
-			} catch (Exception exx) {
+			}
+			catch (Exception exx) {
 				Log.Error (exx);
 			}
 		}
@@ -1095,7 +1107,7 @@ namespace Praeclarum.UI
 		}
 
 		public void ShowSettings (UIViewController controller)
-		{			
+		{
 			if (DismissSheetsAndPopovers ()) {
 				return;
 			}
@@ -1109,7 +1121,7 @@ namespace Praeclarum.UI
 		}
 
 		public void ShowStorage (UIViewController controller)
-		{			
+		{
 			if (DismissSheetsAndPopovers ()) {
 				return;
 			}
@@ -1143,10 +1155,10 @@ namespace Praeclarum.UI
 			ReviewNagging?.RegisterPositiveAction ();
 
 			await AddAndOpenDocRef (await DocumentReference.New (
-				directory, 
-				App.DocumentBaseName, 
+				directory,
+				App.DocumentBaseName,
 				App.DefaultExtension,
-				ActiveFileSystem, 
+				ActiveFileSystem,
 				App.CreateDocument,
 				GetNewDocumentText ()));
 		}
@@ -1154,23 +1166,20 @@ namespace Praeclarum.UI
 #pragma warning disable 1998
 		public async Task ImportAndOpenDocument (UIBarButtonItem addButton)
 		{
-			DismissSheetsAndPopovers();
+			DismissSheetsAndPopovers ();
 
 			var utis = App.ContentTypes.ToArray ();
-			var picker = new UIDocumentPickerViewController(utis, UIDocumentPickerMode.Import);
+			var picker = new UIDocumentPickerViewController (utis, UIDocumentPickerMode.Import);
 
-			if (picker.PopoverPresentationController != null)
-			{
+			if (picker.PopoverPresentationController != null) {
 				picker.PopoverPresentationController.BarButtonItem = addButton;
 			}
 
-			if (ios11)
-			{
+			if (ios11) {
 				picker.DidPickDocumentAtUrls += Picker_DidPickDocumentAtUrls;
 				picker.AllowsMultipleSelection = false;
 			}
-			else
-			{
+			else {
 				picker.DidPickDocument += Picker_DidPickDocument;
 			}
 
@@ -1182,52 +1191,45 @@ namespace Praeclarum.UI
 
 		async void Picker_DidPickDocument (object sender, UIDocumentPickedEventArgs e)
 		{
-			try
-			{
-				await PickUrlAsync(e.Url);
+			try {
+				await PickUrlAsync (e.Url);
 			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
-		async void Picker_DidPickDocumentAtUrls(object sender, UIDocumentPickedAtUrlsEventArgs e)
+		async void Picker_DidPickDocumentAtUrls (object sender, UIDocumentPickedAtUrlsEventArgs e)
 		{
-			try
-			{
-				await PickUrlAsync(e.Urls.First ());
+			try {
+				await PickUrlAsync (e.Urls.First ());
 			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
+			catch (Exception ex) {
+				Log.Error (ex);
 			}
 		}
 
-		async Task PickUrlAsync(NSUrl url)
+		async Task PickUrlAsync (NSUrl url)
 		{
-				var name = Path.GetFileNameWithoutExtension(url.Path);
+			var name = Path.GetFileNameWithoutExtension (url.Path);
 
-				var directory = CurrentDirectory;
+			var directory = CurrentDirectory;
 
-				var text = await Task.Run(() =>
-			   {
-				   using (var d = NSData.FromUrl(url))
-				   {
-					   using (var r = new StreamReader(d.AsStream()))
-					   {
-						   return r.ReadToEnd();
-					   }
-				   }
-			   });
+			var text = await Task.Run (() => {
+				using (var d = NSData.FromUrl (url)) {
+					using (var r = new StreamReader (d.AsStream ())) {
+						return r.ReadToEnd ();
+					}
+				}
+			});
 
-				await AddAndOpenDocRef(await DocumentReference.New(
-					directory,
-					name,
-					App.DefaultExtension,
-					ActiveFileSystem,
-					App.CreateDocument,
-					text));
+			await AddAndOpenDocRef (await DocumentReference.New (
+				directory,
+				name,
+				App.DefaultExtension,
+				ActiveFileSystem,
+				App.CreateDocument,
+				text));
 
 		}
 
@@ -1256,18 +1258,18 @@ namespace Praeclarum.UI
 				form.Add (new FormAction (
 					"From Clipboard",
 					async () => await AddAndOpenDocRef (await DocumentReference.New (
-						directory, 
-						App.DocumentBaseName, 
+						directory,
+						App.DocumentBaseName,
 						App.DefaultExtension,
-						ActiveFileSystem, 
-						App.CreateDocument, 
+						ActiveFileSystem,
+						App.CreateDocument,
 						GetNewDocumentText () + pbtext))));
 			}
 
 			var odi = OpenedDocIndex;
 			var source = (dup && 0 <= odi && odi < Docs.Count) ?
-			             Docs [odi] :
-			             null;
+						 Docs[odi] :
+						 null;
 			if (source != null) {
 				form.Add (new FormAction (
 					"Duplicate",
@@ -1280,9 +1282,9 @@ namespace Praeclarum.UI
 					AddFolder));
 			}
 
-			form.Add(new FormAction(
+			form.Add (new FormAction (
 					"Import...",
-					async () => await ImportAndOpenDocument(addButton)));
+					async () => await ImportAndOpenDocument (addButton)));
 
 			if (form.Count > 1) {
 				form.Title = "Add";
@@ -1290,8 +1292,9 @@ namespace Praeclarum.UI
 
 				ActionSheet = form.ToActionSheet ();
 				ActionSheet.ShowFrom (addButton, true);
-			} else {
-				((FormAction)form [0]).Execute ();
+			}
+			else {
+				((FormAction)form[0]).Execute ();
 			}
 		}
 
@@ -1305,8 +1308,9 @@ namespace Praeclarum.UI
 					path = Path.GetDirectoryName (path);
 					depth++;
 				}
-			} catch (Exception ex) {
-				Debug.WriteLine (ex);				
+			}
+			catch (Exception ex) {
+				Debug.WriteLine (ex);
 			}
 
 			return depth;
@@ -1319,7 +1323,7 @@ namespace Praeclarum.UI
 				var ss = pb.Strings;
 				if (ss == null || ss.Length < 1)
 					return null;
-				return ss [0];
+				return ss[0];
 			}
 			catch (Exception) {
 				return null;
@@ -1377,7 +1381,8 @@ namespace Praeclarum.UI
 							"OK").Show ();
 					}
 
-				} catch (Exception ex) {
+				}
+				catch (Exception ex) {
 					Debug.WriteLine (ex);
 				}
 			};
@@ -1415,7 +1420,8 @@ namespace Praeclarum.UI
 			//
 			if (index >= 0) {
 				await OpenDocument (index, true);
-			} else {
+			}
+			else {
 				Console.WriteLine ("Document list does not contain " + path);
 			}
 		}
@@ -1517,7 +1523,7 @@ namespace Praeclarum.UI
 		async Task MoveDoc (IFile file, DocumentsViewController listC, IFileSystem dest, string destDir, bool animated)
 		{
 			await ActiveFileSystem.MoveAsync (file, dest, destDir);
-			listC.RemoveDocuments (new[]{file.Path}, animated);
+			listC.RemoveDocuments (new[] { file.Path }, animated);
 		}
 
 		public async Task<bool> DuplicateDocuments (IFile[] files, UIBarButtonItem duplicateButton)
@@ -1532,7 +1538,7 @@ namespace Praeclarum.UI
 			// If there is only 1 file, just do it
 			//
 			if (files.Length == 1) {
-				await DuplicateFile (files [0]);
+				await DuplicateFile (files[0]);
 				return true;
 			}
 
@@ -1549,8 +1555,9 @@ namespace Praeclarum.UI
 			ActionSheet.Clicked += (ss, se) => {
 				try {
 					tcs.SetResult ((int)se.ButtonIndex);
-				} catch (Exception ex) {
-					Log.Error (ex);					
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
 				}
 			};
 
@@ -1575,8 +1582,9 @@ namespace Praeclarum.UI
 		{
 			var msg = "";
 			if (files.Length == 1) {
-				msg = files [0].IsDirectory ? "Folder" : App.DocumentBaseName;
-			} else {
+				msg = files[0].IsDirectory ? "Folder" : App.DocumentBaseName;
+			}
+			else {
 				var ndir = files.Count (x => x.IsDirectory);
 				var ndoc = files.Length - ndir;
 				var head = "";
@@ -1612,8 +1620,9 @@ namespace Praeclarum.UI
 			ActionSheet.Clicked += (ss, se) => {
 				try {
 					tcs.SetResult ((int)se.ButtonIndex);
-				} catch (Exception ex) {
-					Log.Error (ex);					
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
 				}
 			};
 
@@ -1628,12 +1637,13 @@ namespace Praeclarum.UI
 			// Perform the delete
 			//
 			try {
-				await DeleteDocs (files.Select(x => x.Path).ToArray());
+				await DeleteDocs (files.Select (x => x.Path).ToArray ());
 				foreach (var f in files) {
 					InvalidateThumbnail (f, deleteThumbnail: true, reloadThumbnail: false);
-				}	
-			} catch (Exception ex) {
-				Console.WriteLine (ex);	
+				}
+			}
+			catch (Exception ex) {
+				Console.WriteLine (ex);
 			}
 
 			return true;
@@ -1646,7 +1656,7 @@ namespace Praeclarum.UI
 
 			var docIndex = OpenedDocIndex;
 
-			var docRef = Docs [docIndex];
+			var docRef = Docs[docIndex];
 
 			ActionSheet = new UIActionSheet ();
 			ActionSheet.AddButton ("Delete " + App.DocumentBaseName);
@@ -1656,18 +1666,20 @@ namespace Praeclarum.UI
 
 			ActionSheet.Clicked += async (ss, se) => {
 
-				if (se.ButtonIndex != 0) return;
+				if (se.ButtonIndex != 0)
+					return;
 
 				if (docIndex >= 0) {
 					await CloseOpenedDoc (reloadThumbnail: false);
 				}
 
-				await DeleteDocs (new[]{docRef.File.Path});
+				await DeleteDocs (new[] { docRef.File.Path });
 
 				if (Docs.Count > 0) {
 					var newIndex = Math.Min (Docs.Count - 1, Math.Max (0, docIndex));
 					await OpenDocument (newIndex, true);
-				} else if (FileSystem.IsWritable) {
+				}
+				else if (FileSystem.IsWritable) {
 					await AddAndOpenDocRef (await DocumentReference.New (
 						CurrentDocumentListController.Directory,
 						App.DocumentBaseName,
@@ -1686,9 +1698,10 @@ namespace Praeclarum.UI
 			try {
 				var newFile = await ActiveFileSystem.DuplicateAsync (file);
 				if (newFile != null) {
-					AddDocRef (new DocumentReference (newFile, App.CreateDocument, isNew:false));
+					AddDocRef (new DocumentReference (newFile, App.CreateDocument, isNew: false));
 				}
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Alert ("Failed to Duplicate " + file.Path, ex);
 			}
 		}
@@ -1702,22 +1715,24 @@ namespace Praeclarum.UI
 					var deleted = await FileSystem.DeleteFile (path);
 
 					if (deleted) {
-						delPaths.Add(path);
+						delPaths.Add (path);
 						Console.WriteLine ("DELETE {0}", path);
-					} else {
+					}
+					else {
 						var alert = new UIAlertView (
-							           "Unable to Delete", 
-							           "An error occured while trying to delete. If the problem persists, try restarting " + App.Name + ".",
+									   "Unable to Delete",
+									   "An error occured while trying to delete. If the problem persists, try restarting " + App.Name + ".",
 									   (IUIAlertViewDelegate)null, "OK");
 						alert.Show ();
 					}
 
-				} catch (Exception ex) {
+				}
+				catch (Exception ex) {
 					Console.WriteLine (ex);
 				}
 			}
 
-			CurrentDocumentListController.RemoveDocuments (delPaths.ToArray(), true);
+			CurrentDocumentListController.RemoveDocuments (delPaths.ToArray (), true);
 
 		}
 
@@ -1772,7 +1787,8 @@ namespace Praeclarum.UI
 
 			try {
 				cult = CultureInfo.GetCultureInfo (languageId + "-" + regionId);
-			} catch (Exception) {
+			}
+			catch (Exception) {
 				cult = null;
 			}
 
@@ -1808,22 +1824,22 @@ namespace Praeclarum.UI
 			CurrentCulture = cult;
 		}
 
-#region Quick UI stuff
+		#region Quick UI stuff
 
 		public static void Alert (string title, Exception ex)
 		{
 			Console.WriteLine (ex);
 			var v = new UIAlertView (
-				        title,
-				        ex.Message,
+						title,
+						ex.Message,
 						(IUIAlertViewDelegate)null,
-				        "OK");
+						"OK");
 			v.Show ();
 		}
 
-#endregion
+		#endregion
 
-#region Thumbnails
+		#region Thumbnails
 
 		public ImageCache ThumbnailCache { get; private set; }
 
@@ -1881,7 +1897,8 @@ namespace Praeclarum.UI
 				try {
 					await doc.CloseAsync ().ConfigureAwait (false);
 					doc.Dispose ();
-				} catch (Exception ex) {
+				}
+				catch (Exception ex) {
 					Console.WriteLine (ex);
 				}
 			}
@@ -1889,7 +1906,8 @@ namespace Praeclarum.UI
 			if (local != null) {
 				try {
 					await local.End ().ConfigureAwait (false);
-				} catch (Exception ex) {
+				}
+				catch (Exception ex) {
 					Console.WriteLine (ex);
 				}
 			}
@@ -1906,13 +1924,13 @@ namespace Praeclarum.UI
 
 				using (var colorSpace = CoreGraphics.CGColorSpace.CreateDeviceRGB ()) {
 					using (var c = new CoreGraphics.CGBitmapContext (
-						              IntPtr.Zero,
-						              width,
-						              height,
-						              8,
-						              4 * width,
-						              colorSpace,
-						              CoreGraphics.CGImageAlphaInfo.NoneSkipFirst)) {
+									  IntPtr.Zero,
+									  width,
+									  height,
+									  8,
+									  4 * width,
+									  colorSpace,
+									  CoreGraphics.CGImageAlphaInfo.NoneSkipFirst)) {
 
 						c.TranslateCTM (0, height);
 						c.ScaleCTM (scale, -scale);
@@ -1929,14 +1947,14 @@ namespace Praeclarum.UI
 			});
 		}
 
-#endregion
+		#endregion
 
-#region Actions
+		#region Actions
 
 		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController fromController, UIBarButtonItem fromButton)
 		{
 			try {
-				
+
 				if (docRef == null)
 					return;
 
@@ -1958,8 +1976,9 @@ namespace Praeclarum.UI
 					}
 
 					await docRef.Close ();
-									
-				} catch (Exception ex) {
+
+				}
+				catch (Exception ex) {
 					Debug.WriteLine (ex);
 				}
 
@@ -1968,7 +1987,7 @@ namespace Praeclarum.UI
 					var a = new UIActivityViewController (items, aa);
 					a.ModalPresentationStyle = UIModalPresentationStyle.Popover;
 
-					a.CompletionHandler = (x,success) => {
+					a.CompletionHandler = (x, success) => {
 						Console.WriteLine ("COMPLETE {0} {1}", x, success);
 						tcs.SetResult (success);
 					};
@@ -1977,7 +1996,8 @@ namespace Praeclarum.UI
 						if (a.PopoverPresentationController != null) {
 							try {
 								a.PopoverPresentationController.BarButtonItem = fromButton;
-							} catch (Exception) {
+							}
+							catch (Exception) {
 								a.PopoverPresentationController.SourceView = fromController.View;
 							}
 						}
@@ -1988,20 +2008,21 @@ namespace Praeclarum.UI
 					await tcs.Task;
 				}
 
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Console.WriteLine ("Perform Act of Doc Failed: " + ex);
 			}
 
-		
+
 		}
 
-#endregion
+		#endregion
 
-#region MRU
+		#region MRU
 
 		protected class MRU
 		{
-			List<Tuple<string,string>> entries = new List<Tuple<string, string>> ();
+			List<Tuple<string, string>> entries = new List<Tuple<string, string>> ();
 
 			public void InitializeMRU ()
 			{
@@ -2010,10 +2031,10 @@ namespace Praeclarum.UI
 						UIApplication.SharedApplication.ShortcutItems
 							.Where (i => i.Type == "open" && i.UserInfo != null)
 							.Select (scitem => {
-								var path = scitem.UserInfo ["path"].ToString ();
-								var fsId = scitem.UserInfo ["fsId"].ToString ();
+								var path = scitem.UserInfo["path"].ToString ();
+								var fsId = scitem.UserInfo["fsId"].ToString ();
 								return Tuple.Create (fsId, path);
-						}).ToList ();
+							}).ToList ();
 				}
 			}
 
@@ -2026,7 +2047,8 @@ namespace Praeclarum.UI
 				if (i == 0) {
 					// OK
 					return;
-				} else if (i > 0) {
+				}
+				else if (i > 0) {
 					entries.RemoveAt (i);
 				}
 				entries.Insert (0, key);
@@ -2041,9 +2063,9 @@ namespace Praeclarum.UI
 						var path = e.Item2;
 						var name = System.IO.Path.GetFileNameWithoutExtension (path);
 						var userInfo = new NSDictionary<NSString, NSObject> (
-							keys: new[] {new NSString("fsId"), new NSString("path")},
-							values: new NSObject[] {new NSString(fsId), new NSString(path)});						
-						var item = new UIMutableApplicationShortcutItem("open", "Open " + name, "", icon, userInfo);
+							keys: new[] { new NSString ("fsId"), new NSString ("path") },
+							values: new NSObject[] { new NSString (fsId), new NSString (path) });
+						var item = new UIMutableApplicationShortcutItem ("open", "Open " + name, "", icon, userInfo);
 						return item;
 					}).ToArray ();
 					UIApplication.SharedApplication.ShortcutItems = newItems;
@@ -2051,7 +2073,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-#endregion
+		#endregion
 
 		public async Task ShowPatronAsync ()
 		{
@@ -2240,7 +2262,7 @@ namespace Praeclarum.UI
 	{
 		public DocumentsNavigationController (UIViewController root)
 			: base (root)
-		{			
+		{
 		}
 
 		public override UIStatusBarStyle PreferredStatusBarStyle ()
@@ -2248,7 +2270,8 @@ namespace Praeclarum.UI
 			try {
 				var top = this.TopViewController as DocumentsViewController;
 				return top != null ? top.PreferredStatusBarStyle () : DocumentAppDelegate.Shared.Theme.StatusBarStyle;
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				Log.Error (ex);
 				return UIStatusBarStyle.Default;
 			}

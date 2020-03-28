@@ -29,7 +29,7 @@ namespace Praeclarum.UI
 				}),
 			};
 
-			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] {
+			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] {
 				new UIBarButtonItem (UIBarButtonSystemItem.Done, (s, e) => {
 					DownloadUrl = null;
 					DismissViewController (true, null);

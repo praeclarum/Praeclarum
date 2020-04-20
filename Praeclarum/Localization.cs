@@ -48,7 +48,7 @@ namespace Praeclarum
 			var lang = System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
 			if (lang != "en" && english == translation && english.Length > 0 && !notes.Contains (english)) {
 				notes.Add (english);
-				Log.Info ($"Needs Translation [{lang}]: \"{english}\" = \"\";");
+				System.Diagnostics.Debug.WriteLine ($"Needs Translation [{lang}]: \"{english}\" = \"\";");
 			}
 #endif
 			return translation.Length > 0 ? translation : english;

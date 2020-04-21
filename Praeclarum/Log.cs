@@ -70,7 +70,7 @@ namespace Praeclarum
 		static void WriteLine (string type, string line)
 		{
 #if MONODROID
-			if (_pendingType == "E") {
+			if (type == "E") {
 				Android.Util.Log.Error (Domain, line);
 			}
 			else {

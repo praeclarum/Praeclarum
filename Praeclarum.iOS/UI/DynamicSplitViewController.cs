@@ -92,6 +92,8 @@ namespace Praeclarum.UI
 			AddChildViewController (Second);
 
 			Splitter.AddGestureRecognizer (new UIPanGestureRecognizer (HandlePanSplitter));
+
+			ShowOrHideSecond (false);
 		}
 
 		double panStartRatio = 0.5;

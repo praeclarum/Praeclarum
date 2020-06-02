@@ -1989,7 +1989,7 @@ namespace Praeclarum.UI
 
 					a.CompletionHandler = (x, success) => {
 						Console.WriteLine ("COMPLETE {0} {1}", x, success);
-						tcs.SetResult (success);
+						tcs.TrySetResult (success);
 					};
 
 					if (UIDevice.CurrentDevice.CheckSystemVersion (8, 0)) {

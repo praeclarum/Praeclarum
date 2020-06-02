@@ -241,7 +241,7 @@ namespace Praeclarum
 #if __IOS__
 			attrs.Font = UIKit.UIFont.FromName (fontName, size);
 #elif MONOMAC
-			attrs.Font = new CoreText.CTFont (fontName, size);
+			attrs.Font = AppKit.NSFont.FromFontName (fontName, size);
 #endif
 		}
 
@@ -333,11 +333,16 @@ namespace Praeclarum
 			set {
 				link = value;
 				if (!string.IsNullOrEmpty (link)) {
+					try {
 #if __IOS__
-					attrs.Link = new NSUrl (link);
+						attrs.Link = new NSUrl (link);
 #elif MONOMAC
-					attrs.Dictionary.SetValue (LinkAttributeName, new NSString (link));
+						attrs.LinkUrl = new NSUrl (link);
 #endif
+					}
+					catch (Exception ex) {
+						Log.Error (ex);
+					}
 				}
 			}
 		}

@@ -105,6 +105,9 @@ namespace Praeclarum.App
 		public virtual bool IsPatronSupported {
 			get { return false; }
 		}
+		public virtual bool HasTips {
+			get { return false; }
+		}
 		public virtual bool NagForReviews {
 			get { return false; }
 		}

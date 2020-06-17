@@ -18,14 +18,14 @@ namespace Praeclarum.UI
 
 		static TipJarPrice[] prices = new TipJarPrice[0];
 
-		bool isPatron;
+		bool hasTipped;
 
-		DateTime endDate;
+		DateTime tipDate;
 
-		public TipJarForm (IEnumerable<Tuple<int, string>> monthlyPrices)
+		public TipJarForm (IEnumerable<string> names)
 		{
 			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = monthlyPrices.Select (x => new TipJarPrice (bundleId + ".patron.cons." + x.Item1 + "month", x.Item1, x.Item2)).ToArray ();
+			prices = names.Select (x => new TipJarPrice (bundleId + ".tip." + x.Replace(' ', '_').ToLowerInvariant(), x)).ToArray ();
 
 			var appdel = DocumentAppDelegate.Shared;
 			var appName = appdel.App.Name;
@@ -41,8 +41,8 @@ namespace Praeclarum.UI
 			Sections.Add (new TipDeleteSection ());
 #endif
 
-			isPatron = appdel.Settings.IsPatron;
-			endDate = appdel.Settings.PatronEndDate;
+			hasTipped = appdel.Settings.HasTipped;
+			tipDate = appdel.Settings.TipDate;
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
 
@@ -116,8 +116,8 @@ namespace Praeclarum.UI
 			ReloadSection (buySection);
 
 			var settings = DocumentAppDelegate.Shared.Settings;
-			isPatron = settings.HasTipped;
-			endDate = settings.TipDate + TimeSpan.FromDays (365);
+			hasTipped = settings.HasTipped;
+			tipDate = settings.TipDate;
 
 			aboutSection.SetPatronage ();
 			buySection.SetPatronage ();
@@ -125,7 +125,7 @@ namespace Praeclarum.UI
 			ReloadSection (aboutSection);
 			ReloadSection (buySection);
 
-			return isPatron ? 1 : 0;
+			return hasTipped ? 1 : 0;
 		}
 
 		void ShowFormError (string title, Exception ex)
@@ -144,47 +144,39 @@ namespace Praeclarum.UI
 				Log.Error (ex2);
 			}
 		}
-#pragma warning disable 1998
 		public static async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
 		{
 			try {
+				var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
+				if (p == null)
+					return;
+
 				var m = t.Error != null ? t.Error.LocalizedDescription : "Unknown error";
-				var alert = UIAlertController.Create ("Purchase Failed", m, UIAlertControllerStyle.Alert);
+				var alert = UIAlertController.Create ("Tip Failed", m, UIAlertControllerStyle.Alert);
 				alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
-				var vc = UIApplication.SharedApplication.KeyWindow.RootViewController;
-				while (vc.PresentedViewController != null) {
-					vc = vc.PresentedViewController;
-				}
-				vc.PresentViewController (alert, true, null);
+
+				visibleForm?.PresentViewController (alert, true, null);
 			}
 			catch (Exception ex) {
+				visibleForm?.ShowError (ex);
 				Log.Error (ex);
 			}
 		}
-#pragma warning restore 1998
 		static async Task AddSubscriptionAsync (string transactionId, DateTime transactionDate, TipJarPrice p)
 		{
+			var settings = DocumentAppDelegate.Shared.Settings;
+			settings.HasTipped = true;
+			settings.TipDate = transactionDate;
+
 			var v = visibleForm;
 			if (v != null) {
-				NSTimer.CreateScheduledTimer (1.0, nst => {
-					v.BeginInvokeOnMainThread (async () => {
-						for (var i = 0; i < 3; i++) {
-							try {
-								await v.RefreshPatronDataAsync ();
-							}
-							catch (Exception ex) {
-								Log.Error (ex);
-							}
-							try {
-								await DocumentAppDelegate.Shared.CurrentDocumentListController.LoadDocs ();
-							}
-							catch (Exception ex) {
-								Log.Error (ex);
-							}
-							await Task.Delay (TimeSpan.FromSeconds (2.0));
-						}
-					});
-				});
+				var m = "Your support is very much appreciated!";
+				var alert = UIAlertController.Create ("Tip Successful", m, UIAlertControllerStyle.Alert);
+				alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
+
+				v.PresentViewController (alert, true, null);
+
+				await v.RefreshPatronDataAsync ();
 			}
 		}
 		public static async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
@@ -213,19 +205,15 @@ namespace Praeclarum.UI
 			{
 				var form = (TipJarForm)Form;
 				var appName = DocumentAppDelegate.Shared.App.Name;
-				if (form.isPatron) {
-					Title = "Thank you for supporting " + appName + "!";
-					Hint = "Your patronage makes continued development possible. Thank you. \ud83d\udc99\n\n" +
-						"Patron through " + form.endDate.ToLongDateString () + ".";
-
-				}
-				else {
-					Title = "Thank you for using " + appName;
-					Hint = "Development of " + appName + " for iOS is supported " +
-						"by voluntary patronage from people like you.\n\n" +
-						"Please consider becoming a patron " +
-						"to make continued development of " + appName + " possible and " +
-						"to put it in as many hands as possible.";
+				Title = "Hi, I'm Frank";
+				Hint = $"I am the author of " + appName + " and I want to thank you for your purchase. " +
+					"I am an independent developer and am able to make my living thanks to people like you. Thank you!\n\n" +
+					$"This form is here if you love {appName} and want to help fund its continued development. " +
+					"Tips like this help me to pay the bills and spend more time improving the app."
+					;
+				if (form.hasTipped) {
+					Hint += $"\n\nThank you so much for your tip on {form.tipDate.ToShortDateString ()}. " +
+						"Your support is very much appreciated!";
 				}
 			}
 		}
@@ -233,14 +221,15 @@ namespace Praeclarum.UI
 		class TipJarPrice
 		{
 			public readonly string Id;
-			public readonly int NumMonths;
+			public readonly string Name;
 			public string Price;
 			public StoreKit.SKProduct? Product;
-			public TipJarPrice (string id, int numMonths, string price)
+			public TipJarPrice (string id, string name)
 			{
+				Console.WriteLine ("Created tip: " + id);
 				Id = id;
-				NumMonths = numMonths;
-				Price = price;
+				Name = name + " Tip";
+				Price = "";
 			}
 		}
 
@@ -249,25 +238,25 @@ namespace Praeclarum.UI
 			public PatronBuySection (TipJarPrice[] prices)
 				: base (prices)
 			{
-				Hint = "These are one-time purchases.";
+				Hint = "Tapping one of the above will charge you the listed amount.";
 			}
 
 			public void SetPatronage ()
 			{
 				var form = (TipJarForm)Form;
 				var appName = DocumentAppDelegate.Shared.App.Name;
-				if (form.isPatron) {
-					Title = "Extend your Patronage";
+				if (form.hasTipped) {
+					Title = "Tip Again";
 				}
 				else {
-					Title = "Become a Patron";
+					Title = "Tip Jar";
 				}
 			}
 
 			public override string GetItemTitle (object item)
 			{
 				var p = (TipJarPrice)item;
-				return p.NumMonths + " Months";
+				return p.Name;
 			}
 
 			public override PFormItemDisplay GetItemDisplay (object item)
@@ -381,7 +370,13 @@ namespace Praeclarum.UI
 		{
 			var appdel = DocumentAppDelegate.Shared;
 			var appName = appdel.App.Name;
-			Hint = appName + "'s development is supported by voluntary patronage from people like you.";
+			Hint = $"If you love using {appName}, you can tip me to help fund its development. Thank you!";
+		}
+
+		public static bool ShouldBeAtTop {
+			get {
+				return true;
+			}
 		}
 
 		public override bool GetItemNavigates (object item)
@@ -391,7 +386,7 @@ namespace Praeclarum.UI
 
 		public override bool SelectItem (object item)
 		{
-			var f = new TipJarForm (DocumentAppDelegate.Shared.GetPatronMonthlyPrices ());
+			var f = new TipJarForm (DocumentAppDelegate.Shared.GetTipDollars ());
 			f.NavigationItem.RightBarButtonItem = new UIKit.UIBarButtonItem (UIKit.UIBarButtonSystemItem.Done, (s, e) => {
 				if (f != null && f.PresentingViewController != null) {
 					f.DismissViewController (true, null);

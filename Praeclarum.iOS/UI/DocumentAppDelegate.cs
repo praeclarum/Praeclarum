@@ -160,15 +160,15 @@ namespace Praeclarum.UI
 			}
 
 			//
-			// Patron
+			// In-app Purchases
 			//
 			try {
-				if (App.IsPatronSupported) {
+				if (App.IsPatronSupported || App.HasTips) {
 					if (Settings.IsPatron) {
 						Settings.IsPatron = DateTime.UtcNow < Settings.PatronEndDate;
 					}
-					StoreManager.Shared.CompletionActions.Add (PatronForm.HandlePurchaseCompletionAsync);
-					StoreManager.Shared.FailActions.Add (PatronForm.HandlePurchaseFailAsync);
+					StoreManager.Shared.CompletionActions.Add (HandlePurchaseCompletionAsync);
+					StoreManager.Shared.FailActions.Add (HandlePurchaseFailAsync);
 				}
 			}
 			catch (Exception ex) {
@@ -313,6 +313,22 @@ namespace Praeclarum.UI
 			}
 
 			return shouldPerformAdditionalDelegateHandling;
+		}
+
+		static Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
+		{
+			if (t.Payment.ProductIdentifier.Contains (".tip.")) {
+				return TipJarForm.HandlePurchaseCompletionAsync (t);
+			}
+			return PatronForm.HandlePurchaseCompletionAsync (t);
+		}
+
+		static Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
+		{
+			if (t.Payment.ProductIdentifier.Contains (".tip.")) {
+				return TipJarForm.HandlePurchaseFailAsync (t);
+			}
+			return PatronForm.HandlePurchaseFailAsync (t);
 		}
 
 		void UpdateBrowserToolbar (bool animated)
@@ -2086,6 +2102,11 @@ namespace Praeclarum.UI
 		public virtual IEnumerable<Tuple<int, string>> GetPatronMonthlyPrices ()
 		{
 			return Enumerable.Empty<Tuple<int, string>> ();
+		}
+
+		public virtual IEnumerable<string> GetTipDollars ()
+		{
+			return Enumerable.Empty<string> ();
 		}
 
 		public virtual NSUrl GetFirstRunOpenUrl () => null;

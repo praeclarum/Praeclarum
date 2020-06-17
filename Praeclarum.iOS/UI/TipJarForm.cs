@@ -170,8 +170,8 @@ namespace Praeclarum.UI
 
 			var v = visibleForm;
 			if (v != null) {
-				var m = "Your support is very much appreciated!";
-				var alert = UIAlertController.Create ("Tip Successful", m, UIAlertControllerStyle.Alert);
+				var m = "Your continued support is very much appreciated.";
+				var alert = UIAlertController.Create ("Thank you!", m, UIAlertControllerStyle.Alert);
 				alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
 
 				v.PresentViewController (alert, true, null);
@@ -212,8 +212,8 @@ namespace Praeclarum.UI
 					"Tips like this help me to pay the bills and spend more time improving the app."
 					;
 				if (form.hasTipped) {
-					Hint += $"\n\nThank you so much for your tip on {form.tipDate.ToShortDateString ()}. " +
-						"Your support is very much appreciated!";
+					Hint += $"\n\n⭐️⭐️⭐️ Thank you for your tip on {form.tipDate.ToShortDateString ()}. " +
+						"Your support is very much appreciated! ⭐️⭐️⭐️";
 				}
 			}
 		}

@@ -176,6 +176,25 @@ namespace Praeclarum.App
 				SetDateTime ("PatronEndDate", value);
 			}
 		}
+
+		public bool HasTipped {
+			get {
+				return defs.BoolForKey ("HasTipped");
+			}
+			set {
+				defs.SetBool (value, "HasTipped");
+			}
+		}
+
+		public DateTime TipDate {
+			get {
+				return GetDateTime ("TipDate");
+			}
+			set {
+				SetDateTime ("TipDate", value);
+			}
+		}
+
 	}
 }
 

@@ -33,6 +33,10 @@ namespace Praeclarum.App
 		}
 
 		bool DisableAnalytics { get; set; }
+
+		bool HasTipped { get; set; }
+
+		DateTime TipDate { get; set; }
 	}
 
 	public interface IAppSettings

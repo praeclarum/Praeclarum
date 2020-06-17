@@ -13,6 +13,7 @@ namespace Praeclarum.UI
 	public class Theme
 	{
 		static protected readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
+		static protected readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
 
 		readonly Lazy<UIImage> CloneButtonImage = new Lazy<UIImage> (
 			() => UIImage.FromBundle ("Clone.png"));
@@ -267,6 +268,9 @@ namespace Praeclarum.UI
 		public virtual void Apply (UITableView tableView)
 		{
 			var c = tableView.Style == UITableViewStyle.Grouped ? GroupedTableBackgroundColor : PlainTableBackgroundColor;
+			if (ios13) {
+				c = UIColor.SystemGroupedBackgroundColor;
+			}
 			if (tableView.BackgroundView == null) {
 				tableView.BackgroundView = new UIView { BackgroundColor = c };
 			} else {

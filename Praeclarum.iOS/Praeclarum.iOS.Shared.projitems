@@ -53,5 +53,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)App\ReviewNagging.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\TranslateSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\GalleryViewController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TipJarForm.cs" />
   </ItemGroup>
 </Project>

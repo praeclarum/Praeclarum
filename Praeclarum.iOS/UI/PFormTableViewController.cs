@@ -20,7 +20,7 @@ namespace Praeclarum.UI
 		/// </summary>
 		public bool AutoCancelButton { get; set; }
 
-		readonly bool useBlur = !UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
+		readonly bool useBlur = false;//!UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 		UIBlurEffect blurEffect;
 
 		partial void InitializeUI ()

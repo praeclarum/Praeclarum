@@ -106,7 +106,9 @@ namespace Praeclarum.UI
 				};
 				UIToolbar.Appearance.BarTintColor = NavigationBackgroundColor;
 
-				UITableViewHeaderFooterView.Appearance.BackgroundColor = GroupedTableBackgroundColor;
+				if (!ios13) {
+					UITableViewHeaderFooterView.Appearance.BackgroundColor = GroupedTableBackgroundColor;
+				}
 
 				foreach (var w in UIApplication.SharedApplication.Windows) {
 					ApplyToVC (w.RootViewController, new HashSet<IntPtr> ());

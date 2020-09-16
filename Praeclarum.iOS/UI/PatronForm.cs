@@ -520,7 +520,7 @@ namespace Praeclarum.UI
 			: base (new Command ("Become a Patron"))
 		{
 			var appName = "Calca";
-			Hint = appName + "'s development is supported by voluntary patronage from people like you.";
+			Hint = appName + "'s continued development is supported by voluntary patronage from people like you.";
 		}
 
 		public override bool GetItemNavigates (object item)

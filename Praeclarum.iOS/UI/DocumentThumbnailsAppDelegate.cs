@@ -24,16 +24,7 @@ namespace Praeclarum.UI
 			nvcs.Add (newEditorVC);
 			vcs = nvcs.ToArray ();
 
-			//
-			// Throttle the animations
-			//
-			var now = DateTime.UtcNow;
-			if (animated && (now - lastOpenTime).TotalSeconds > 1) {
-				nc.SetViewControllers (vcs, true);
-			}
-			else {
-				nc.SetViewControllers (vcs, false);
-			}
+			nc.SetViewControllers (vcs, false);
 		}
 
 		protected override DocumentsViewController CreateDirectoryViewController (string path)

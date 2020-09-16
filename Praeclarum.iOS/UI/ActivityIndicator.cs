@@ -18,7 +18,7 @@ namespace Praeclarum.UI
 		{
 			Opaque = false;
 
-			var bounds = new CGRect (0, 0, 150, 44);
+			var bounds = new CGRect (0, 0, 150, 88);
 			Frame = bounds;
 
 			var isDark = DocumentAppDelegate.Shared.Theme.IsDark;

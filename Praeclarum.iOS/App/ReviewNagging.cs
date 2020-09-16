@@ -50,21 +50,23 @@ namespace Praeclarum.App
 			}
 		}
 
+		public bool ShouldPresent {
+			get {
+				var osok = UIDevice.CurrentDevice.CheckSystemVersion (10, 3);
+				var shouldPresent = osok && !Shown && NumPositiveActions >= MinNumPositiveActions;
+				Log.Info ($"Present Review (os={osok}, s={Shown}, n={NumPositiveActions}) = {shouldPresent}");
+				return shouldPresent;
+			}
+		}
+
 		public void PresentIfAppropriate ()
 		{
 			try {
-
-				var osok = UIDevice.CurrentDevice.CheckSystemVersion (10, 3);
-				var shouldPresent = osok && !Shown && NumPositiveActions >= MinNumPositiveActions;
-
-				Log.Info ($"Present Review (os={osok}, s={Shown}, n={NumPositiveActions}) = {shouldPresent}");
-
-				if (shouldPresent) {
+				if (ShouldPresent) {
 
 					defs.SetBool (true, shownKey);
 
 					SKStoreReviewController.RequestReview ();
-
 				}
 			}
 			catch (Exception ex) {

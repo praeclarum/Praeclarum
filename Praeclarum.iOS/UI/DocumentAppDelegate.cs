@@ -2110,6 +2110,19 @@ namespace Praeclarum.UI
 		}
 
 		public virtual NSUrl GetFirstRunOpenUrl () => null;
+
+		public void NagForReviewIfAppropriate (TimeSpan delay)
+		{
+			if (ReviewNagging is ReviewNagging n) {
+				if (n.ShouldPresent) {
+					Task.Delay (delay).ContinueWith (_ => {
+						BeginInvokeOnMainThread (() => {
+							n.PresentIfAppropriate ();
+						});
+					});
+				}
+			}
+		}
 	}
 
 	public class DocumentsBrowserDelegate : UIDocumentBrowserViewControllerDelegate

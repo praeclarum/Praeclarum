@@ -54,6 +54,7 @@ namespace Praeclarum.App
 
 		public virtual float ThumbnailAspectRatio { get { return 8.5f/11.0f; } }
 
+#if __IOS__
 		public virtual void DrawThumbnail (IDocument doc, IGraphics g, SizeF size, Theme theme, bool readOnlyDoc)
 		{
 			g.SetColor (GetThumbnailBackgroundColor (theme));
@@ -63,6 +64,7 @@ namespace Praeclarum.App
 		public virtual Color GetThumbnailBackgroundColor (Theme theme) {
 			return theme.DocumentBackgroundColor.GetColor ();
 		}
+#endif
 
 		/// <summary>
 		/// Called once everything is loaded

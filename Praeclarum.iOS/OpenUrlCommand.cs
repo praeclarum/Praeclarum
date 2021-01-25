@@ -69,7 +69,10 @@ namespace Praeclarum
 			var dev = UIDevice.CurrentDevice;
 			var scr = UIScreen.MainScreen;
 
-			var appName = mainBundle.ObjectForInfoDictionary ("CFBundleDisplayName");
+			var appName = mainBundle.ObjectForInfoDictionary ("CFBundleDisplayName")?.ToString ();
+			if (string.IsNullOrEmpty (appName)) {
+				appName = mainBundle.ObjectForInfoDictionary ("CFBundleName")?.ToString ();
+			}
 			var version = mainBundle.ObjectForInfoDictionary ("CFBundleVersion");
 
 			Subject = appName + " Feedback (" + dev.SystemName + ")";

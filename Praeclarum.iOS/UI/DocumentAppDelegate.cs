@@ -1786,6 +1786,13 @@ namespace Praeclarum.UI
 
 		static void UpdateCurrentCulture ()
 		{
+			var cult = GetCultureInfoFromCurrentNSLocale ();
+			Log.Info ("Culture set to: " + cult);
+			CurrentCulture = cult;
+		}
+
+		public static CultureInfo GetCultureInfoFromCurrentNSLocale ()
+		{
 			CultureInfo cult = null;
 
 			var current = NSLocale.CurrentLocale;
@@ -1810,19 +1817,6 @@ namespace Praeclarum.UI
 
 			if (cult == null) {
 				try {
-					cult = CultureInfo.GetCultures (CultureTypes.SpecificCultures).FirstOrDefault (x => {
-						var n = x.Name;
-						var d = n.LastIndexOf ('-');
-						return d > 0 && n.Substring (d + 1) == regionId;
-					});
-				}
-				catch (Exception) {
-					cult = null;
-				}
-			}
-
-			if (cult == null) {
-				try {
 					cult = CultureInfo.GetCultureInfo (languageId);
 				}
 				catch (Exception) {
@@ -1832,12 +1826,11 @@ namespace Praeclarum.UI
 
 			if (cult == null) {
 				Log.Error ("Failed to recognize locale: " + localeId);
-				cult = CultureInfo.InvariantCulture;
+				return CultureInfo.InvariantCulture;
 			}
-
-			Log.Info ("Culture set to: " + cult);
-
-			CurrentCulture = cult;
+			else {
+				return cult;
+			}
 		}
 
 		#region Quick UI stuff

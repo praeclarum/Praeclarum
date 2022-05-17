@@ -28,12 +28,10 @@ namespace Praeclarum
 
 		static string Translate (string english)
 		{
-#if __IOS__ || __MACOS__
+#if IOS || MACCATALYST || __IOS__ || __MACOS__
 			if (Foundation.NSUserDefaults.StandardUserDefaults.BoolForKey ("UseEnglish"))
 				return english;
-#pragma warning disable CS0618 // Type or member is obsolete
-			return Foundation.NSBundle.MainBundle.LocalizedString (key: english, comment: "");
-#pragma warning restore CS0618 // Type or member is obsolete
+			return Foundation.NSBundle.MainBundle.GetLocalizedString (key: english, value: english);
 #else
 			return english;
 #endif

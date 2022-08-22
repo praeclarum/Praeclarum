@@ -264,7 +264,7 @@ namespace Praeclarum.IO
 
 			try {
 
-				dest = await destFileSystem.CreateFile (destPath, "");
+				dest = await destFileSystem.CreateFile (destPath, Array.Empty<byte> ());
 
 				srcLocal = await src.BeginLocalAccess ();
 				destLocal = await dest.BeginLocalAccess ();

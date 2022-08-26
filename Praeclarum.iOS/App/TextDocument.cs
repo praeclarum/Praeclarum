@@ -25,6 +25,20 @@ namespace Praeclarum.App
 			LocalFilePath = url.AbsoluteString;
 		}
 
+		public TextDocument (IntPtr handle)
+			: base (handle)
+		{
+			LocalFilePath = "";
+			try {
+				if (this.FileUrl is NSUrl url) {
+					LocalFilePath = url.AbsoluteString;
+				}
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
 		public bool IsOpen { get { return !DocumentState.HasFlag (UIDocumentState.Closed); } }
 
 		public event EventHandler<SavingEventArgs> Saving = delegate {};

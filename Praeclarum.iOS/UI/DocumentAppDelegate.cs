@@ -2121,6 +2121,7 @@ namespace Praeclarum.UI
 	public class DocumentsBrowserDelegate : UIDocumentBrowserViewControllerDelegate
 	{
 		readonly DocumentApplication app;
+		UIDocument lastCreatedDoc = null;
 
 		public DocumentsBrowserDelegate (DocumentApplication app)
 		{
@@ -2129,29 +2130,35 @@ namespace Praeclarum.UI
 
 		public override void DidRequestDocumentCreation (UIDocumentBrowserViewController controller, System.Action<NSUrl, UIDocumentBrowserImportMode> importHandler)
 		{
-			var docsDir = Path.GetTempPath ();
-			string urlPath = Path.Combine (docsDir, app.DocumentBaseName + "." + app.DefaultExtension);
 			try {
-				if (File.Exists (urlPath))
-					File.Delete (urlPath);
-			}
-			catch {
-			}
-			var url = NSUrl.FromFilename (urlPath);
-			var doc = (UIDocument)app.CreateDocument (url);
-			doc.Save (url, UIDocumentSaveOperation.ForCreating, saveSuccess => {
-				if (!saveSuccess) {
-					importHandler (null, UIDocumentBrowserImportMode.None);
-					return;
+				var docsDir = Path.GetTempPath ();
+				string urlPath = Path.Combine (docsDir, app.DocumentBaseName + "." + app.DefaultExtension);
+				try {
+					if (File.Exists (urlPath))
+						File.Delete (urlPath);
 				}
-				doc.Close (closeSuccess => {
-					if (!closeSuccess) {
+				catch {
+				}
+				var url = NSUrl.FromFilename (urlPath);
+				var doc = (UIDocument)app.CreateDocument (url);
+				lastCreatedDoc = doc; // Keep it alive for the GC
+				doc.Save (url, UIDocumentSaveOperation.ForCreating, saveSuccess => {
+					if (!saveSuccess) {
 						importHandler (null, UIDocumentBrowserImportMode.None);
 						return;
 					}
-					importHandler (url, UIDocumentBrowserImportMode.Move);
+					doc.Close (closeSuccess => {
+						if (!closeSuccess) {
+							importHandler (null, UIDocumentBrowserImportMode.None);
+							return;
+						}
+						importHandler (url, UIDocumentBrowserImportMode.Move);
+					});
 				});
-			});
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+			}
 		}
 
 		public override void DidPickDocumentUrls (UIDocumentBrowserViewController controller, NSUrl[] documentUrls)

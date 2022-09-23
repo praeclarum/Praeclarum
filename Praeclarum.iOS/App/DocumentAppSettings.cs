@@ -195,6 +195,42 @@ namespace Praeclarum.App
 			}
 		}
 
+		public bool SubscribedToPro
+		{
+			get
+			{
+				return defs.BoolForKey("SubscribedToPro");
+			}
+			set
+			{
+				defs.SetBool(value, "SubscribedToPro");
+			}
+		}
+
+		public DateTime SubscribedDate
+		{
+			get
+			{
+				return GetDateTime("SubscribedDate");
+			}
+			set
+			{
+				SetDateTime("SubscribedDate", value);
+			}
+		}
+
+		public int SubscribedDays
+		{
+			get
+			{
+				return (int)defs.IntForKey("SubscribedDays");
+			}
+			set
+			{
+				defs.SetInt(value, "SubscribedDays");
+			}
+		}
+
 	}
 }
 

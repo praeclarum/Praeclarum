@@ -54,5 +54,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\TranslateSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\GalleryViewController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\TipJarForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ProForm.cs" />
   </ItemGroup>
 </Project>

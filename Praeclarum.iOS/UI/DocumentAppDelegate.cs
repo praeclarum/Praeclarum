@@ -905,17 +905,30 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public UIViewController BrowserController
+		{
+			get
+			{
+				return (UIViewController)docBrowser ?? CurrentDocumentListController;
+			}
+		}
+
 		public UIViewController PresenterController {
 			get {
-				var vc = (UIViewController)docBrowser ?? CurrentDocumentListController;
-				var pvc = vc.PresentedViewController ?? vc;
-				return pvc;
+				var vc = BrowserController;
+				var pvc = vc.PresentedViewController;
+				while (pvc != null)
+				{
+					vc = pvc;
+					pvc = vc.PresentedViewController;
+				}
+				return vc;
 			}
 		}
 
 		public IDocumentEditor CurrentDocumentEditor {
 			get {
-				var vcs = (detailNav ?? docListNav ?? (PresenterController as UINavigationController))?.ViewControllers;
+				var vcs = (detailNav ?? docListNav ?? (BrowserController?.PresentedViewController as UINavigationController))?.ViewControllers;
 				return vcs?.OfType<IDocumentEditor> ().LastOrDefault ();
 			}
 		}

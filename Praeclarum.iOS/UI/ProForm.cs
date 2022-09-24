@@ -23,13 +23,13 @@ namespace Praeclarum.UI
 
 		DateTime subscribedDate;
 
-		public ProForm(IEnumerable<string> names)
+		public ProForm(IEnumerable<(int Months, string Name)> names)
 		{
-			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = names.Select(x => new SubscriptionPrice(bundleId + ".tip." + x.Replace(' ', '_').ToLowerInvariant(), x)).ToArray();
-
 			var appdel = DocumentAppDelegate.Shared;
 			var appName = appdel.App.Name;
+			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
+			prices = names.Select(x => new SubscriptionPrice(bundleId + ".pro." + x.Months + "_month", appName + " Pro (" + x.Name + ")")).ToArray();
+
 			Title = "Upgrade to " + appName + " Pro";
 
 			aboutSection = new ProAboutSection(appName);
@@ -47,7 +47,7 @@ namespace Praeclarum.UI
 			aboutSection.SetPatronage();
 			buySection.SetPatronage();
 
-			RefreshPatronDataAsync().ContinueWith(t => {
+			RefreshProDataAsync().ContinueWith(t => {
 				if (t.IsFaulted)
 					Log.Error(t.Exception);
 			});
@@ -100,7 +100,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		async Task<int> RefreshPatronDataAsync()
+		async Task<int> RefreshProDataAsync()
 		{
 			var ids = prices.Select(x => x.Id).ToArray();
 			var prods = await StoreManager.Shared.FetchProductInformationAsync(ids);
@@ -189,7 +189,7 @@ namespace Praeclarum.UI
 
 				v.PresentViewController(alert, true, null);
 
-				await v.RefreshPatronDataAsync();
+				await v.RefreshProDataAsync();
 			}
 		}
 		public static async Task HandlePurchaseCompletionAsync(StoreKit.SKPaymentTransaction t)
@@ -242,7 +242,7 @@ namespace Praeclarum.UI
 			{
 				Console.WriteLine("Created subscription: " + id);
 				Id = id;
-				Name = name + " Tip";
+				Name = name;
 				Price = "";
 			}
 		}
@@ -259,7 +259,7 @@ namespace Praeclarum.UI
 			{
 				var form = (ProForm)Form;
 				var appName = DocumentAppDelegate.Shared.App.Name;
-				Title = "Pro Subscriptions";
+				Title = "Pro Subscription Options";
 			}
 
 			public override string GetItemTitle(object item)
@@ -373,7 +373,7 @@ namespace Praeclarum.UI
 			{
 				var form = (ProForm)Form;
 				await form.DeletePastPurchasesAsync();
-				await form.RefreshPatronDataAsync();
+				await form.RefreshProDataAsync();
 			}
 		}
 	}
@@ -403,7 +403,7 @@ namespace Praeclarum.UI
 
 		public override bool SelectItem(object item)
 		{
-			var f = new ProForm(DocumentAppDelegate.Shared.GetTipDollars());
+			var f = new ProForm(DocumentAppDelegate.Shared.GetProPrices());
 			f.NavigationItem.RightBarButtonItem = new UIKit.UIBarButtonItem(UIKit.UIBarButtonSystemItem.Done, (s, e) => {
 				if (f != null && f.PresentingViewController != null)
 				{

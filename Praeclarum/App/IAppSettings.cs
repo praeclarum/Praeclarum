@@ -38,8 +38,13 @@ namespace Praeclarum.App
 		DateTime TipDate { get; set; }
 
 		bool SubscribedToPro { get; set; }
-		DateTime SubscribedDate { get; set; }
-		int SubscribedDays { get; set; }
+		DateTime SubscribedToProDate { get; set; }
+		int SubscribedToProMonths { get; set; }
+	}
+
+	public static class DocumentAppSettingsExtensions
+	{
+		public static DateTime SubscribedToProEndDate (this IDocumentAppSettings settings) => settings.SubscribedToProDate.AddMonths(settings.SubscribedToProMonths);
 	}
 
 	public interface IAppSettings

@@ -163,9 +163,13 @@ namespace Praeclarum.UI
 			// In-app Purchases
 			//
 			try {
-				if (App.IsPatronSupported || App.HasTips) {
+				if (App.IsPatronSupported || App.HasTips || App.HasPro) {
 					if (Settings.IsPatron) {
-						Settings.IsPatron = DateTime.UtcNow < Settings.PatronEndDate;
+						Settings.IsPatron = DateTime.UtcNow <= Settings.PatronEndDate;
+					}
+					if (Settings.SubscribedToPro)
+					{
+						Settings.SubscribedToPro = DateTime.UtcNow <= Settings.SubscribedToProEndDate ();
 					}
 					StoreManager.Shared.CompletionActions.Add (HandlePurchaseCompletionAsync);
 					StoreManager.Shared.FailActions.Add (HandlePurchaseFailAsync);
@@ -317,8 +321,14 @@ namespace Praeclarum.UI
 
 		static Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
 		{
-			if (t.Payment.ProductIdentifier.Contains (".tip.")) {
-				return TipJarForm.HandlePurchaseCompletionAsync (t);
+			var pid = t.Payment.ProductIdentifier;
+			if (pid.Contains(".tip."))
+			{
+				return TipJarForm.HandlePurchaseCompletionAsync(t);
+			}
+			else if (pid.Contains(".pro."))
+			{
+				return ProForm.HandlePurchaseCompletionAsync(t);
 			}
 			return PatronForm.HandlePurchaseCompletionAsync (t);
 		}
@@ -897,13 +907,15 @@ namespace Praeclarum.UI
 
 		public UIViewController PresenterController {
 			get {
-				return (UIViewController)docBrowser ?? CurrentDocumentListController;
+				var vc = (UIViewController)docBrowser ?? CurrentDocumentListController;
+				var pvc = vc.PresentedViewController ?? vc;
+				return pvc;
 			}
 		}
 
 		public IDocumentEditor CurrentDocumentEditor {
 			get {
-				var vcs = (detailNav ?? docListNav ?? (PresenterController?.PresentedViewController as UINavigationController))?.ViewControllers;
+				var vcs = (detailNav ?? docListNav ?? (PresenterController as UINavigationController))?.ViewControllers;
 				return vcs?.OfType<IDocumentEditor> ().LastOrDefault ();
 			}
 		}
@@ -2084,12 +2096,30 @@ namespace Praeclarum.UI
 
 		#endregion
 
-		public async Task ShowPatronAsync ()
+		public async Task ShowPatronAsync (UIViewController presenterController = null)
 		{
+			var pvc = presenterController ?? PresenterController;
 			var pform = new PatronForm (GetPatronMonthlyPrices ());
 			var nav = new UINavigationController (pform);
 			nav.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
-			await PresenterController.PresentViewControllerAsync (nav, true);
+			await pvc.PresentViewControllerAsync (nav, true);
+		}
+
+		public void PromotePro (string failure, UIViewController presenterController = null)
+		{
+			ShowPro (presenterController);
+		}
+
+		public void ShowPro (UIViewController presenterController = null)
+		{
+			BeginInvokeOnMainThread(() =>
+			{
+				var pvc = presenterController ?? PresenterController;
+				var pform = new ProForm (GetProPrices());
+				var nav = new UINavigationController (pform);
+				nav.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
+				pvc.PresentViewController (nav, true, null);
+			});
 		}
 
 		public virtual IEnumerable<(int Months, string Name)> GetProPrices()

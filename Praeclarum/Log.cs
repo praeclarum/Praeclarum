@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Praeclarum
 {
@@ -14,6 +15,14 @@ namespace Praeclarum
 		}
 
 		public static LogExtras Logger;
+
+		public static void TaskError (Task task)
+		{
+			if (task == null)
+				return;
+			if (task.IsFaulted)
+				Error (task.Exception);
+		}
 
 		public static void Error (string context, Exception ex)
 		{

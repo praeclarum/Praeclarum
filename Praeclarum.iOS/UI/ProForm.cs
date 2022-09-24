@@ -28,7 +28,7 @@ namespace Praeclarum.UI
 			var appdel = DocumentAppDelegate.Shared;
 			var appName = appdel.App.Name;
 			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = names.Select(x => new SubscriptionPrice(bundleId + ".pro." + x.Months + "_month", appName + " Pro (" + x.Name + ")")).ToArray();
+			prices = names.Select(x => new SubscriptionPrice(bundleId + ".pro." + x.Months + "_month", x.Months, appName + " Pro (" + x.Name + ")")).ToArray();
 
 			Title = "Upgrade to " + appName + " Pro";
 
@@ -43,7 +43,7 @@ namespace Praeclarum.UI
 #endif
 
 			subscribedToPro = appdel.Settings.SubscribedToPro;
-			subscribedDate = appdel.Settings.SubscribedDate;
+			subscribedDate = appdel.Settings.SubscribedToProDate;
 			aboutSection.SetPatronage();
 			buySection.SetPatronage();
 
@@ -177,8 +177,9 @@ namespace Praeclarum.UI
 		static async Task AddSubscriptionAsync(string transactionId, DateTime transactionDate, SubscriptionPrice p)
 		{
 			var settings = DocumentAppDelegate.Shared.Settings;
-			settings.HasTipped = true;
-			settings.TipDate = transactionDate;
+			settings.SubscribedToPro = true;
+			settings.SubscribedToProDate = transactionDate;
+			settings.SubscribedToProMonths = p.Months;
 
 			var v = visibleForm;
 			if (v != null)
@@ -238,7 +239,8 @@ namespace Praeclarum.UI
 			public readonly string Name;
 			public string Price;
 			public StoreKit.SKProduct? Product;
-			public SubscriptionPrice(string id, string name)
+			public readonly int Months;
+			public SubscriptionPrice(string id, int months, string name)
 			{
 				Console.WriteLine("Created subscription: " + id);
 				Id = id;

@@ -110,6 +110,9 @@ namespace Praeclarum.App
 		public virtual bool HasTips {
 			get { return false; }
 		}
+		public virtual bool HasPro {
+			get { return false; }
+		}
 		public virtual bool NagForReviews {
 			get { return false; }
 		}

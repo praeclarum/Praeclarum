@@ -207,27 +207,27 @@ namespace Praeclarum.App
 			}
 		}
 
-		public DateTime SubscribedDate
+		public DateTime SubscribedToProDate
 		{
 			get
 			{
-				return GetDateTime("SubscribedDate");
+				return GetDateTime("SubscribedToProDate");
 			}
 			set
 			{
-				SetDateTime("SubscribedDate", value);
+				SetDateTime("SubscribedToProDate", value);
 			}
 		}
 
-		public int SubscribedDays
+		public int SubscribedToProMonths
 		{
 			get
 			{
-				return (int)defs.IntForKey("SubscribedDays");
+				return (int)defs.IntForKey("SubscribedToProMonths");
 			}
 			set
 			{
-				defs.SetInt(value, "SubscribedDays");
+				defs.SetInt(value, "SubscribedToProMonths");
 			}
 		}
 

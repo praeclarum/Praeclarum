@@ -2120,7 +2120,21 @@ namespace Praeclarum.UI
 
 		public void PromotePro (string failure, UIViewController presenterController = null)
 		{
-			ShowPro (presenterController);
+			BeginInvokeOnMainThread(() =>
+			{
+				var pvc = presenterController ?? PresenterController;
+				var message = $"{App.ProSymbol} This feature is only available in {App.Name} Pro.\n\nYou can upgrade by clicking \"Learn More\" below.";
+
+				var alert = UIAlertController.Create(failure, message, UIAlertControllerStyle.Alert);
+				alert.AddAction(UIAlertAction.Create("Cancel", UIAlertActionStyle.Cancel, (a) =>
+				{
+				}));
+				alert.AddAction(UIAlertAction.Create("Learn More about Pro", UIAlertActionStyle.Default, (a) =>
+				{
+					ShowPro (pvc);
+				}));
+				pvc.PresentViewController(alert, true, null);
+			});
 		}
 
 		public void ShowPro (UIViewController presenterController = null)

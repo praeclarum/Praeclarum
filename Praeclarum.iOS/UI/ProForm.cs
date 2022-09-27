@@ -16,6 +16,7 @@ namespace Praeclarum.UI
 		SubscribeSection buySection;
 
 		ProAboutSection aboutSection;
+		ProFeaturesSection featuresSection;
 
 		static SubscriptionPrice[] prices = new SubscriptionPrice[0];
 
@@ -26,16 +27,19 @@ namespace Praeclarum.UI
 		public ProForm(IEnumerable<(int Months, string Name)> names)
 		{
 			var appdel = DocumentAppDelegate.Shared;
-			var appName = appdel.App.Name;
+			var app = appdel.App;
+			var appName = app.Name;
 			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = names.Select(x => new SubscriptionPrice(bundleId + ".pro." + x.Months + "_month", x.Months, appName + " Pro (" + x.Name + ")")).ToArray();
+			prices = names.Select(x => new SubscriptionPrice(bundleId + ".pro." + x.Months + "_month", x.Months, app.ProSymbol + " " + appName + " Pro (" + x.Name + ")")).ToArray();
 
 			Title = "Upgrade to " + appName + " Pro";
 
 			aboutSection = new ProAboutSection(appName);
+			featuresSection = new ProFeaturesSection(appName);
 			buySection = new SubscribeSection(prices);
 
 			Sections.Add(aboutSection);
+			Sections.Add(featuresSection);
 			Sections.Add(buySection);
 			Sections.Add (new ProRestoreSection ());
 #if DEBUG
@@ -86,7 +90,9 @@ namespace Praeclarum.UI
 			{
 
 				var settings = DocumentAppDelegate.Shared.Settings;
-				settings.HasTipped = false;
+				settings.SubscribedToPro = false;
+				settings.SubscribedToProDate = new DateTime (1970, 1, 1);
+				settings.SubscribedToProMonths = 0;
 
 			}
 			catch (NSErrorException ex)
@@ -123,8 +129,8 @@ namespace Praeclarum.UI
 			ReloadSection(buySection);
 
 			var settings = DocumentAppDelegate.Shared.Settings;
-			subscribedToPro = settings.HasTipped;
-			subscribedDate = settings.TipDate;
+			subscribedToPro = settings.SubscribedToPro;
+			subscribedDate = settings.SubscribedToProDate;
 
 			aboutSection.SetPatronage();
 			buySection.SetPatronage();
@@ -219,16 +225,48 @@ namespace Praeclarum.UI
 			{
 				var form = (ProForm)Form;
 				var appName = DocumentAppDelegate.Shared.App.Name;
-				Title = "Hi, I'm Frank";
-				Hint = $"I am the author of " + appName + " and I want to thank you for your purchase. " +
-					"I am an independent developer and am able to make my living thanks to people like you. Thank you!\n\n" +
-					$"This form is here if you love {appName} and want to help fund its continued development. " +
-					"Tips like this help me to pay the bills and spend more time improving the app."
-					;
+				Title = appName + " Pro";
+				Hint = $"Pro is awesome.";
 				if (form.subscribedToPro)
 				{
-					Hint += $"\n\n⭐️⭐️⭐️ Thank you for your tip on {form.subscribedDate.ToShortDateString()}. " +
-						"Your support is very much appreciated! ⭐️⭐️⭐️";
+					Hint += $"\n\n⭐️⭐️⭐️ Thank you for your subscription! ⭐️⭐️⭐️";
+				}
+			}
+		}
+
+		class ProFeaturesSection : PFormSection
+		{
+			public ProFeaturesSection(string appName)
+				: base("Pro Feature List")
+			{
+			}
+			public override bool SelectItem(object item)
+			{
+				ShowFeatures();
+				return false;
+			}
+			public override bool GetItemNavigates (object item)
+			{
+				return true;
+			}
+			void ShowFeatures()
+			{
+				var appdel = DocumentAppDelegate.Shared;
+				var features = appdel.App.GetProFeatures();
+				var featuresForm = new PForm("Pro Feature List");
+				foreach (var (title, items) in features)
+				{
+					var s = new PFormSection();
+					s.Title = title;
+					foreach (var i in items)
+					{
+						s.Items.Add(i);
+					}
+					featuresForm.Sections.Add(s);
+				}
+				if (this.Form.NavigationController is UINavigationController nav)
+				{
+					nav.PushViewController(featuresForm, true);
 				}
 			}
 		}

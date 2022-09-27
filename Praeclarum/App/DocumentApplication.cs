@@ -116,6 +116,8 @@ namespace Praeclarum.App
 		public virtual bool NagForReviews {
 			get { return false; }
 		}
+
+		public virtual (string Section, string[] Features)[] GetProFeatures () { return Array.Empty<(string,string[])>(); }
 	}
 }
 

@@ -218,7 +218,7 @@ namespace Praeclarum.UI
 			}
 			else if (!gotSubs)
 			{
-				ShowAlert("No Subscriptions Found", $"There is no record of you subscribing to {DocumentAppDelegate.Shared.App.Name} Pro.");
+				ShowAlert("No Subscriptions Found", $"There is no record of you ever subscribing to {DocumentAppDelegate.Shared.App.Name} Pro.");
 			}
 			if (visibleForm is not null)
 				await visibleForm.RefreshProDataAsync();

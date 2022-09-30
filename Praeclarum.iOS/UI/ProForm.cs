@@ -13,10 +13,11 @@ namespace Praeclarum.UI
 {
 	public class ProForm : PForm
 	{
-		SubscribeSection buySection;
+		readonly SubscribeSection buySection;
 
-		ProAboutSection aboutSection;
-		ProFeaturesSection featuresSection;
+		readonly ProAboutSection aboutSection;
+		readonly ProFeaturesSection featuresSection;
+		readonly ProRestoreSection restoreSection;
 
 		static SubscriptionPrice[] prices = new SubscriptionPrice[0];
 
@@ -37,11 +38,12 @@ namespace Praeclarum.UI
 			aboutSection = new ProAboutSection(appName);
 			featuresSection = new ProFeaturesSection(appName);
 			buySection = new SubscribeSection(prices);
+			restoreSection = new ProRestoreSection();
 
 			Sections.Add(aboutSection);
 			Sections.Add(featuresSection);
 			Sections.Add(buySection);
-			Sections.Add (new ProRestoreSection ());
+			Sections.Add (restoreSection);
 #if DEBUG
 			Sections.Add (new ProDeleteSection ());
 #endif
@@ -75,11 +77,8 @@ namespace Praeclarum.UI
 
 		public async Task<int> RestorePastPurchasesAsync()
 		{
+			gotSubs = false;
 			StoreManager.Shared.Restore();
-
-			//var settings = DocumentAppDelegate.Shared.Settings;
-			//settings.HasTipped = isPatron;
-			//settings.TipDate = endDate;
 
 			return 0;
 		}
@@ -106,24 +105,30 @@ namespace Praeclarum.UI
 			}
 		}
 
+		bool needsPrices = true;
+
 		async Task<int> RefreshProDataAsync()
 		{
-			var ids = prices.Select(x => x.Id).ToArray();
-			var prods = await StoreManager.Shared.FetchProductInformationAsync(ids);
-
-			foreach (var price in prices)
+			if (needsPrices)
 			{
-				var prod = prods.Products.FirstOrDefault(x => x.ProductIdentifier == price.Id);
-				if (prod != null)
+				var ids = prices.Select(x => x.Id).ToArray();
+				var prods = await StoreManager.Shared.FetchProductInformationAsync(ids);
+
+				foreach (var price in prices)
 				{
-					price.Price = prod.PriceLocale.CurrencySymbol + prod.Price.DescriptionWithLocale(prod.PriceLocale);
-					price.Product = prod;
+					var prod = prods.Products.FirstOrDefault(x => x.ProductIdentifier == price.Id);
+					if (prod != null)
+					{
+						price.Price = prod.PriceLocale.CurrencySymbol + prod.Price.DescriptionWithLocale(prod.PriceLocale);
+						price.Product = prod;
+					}
+					else
+					{
+						price.Price = "?";
+						price.Product = null;
+					}
 				}
-				else
-				{
-					price.Price = "?";
-					price.Product = null;
-				}
+				needsPrices = false;
 			}
 
 			ReloadSection(buySection);
@@ -137,6 +142,7 @@ namespace Praeclarum.UI
 
 			ReloadSection(aboutSection);
 			ReloadSection(buySection);
+			ReloadSection(restoreSection);
 
 			return subscribedToPro ? 1 : 0;
 		}
@@ -169,7 +175,7 @@ namespace Praeclarum.UI
 					return;
 
 				var m = t.Error != null ? t.Error.LocalizedDescription : "Unknown error";
-				var alert = UIAlertController.Create("Tip Failed", m, UIAlertControllerStyle.Alert);
+				var alert = UIAlertController.Create("Pro Subscription Failed", m, UIAlertControllerStyle.Alert);
 				alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, a => { }));
 
 				visibleForm?.PresentViewController(alert, true, null);
@@ -180,6 +186,17 @@ namespace Praeclarum.UI
 				Log.Error(ex);
 			}
 		}
+		static void ShowAlert(string title, string m)
+		{
+			var v = visibleForm;
+			if (v != null)
+			{
+				var alert = UIAlertController.Create(title, m, UIAlertControllerStyle.Alert);
+				alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, a => { }));
+				v.PresentViewController(alert, true, null);
+			}
+		}
+		static bool gotSubs = false;
 		static async Task AddSubscriptionAsync(string transactionId, DateTime transactionDate, SubscriptionPrice p)
 		{
 			var settings = DocumentAppDelegate.Shared.Settings;
@@ -187,17 +204,24 @@ namespace Praeclarum.UI
 			settings.SubscribedToProDate = transactionDate;
 			settings.SubscribedToProMonths = p.Months;
 
-			var v = visibleForm;
-			if (v != null)
+			gotSubs = true;
+
+			ShowAlert("Thank you!", "Your continued support is very much appreciated.");
+			if (visibleForm is not null)
+				await visibleForm.RefreshProDataAsync ();
+		}
+		public static async Task HandlePurchaseRestoredAsync(NSError? error)
+		{
+			if (error is not null)
 			{
-				var m = "Your continued support is very much appreciated.";
-				var alert = UIAlertController.Create("Thank you!", m, UIAlertControllerStyle.Alert);
-				alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, a => { }));
-
-				v.PresentViewController(alert, true, null);
-
-				await v.RefreshProDataAsync();
+				ShowAlert("Error Restoring Subscriptions", error.LocalizedDescription);
 			}
+			else if (!gotSubs)
+			{
+				ShowAlert("No Subscriptions Found", $"There is no record of you subscribing to {DocumentAppDelegate.Shared.App.Name} Pro.");
+			}
+			if (visibleForm is not null)
+				await visibleForm.RefreshProDataAsync();
 		}
 		public static async Task HandlePurchaseCompletionAsync(StoreKit.SKPaymentTransaction t)
 		{
@@ -370,23 +394,21 @@ namespace Praeclarum.UI
 				return false;
 			}
 
+			public override bool GetItemEnabled (object item)
+			{
+				return !StoreManager.Shared.IsRestoring;
+			}
+
 			async void RestoreAsync()
 			{
 				var form = (ProForm)Form;
 				try
 				{
-					// We save receipts in iCloud
+					if (StoreManager.Shared.IsRestoring)
+						return;
 
 					var n = await form.RestorePastPurchasesAsync();
-					//n = await form.RefreshPatronDataAsync ();
-
-					//Console.WriteLine (n);
-					//var m = n > 0 ?
-					//	"Your subscriptions have been restored." :
-					//	"No past subscriptions found.";
-					//var alert = UIAlertController.Create ("Restore Complete", m, UIAlertControllerStyle.Alert);
-					//alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
-					//form.PresentViewController (alert, true, null);
+					form.ReloadSection(this);
 				}
 				catch (Exception ex)
 				{

@@ -171,6 +171,7 @@ namespace Praeclarum.UI
 					{
 						Settings.SubscribedToPro = DateTime.UtcNow <= Settings.SubscribedToProEndDate ();
 					}
+					StoreManager.Shared.RestoredActions.Add (HandlePurchaseRestoredAsync);
 					StoreManager.Shared.CompletionActions.Add (HandlePurchaseCompletionAsync);
 					StoreManager.Shared.FailActions.Add (HandlePurchaseFailAsync);
 				}
@@ -317,6 +318,13 @@ namespace Praeclarum.UI
 			}
 
 			return shouldPerformAdditionalDelegateHandling;
+		}
+
+		static async Task HandlePurchaseRestoredAsync (NSError? error)
+		{
+			// await TipJarForm.HandlePurchaseRestoredAsync(error);
+			await ProForm.HandlePurchaseRestoredAsync(error);
+			// await PatronForm.HandlePurchaseRestoredAsync (error);
 		}
 
 		static Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)

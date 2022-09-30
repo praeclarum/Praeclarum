@@ -15,6 +15,7 @@ namespace Praeclarum.App
 		readonly List<SKPaymentTransaction> productsPurchased = new List<SKPaymentTransaction> ();
 		readonly List<SKPaymentTransaction> productsRestored = new List<SKPaymentTransaction> ();
 
+		public readonly List<Func<NSError?, Task>> RestoredActions = new List<Func<NSError?, Task>> ();
 		public readonly List<Func<SKPaymentTransaction, Task>> CompletionActions = new List<Func<SKPaymentTransaction, Task>> ();
 		public readonly List<Func<SKPaymentTransaction, Task>> FailActions = new List<Func<SKPaymentTransaction, Task>> ();
 
@@ -35,21 +36,29 @@ namespace Praeclarum.App
 			SKPaymentQueue.DefaultQueue.AddPayment (payment);
 		}
 
+		public bool IsRestoring { get; private set; }
+
 		public void Restore ()
 		{
+			if (IsRestoring) return;
+			IsRestoring = true;
 			Console.WriteLine ("STORE Restore()");
 			productsRestored.Clear ();
 			SKPaymentQueue.DefaultQueue.RestoreCompletedTransactions ();
 		}
 
-		public override void RestoreCompletedTransactionsFinished (SKPaymentQueue queue)
+		public override async void RestoreCompletedTransactionsFinished (SKPaymentQueue queue)
 		{
+			IsRestoring = false;
 			Console.WriteLine ("STORE RestoreCompleted()");
+			await RestoredAsync(error: null);
 		}
 
-		public override void RestoreCompletedTransactionsFailedWithError (SKPaymentQueue queue, NSError error)
+		public override async void RestoreCompletedTransactionsFailedWithError (SKPaymentQueue queue, NSError error)
 		{
+			IsRestoring = false;
 			Console.WriteLine ("STORE ERROR RestoreError ({0})", error);
+			await RestoredAsync(error: error);
 		}
 
 		public override async void UpdatedTransactions (SKPaymentQueue queue, SKPaymentTransaction[] transactions)
@@ -100,6 +109,21 @@ namespace Praeclarum.App
 			}
 			Console.WriteLine ("STORE FinishTransaction()");
 			SKPaymentQueue.DefaultQueue.FinishTransaction (t);
+		}
+
+		async Task RestoredAsync (NSError? error)
+		{
+			foreach (var a in RestoredActions)
+			{
+				try
+				{
+					await a(error);
+				}
+				catch (Exception ex)
+				{
+					Log.Error (ex);
+				}
+			}
 		}
 
 		class TaskRequestDelegate : SKProductsRequestDelegate

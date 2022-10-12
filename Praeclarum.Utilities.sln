@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Utilities", "Praeclarum.Net\Praeclarum.Utilities.csproj", "{AAAD441D-9D26-4E7B-A560-86E22F01B2CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Utilities", "Praeclarum.Utilities\Praeclarum.Utilities.csproj", "{AAAD441D-9D26-4E7B-A560-86E22F01B2CA}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.Shared", "Praeclarum\Praeclarum.Shared.shproj", "{B8A8BCD4-7815-4994-A9AF-3E603C844835}"
 EndProject

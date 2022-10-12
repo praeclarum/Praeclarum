@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net6.0-ios</TargetFrameworks>
+    <TargetFrameworks>net6.0;net6.0-ios;net6.0-maccatalyst</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <DefineConstants>NO_DROPBOX</DefineConstants>
   </PropertyGroup>
 
-  <Import Project="..\Praeclarum.iOS\Praeclarum.iOS.Shared.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'net6.0-ios' and Exists('..\Praeclarum.iOS\Praeclarum.iOS.Shared.projitems')" />
+  <Import Project="..\Praeclarum.iOS\Praeclarum.iOS.Shared.projitems" Label="Shared" Condition="('$(TargetFramework)' == 'net6.0-ios' or '$(TargetFramework)' == 'net6.0-maccatalyst') and Exists('..\Praeclarum.iOS\Praeclarum.iOS.Shared.projitems')" />
   <Import Project="..\Praeclarum\Praeclarum.Shared.projitems" Label="Shared" Condition="Exists('..\Praeclarum\Praeclarum.Shared.projitems')" />
 </Project>

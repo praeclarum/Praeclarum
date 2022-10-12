@@ -13,15 +13,27 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Update Versions
+      env:
+        VERSION_PREFIX: 0.1
+        VERSION_SUFFIX: ${{github.run_number}}
+      run: |
+        VERSION=$VERSION_PREFIX.$VERSION_SUFFIX
+        sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Utilities/Praeclarum.Utilities.csproj
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.401
     - name: Install workloads
-      run: dotnet workload install ios
+      run: dotnet workload install ios maccatalyst macos
     - name: Restore dependencies
       run: dotnet restore Praeclarum.Utilities.sln
     - name: Build
       run: dotnet build --no-restore -c Release Praeclarum.Utilities.sln
     - name: Pack
-      run: dotnet pack -c Release Praeclarum.Utilities.sln
+      run: dotnet pack -c Release Praeclarum.Utilities.sln -o .
+    - name: Store nuget
+      uses: actions/upload-artifact@v2
+      with:
+        name: Praeclarum.UtilitiesNuget
+        path: "*.nupkg"

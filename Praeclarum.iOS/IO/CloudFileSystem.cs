@@ -68,7 +68,11 @@ namespace Praeclarum.IO
 
 			askCloudAlert.Clicked += (s, e) => {
 				try {
+#if NET6_0_OR_GREATER
+					var useCloud = e.ButtonIndex == (nint)1;
+#else
 					var useCloud = e.ButtonIndex == 1;
+#endif
 					tcs.SetResult (useCloud);
 				} catch (Exception ex) {
 					Log.Error (ex);					
@@ -470,6 +474,25 @@ namespace Praeclarum.IO
 				ModifiedTime = DateTime.MinValue;
 			}
 
+#if NET6_0_OR_GREATER
+			var isDownloading = item.UbiquitousItemIsDownloading ?? false;
+			if (UIDevice.CurrentDevice.CheckSystemVersion(7, 0))
+			{
+				IsDownloaded = item.UbiquitousItemDownloadingStatus == NSItemDownloadingStatus.Downloaded;
+			}
+			else
+			{
+				try
+				{
+					IsDownloaded = ((NSNumber)item.ValueForKey(NSMetadataQuery.UbiquitousItemIsDownloadedKey)).BoolValue;
+				}
+				catch (Exception)
+				{
+					IsDownloaded = false;
+				}
+			}
+			DownloadProgress = isDownloading ? (item.UbiquitousItemPercentDownloaded??0.0) / 100.0 : 1;
+#else
 			var isDownloading = item.UbiquitousItemIsDownloading;
 			if (UIDevice.CurrentDevice.CheckSystemVersion (7, 0)) {
 				IsDownloaded = item.DownloadingStatus == NSItemDownloadingStatus.Downloaded;
@@ -481,11 +504,12 @@ namespace Praeclarum.IO
 				}
 			}
 			DownloadProgress = isDownloading ? item.UbiquitousItemPercentDownloaded / 100.0 : 1;
+#endif
 		}
 
-//		public bool IsUploaded { get { return ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsUploadedKey)).BoolValue; } }
-//		public bool IsUploading { get { return ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsUploadingKey)).BoolValue; } }
-//		public double PercentUploaded { get { return IsUploading ? ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemPercentUploadedKey)).DoubleValue : 100; } }
+		//		public bool IsUploaded { get { return ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsUploadedKey)).BoolValue; } }
+		//		public bool IsUploading { get { return ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsUploadingKey)).BoolValue; } }
+		//		public double PercentUploaded { get { return IsUploading ? ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemPercentUploadedKey)).DoubleValue : 100; } }
 
 		public Task<LocalFileAccess> BeginLocalAccess ()
 		{

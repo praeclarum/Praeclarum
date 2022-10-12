@@ -537,21 +537,6 @@ namespace Praeclarum.UI
 
 			ApplyTheme (DocumentAppDelegate.Shared.Theme);
 
-			if (!ios7) {
-				segs.TintColor = UIColor.FromWhiteAlpha (165 / 255.0f, 1);
-				segs.SetTitleTextAttributes (new UITextAttributes {
-					TextColor = UIColor.FromWhiteAlpha (220 / 255.0f, 1),
-					TextShadowColor = UIColor.Gray,
-					TextShadowOffset = new UIOffset (0, -1),
-				}, UIControlState.Normal);
-				segs.SetTitleTextAttributes (new UITextAttributes {
-					TextColor = UIColor.White,
-					TextShadowColor = UIColor.DarkGray,
-					TextShadowOffset = new UIOffset (0, -1),
-				}, UIControlState.Selected);
-				segs.ControlStyle = UISegmentedControlStyle.Bar;
-			}
-
 			segs.SelectedSegment = sort == DocumentsSort.Name ? 1 : 0;
 			segs.ValueChanged += HandleValueChanged;
 		}

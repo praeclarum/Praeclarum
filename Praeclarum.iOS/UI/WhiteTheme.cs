@@ -21,6 +21,20 @@ namespace Praeclarum.UI
 		readonly Lazy<UIImage> MoveButtonImage = new Lazy<UIImage> (
 			() => UIImage.FromBundle ("Move.png"));
 
+#if NET6_0_OR_GREATER
+		public static UIColor SystemDarkTextColor => UIColor.DarkText;
+		public static UIColor SystemLightTextColor => UIColor.LightText;
+		public static UIColor SystemLabelColor => UIColor.Label;
+		public static UIColor SystemGroupTableViewBackgroundColor => UIColor.GroupTableViewBackground;
+		public static UIColor SystemGroupedBackgroundColor => UIColor.SystemGroupedBackground;
+#else
+		public static UIColor SystemDarkTextColor => UIColor.DarkTextColor;
+		public static UIColor SystemLightTextColor => UIColor.LightTextColor;
+		public static UIColor SystemLabelColor => UIColor.LabelColor;
+		public static UIColor SystemGroupTableViewBackgroundColor => UIColor.GroupTableViewBackgroundColor;
+		public static UIColor SystemGroupedBackgroundColor => UIColor.SystemGroupedBackgroundColor;
+#endif
+
 		public static Theme Current;
 
 		static Theme ()
@@ -62,7 +76,7 @@ namespace Praeclarum.UI
 				TableCellDetailTextColor = UIColor.LightGray;
 				TableSeparatorColor = UIColor.FromWhiteAlpha (0.25f, 1.0f);
 				DocumentBackgroundColor = UIColor.FromRGB(0, 0, 0);
-				DocumentTextColor = UIColor.LightTextColor;
+				DocumentTextColor = SystemLightTextColor;
 				KeyboardAppearance = UIKeyboardAppearance.Dark;
 			} else {
 				if (appdel != null && appdel.App != null)
@@ -80,14 +94,14 @@ namespace Praeclarum.UI
 				DocumentsFolderColor = UIColor.FromRGB (195, 195, 195);
 				DocumentsFrameSideColor = UIColor.FromRGB ((nfloat)202 / 255.0f, (nfloat)202 / 255.0f, (nfloat)202 / 255.0f);
 				DocumentsFrameBottomColor = UIColor.FromRGB ((nfloat)176 / 255.0f, (nfloat)176 / 255.0f, (nfloat)176 / 255.0f);
-				GroupedTableBackgroundColor = UIColor.GroupTableViewBackgroundColor;
+				GroupedTableBackgroundColor = SystemGroupTableViewBackgroundColor;
 				PlainTableBackgroundColor = UIColor.White;
 				TableCellBackgroundColor = UIColor.White;
-				TableCellTextColor = UIColor.DarkTextColor;
+				TableCellTextColor = SystemDarkTextColor;
 				TableCellDetailTextColor = UIColor.LightGray;
 				TableSeparatorColor = UIColor.FromWhiteAlpha (0.85f, 1.0f);
 				DocumentBackgroundColor = UIColor.White;
-				DocumentTextColor = UIColor.DarkTextColor;
+				DocumentTextColor = SystemDarkTextColor;
 				KeyboardAppearance = UIKeyboardAppearance.Default;
 			}
 		}
@@ -271,7 +285,7 @@ namespace Praeclarum.UI
 		{
 			var c = tableView.Style == UITableViewStyle.Grouped ? GroupedTableBackgroundColor : PlainTableBackgroundColor;
 			if (ios13) {
-				c = UIColor.SystemGroupedBackgroundColor;
+				c = SystemGroupedBackgroundColor;
 			}
 			if (tableView.BackgroundView == null) {
 				tableView.BackgroundView = new UIView { BackgroundColor = c };
@@ -484,7 +498,7 @@ namespace Praeclarum.UI
 
 		public override void Apply (UITableViewCell cell)
 		{
-			cell.TextLabel.TextColor = UIColor.DarkTextColor;
+			cell.TextLabel.TextColor = SystemDarkTextColor;
 			cell.TextLabel.Font = cellFont.Value;
 			cell.DetailTextLabel.TextColor = UIColor.Gray;
 			cell.DetailTextLabel.Font = cellDetailFont.Value;
@@ -568,7 +582,8 @@ namespace Praeclarum.UI
 				UIBarMetrics.Default);
 
 			appearance.SetTitlePositionAdjustment (new UIOffset (0, 1), UIBarMetrics.Default);
-
+#if NET6_0_OR_GREATER
+#else
 			appearance.SetTitleTextAttributes (new UITextAttributes {
 				TextColor = BarTextColor,
 				TextShadowColor = BarButtonTextShadowColor,
@@ -589,6 +604,7 @@ namespace Praeclarum.UI
 				TextShadowOffset = BarButtonTextShadowOffset,
 				Font = font,
 			}, UIControlState.Highlighted);
+#endif
 		}
 
 		public override UIBarButtonItem CreateAddButton (EventHandler handler)

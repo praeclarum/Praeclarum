@@ -101,7 +101,11 @@ namespace Praeclarum.UI
 			try {
 				foreach (UITouch t in touches) {
 					TouchBegan (this, new CanvasTouchEventArgs {
+#if NET6_0_OR_GREATER
+						TouchId = t.Handle.Handle.ToInt32(),
+#else
 						TouchId = t.Handle.ToInt32 (),
+#endif
 						Location = t.LocationInView (this).ToPointF (),
 					});
 				}
@@ -115,7 +119,11 @@ namespace Praeclarum.UI
 			try {
 				foreach (UITouch t in touches) {
 					TouchMoved (this, new CanvasTouchEventArgs {
+#if NET6_0_OR_GREATER
+						TouchId = t.Handle.Handle.ToInt32(),
+#else
 						TouchId = t.Handle.ToInt32 (),
+#endif
 						Location = t.LocationInView (this).ToPointF (),
 					});
 				}
@@ -129,7 +137,11 @@ namespace Praeclarum.UI
 			try {
 				foreach (UITouch t in touches) {
 					TouchEnded (this, new CanvasTouchEventArgs {
+#if NET6_0_OR_GREATER
+						TouchId = t.Handle.Handle.ToInt32(),
+#else
 						TouchId = t.Handle.ToInt32 (),
+#endif
 						Location = t.LocationInView (this).ToPointF (),
 					});
 				}
@@ -143,7 +155,11 @@ namespace Praeclarum.UI
 			try {
 				foreach (UITouch t in touches) {
 					TouchCancelled (this, new CanvasTouchEventArgs {
+#if NET6_0_OR_GREATER
+						TouchId = t.Handle.Handle.ToInt32(),
+#else
 						TouchId = t.Handle.ToInt32 (),
+#endif
 						Location = t.LocationInView (this).ToPointF (),
 					});
 				}

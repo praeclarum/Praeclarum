@@ -449,7 +449,7 @@ namespace Praeclarum.UI
 			get {
 				if (ios13) {
 					try {
-						var c = UIColor.LabelColor;
+						var c = Theme.SystemLabelColor;
 						c.GetRGBA (out var r, out var g, out var b, out var a);
 						return r > 0.5f;
 					}
@@ -1714,10 +1714,13 @@ namespace Praeclarum.UI
 			ActionSheet.CancelButtonIndex = 1;
 
 			ActionSheet.Clicked += async (ss, se) => {
-
+#if NET6_0_OR_GREATER
+				if (se.ButtonIndex != (nint)0)
+					return;
+#else
 				if (se.ButtonIndex != 0)
 					return;
-
+#endif
 				if (docIndex >= 0) {
 					await CloseOpenedDoc (reloadThumbnail: false);
 				}
@@ -1866,7 +1869,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		#region Quick UI stuff
+#region Quick UI stuff
 
 		public static void Alert (string title, Exception ex)
 		{
@@ -1879,9 +1882,9 @@ namespace Praeclarum.UI
 			v.Show ();
 		}
 
-		#endregion
+#endregion
 
-		#region Thumbnails
+#region Thumbnails
 
 		public ImageCache ThumbnailCache { get; private set; }
 
@@ -1989,9 +1992,9 @@ namespace Praeclarum.UI
 			});
 		}
 
-		#endregion
+#endregion
 
-		#region Actions
+#region Actions
 
 		public async Task PerformActionOnDocument (DocumentReference docRef, UIViewController fromController, UIBarButtonItem fromButton)
 		{
@@ -2058,9 +2061,9 @@ namespace Praeclarum.UI
 
 		}
 
-		#endregion
+#endregion
 
-		#region MRU
+#region MRU
 
 		protected class MRU
 		{
@@ -2115,7 +2118,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		#endregion
+#endregion
 
 		public async Task ShowPatronAsync (UIViewController presenterController = null)
 		{

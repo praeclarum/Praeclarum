@@ -29,7 +29,11 @@ using Foundation;
 using NativeSize = CoreGraphics.CGSize;
 using NativePoint = CoreGraphics.CGPoint;
 using NativeRect = CoreGraphics.CGRect;
+#if NET6_0_OR_GREATER
+using NativeValue = System.Runtime.InteropServices.NFloat;
+#else
 using NativeValue = System.nfloat;
+#endif
 
 #if MONOMAC
 using AppKit;

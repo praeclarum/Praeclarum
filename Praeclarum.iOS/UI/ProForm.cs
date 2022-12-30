@@ -26,7 +26,7 @@ namespace Praeclarum.UI
 
 		static ProPrice[] prices => ProService.Shared.Prices;
 
-		bool subscribedToPro => service.SubscribedToPro;
+		bool subscribedToPro => ProService.SubscribedToPro;
 
 		public ProForm()
 		{
@@ -198,7 +198,7 @@ namespace Praeclarum.UI
 			{
 				ShowAlert("Error Restoring Pro Subscription", error.LocalizedDescription);
 			}
-			else if (!ProService.Shared.SubscribedToPro)
+			else if (!ProService.SubscribedToPro)
 			{
 				ShowAlert("No Subscriptions Found", $"You are not currently subscribed to {DocumentAppDelegate.Shared.App.Name} Pro.\n\nChoose one of the pricing plans to subscribe.");
 			}
@@ -454,7 +454,7 @@ namespace Praeclarum.UI
 
 		public override string GetItemTitle(object item)
 		{
-			var isp = ProService.Shared.SubscribedToPro;
+			var isp = ProService.SubscribedToPro;
 			var app = DocumentAppDelegate.Shared.App;
 			var appName = app.Name;
 			return isp ?
@@ -491,7 +491,7 @@ namespace Praeclarum.UI
 
 		public ProPrice[] Prices => prices;
 
-		public bool SubscribedToPro
+		public static bool SubscribedToPro
 		{
 			get
 			{
@@ -519,6 +519,11 @@ namespace Praeclarum.UI
 			prices = names.Select(x => new ProPrice(bundleId + ".pro." + x.Months + "_month", x.Months, appName + " Pro (" + x.Name + ")")).ToArray();
 		}
 
+		void SignalProChanged()
+		{
+			NSNotificationCenter.DefaultCenter.PostNotificationName(nameof(SubscribedToPro), null);
+		}
+
 		public void Restore ()
 		{
 			restoredSubs = false;
@@ -537,11 +542,13 @@ namespace Praeclarum.UI
 			{
 				settings.SubscribedToProDate = subDate.Time;
 				settings.SubscribedToProMonths = subDate.Months;
+				SignalProChanged ();
 			}
 			else
 			{
 				settings.SubscribedToProDate = DateTime.UtcNow.AddMonths(-1);
 				settings.SubscribedToProMonths = 0;
+				SignalProChanged ();
 			}
 		}
 
@@ -575,6 +582,7 @@ namespace Praeclarum.UI
 				var settings = DocumentAppDelegate.Shared.Settings;
 				settings.SubscribedToProDate = transactionDate;
 				settings.SubscribedToProMonths = p.Months;
+				SignalProChanged ();
 			}
 		}
 
@@ -582,11 +590,10 @@ namespace Praeclarum.UI
 		{
 			try
 			{
-
 				var settings = DocumentAppDelegate.Shared.Settings;
 				settings.SubscribedToProDate = new DateTime (1970, 1, 1);
 				settings.SubscribedToProMonths = 0;
-
+				SignalProChanged();
 			}
 			catch (NSErrorException ex)
 			{

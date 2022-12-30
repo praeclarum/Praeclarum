@@ -195,18 +195,6 @@ namespace Praeclarum.App
 			}
 		}
 
-		public bool SubscribedToPro
-		{
-			get
-			{
-				return defs.BoolForKey("SubscribedToPro");
-			}
-			set
-			{
-				defs.SetBool(value, "SubscribedToPro");
-			}
-		}
-
 		public DateTime SubscribedToProDate
 		{
 			get

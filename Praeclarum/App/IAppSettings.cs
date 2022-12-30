@@ -37,7 +37,6 @@ namespace Praeclarum.App
 		bool HasTipped { get; set; }
 		DateTime TipDate { get; set; }
 
-		bool SubscribedToPro { get; set; }
 		DateTime SubscribedToProDate { get; set; }
 		int SubscribedToProMonths { get; set; }
 	}

@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using Foundation;
 using UIKit;
 using System.Collections.Generic;
+using StoreKit;
+using System.Diagnostics;
+using Circuit;
+using System.Runtime;
 
 namespace Praeclarum.UI
 {
@@ -18,21 +22,22 @@ namespace Praeclarum.UI
 		readonly ProFeaturesSection featuresSection;
 		readonly ProRestoreSection restoreSection;
 
-		static SubscriptionPrice[] prices = new SubscriptionPrice[0];
+		readonly ProService service;
 
-		bool subscribedToPro;
+		static ProPrice[] prices;
 
-		DateTime subscribedDate;
+		bool subscribedToPro => service.SubscribedToPro;
 
-		public ProForm(IEnumerable<(int Months, string Name)> names)
+		public ProForm()
 		{
-			var appdel = DocumentAppDelegate.Shared;
-			var app = appdel.App;
-			var appName = app.Name;
-			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = names.Select(x => new SubscriptionPrice(bundleId + ".pro." + x.Months + "_month", x.Months, app.ProSymbol + " " + appName + " Pro (" + x.Name + ")")).ToArray();
+			service = ProService.Shared;
+			prices = service.Prices;
 
-			Title = "Upgrade to " + appName + " Pro";
+			var appdel = DocumentAppDelegate.Shared;			
+			var app = appdel.App;
+			var appName = app.Name;			
+
+			Title = appName + " Pro";
 
 			aboutSection = new ProAboutSection(appName);
 			featuresSection = new ProFeaturesSection(appName);
@@ -47,8 +52,6 @@ namespace Praeclarum.UI
 			Sections.Add (new ProDeleteSection ());
 #endif
 
-			subscribedToPro = appdel.Settings.SubscribedToPro;
-			subscribedDate = appdel.Settings.SubscribedToProDate;
 			aboutSection.SetPatronage();
 			buySection.SetPatronage();
 
@@ -76,32 +79,15 @@ namespace Praeclarum.UI
 
 		public async Task<int> RestorePastPurchasesAsync()
 		{
-			gotSubs = false;
-			StoreManager.Shared.Restore();
+			service.Restore();			
 
 			return 0;
 		}
 
 		async Task DeletePastPurchasesAsync()
 		{
-			try
-			{
-
-				var settings = DocumentAppDelegate.Shared.Settings;
-				settings.SubscribedToPro = false;
-				settings.SubscribedToProDate = new DateTime (1970, 1, 1);
-				settings.SubscribedToProMonths = 0;
-
-			}
-			catch (NSErrorException ex)
-			{
-				Console.WriteLine("ERROR: {0}", ex.Error);
-				Log.Error(ex);
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
-			}
+			await service.DeletePastPurchasesAsync();
+			await RefreshProDataAsync();
 		}
 
 		bool needsPrices = true;
@@ -131,10 +117,6 @@ namespace Praeclarum.UI
 			}
 
 			ReloadSection(buySection);
-
-			var settings = DocumentAppDelegate.Shared.Settings;
-			subscribedToPro = settings.SubscribedToPro;
-			subscribedDate = settings.SubscribedToProDate;
 
 			aboutSection.SetPatronage();
 			buySection.SetPatronage();
@@ -195,29 +177,35 @@ namespace Praeclarum.UI
 				v.PresentViewController(alert, true, null);
 			}
 		}
-		static bool gotSubs = false;
-		static async Task AddSubscriptionAsync(string transactionId, DateTime transactionDate, SubscriptionPrice p)
+		
+		static async Task AddSubscriptionAsync(string transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p)
 		{
-			var settings = DocumentAppDelegate.Shared.Settings;
-			settings.SubscribedToPro = true;
-			settings.SubscribedToProDate = transactionDate;
-			settings.SubscribedToProMonths = p.Months;
-
-			gotSubs = true;
-
-			ShowAlert("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared.App.Name} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
-			if (visibleForm is not null)
-				await visibleForm.RefreshProDataAsync ();
+			if (transactionState == SKPaymentTransactionState.Purchased)
+			{
+				ShowThanksAlert();
+				if (visibleForm is not null)
+					await visibleForm.RefreshProDataAsync();
+			}
 		}
+
+		private static void ShowThanksAlert ()
+		{
+			ShowAlert ("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared.App.Name} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
+		}
+
 		public static async Task HandlePurchaseRestoredAsync(NSError? error)
 		{
 			if (error is not null)
 			{
-				ShowAlert("Error Restoring Subscriptions", error.LocalizedDescription);
+				ShowAlert("Error Restoring Pro Subscription", error.LocalizedDescription);
 			}
-			else if (!gotSubs)
+			else if (!ProService.Shared.SubscribedToPro)
 			{
-				ShowAlert("No Subscriptions Found", $"There is no record of you subscribing to {DocumentAppDelegate.Shared.App.Name} Pro.");
+				ShowAlert("No Subscriptions Found", $"You are not currently subscribed to {DocumentAppDelegate.Shared.App.Name} Pro.\n\nChoose one of the pricing plans to subscribe.");
+			}
+			else
+			{
+				ShowThanksAlert();
 			}
 			if (visibleForm is not null)
 				await visibleForm.RefreshProDataAsync();
@@ -227,14 +215,7 @@ namespace Praeclarum.UI
 			var p = prices.FirstOrDefault(x => x.Id == t.Payment.ProductIdentifier);
 			if (p == null)
 				return;
-			await AddSubscriptionAsync(t.TransactionIdentifier, (DateTime)t.TransactionDate, p);
-		}
-
-		async Task ForceSubscriptionAsync(SubscriptionPrice p)
-		{
-			var now = DateTime.UtcNow;
-			var id = "force" + now.Ticks;
-			await AddSubscriptionAsync(id, now, p);
+			await AddSubscriptionAsync(t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p);
 		}
 
 		class ProAboutSection : PFormSection
@@ -294,29 +275,14 @@ namespace Praeclarum.UI
 			}
 		}
 
-		class SubscriptionPrice
-		{
-			public readonly string Id;
-			public readonly string Name;
-			public string Price;
-			public StoreKit.SKProduct? Product;
-			public readonly int Months;
-			public SubscriptionPrice(string id, int months, string name)
-			{
-				Console.WriteLine("Created subscription: " + id);
-				Id = id;
-				Name = name;
-				Price = "";
-				Months = months;
-			}
-		}
+		
 
 		class SubscribeSection : PFormSection
 		{
-			public SubscribeSection(SubscriptionPrice[] prices)
+			public SubscribeSection(ProPrice[] prices)
 				: base(prices)
 			{
-				Hint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be re-subscribed to that plan.";
+				Hint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be able to re-subscribe using that plan.";
 			}
 
 			public void SetPatronage()
@@ -328,8 +294,16 @@ namespace Praeclarum.UI
 
 			public override string GetItemTitle(object item)
 			{
-				var p = (SubscriptionPrice)item;
-				return p.Name;
+				var p = (ProPrice)item;
+				var app = DocumentAppDelegate.Shared.App;
+				if (p.Months == ProService.Shared.SubscribedToProMonths)
+				{
+					return app.ProSymbol + " " + p.Name;
+				}
+				else
+				{
+					return "⬦ " + p.Name;
+				}
 			}
 
 			public override PFormItemDisplay GetItemDisplay(object item)
@@ -339,7 +313,7 @@ namespace Praeclarum.UI
 
 			public override string GetItemDetails(object item)
 			{
-				var p = (SubscriptionPrice)item;
+				var p = (ProPrice)item;
 				return p.Price;
 			}
 
@@ -357,7 +331,7 @@ namespace Praeclarum.UI
 				var form = (ProForm)Form;
 				try
 				{
-					var price = (SubscriptionPrice)item;
+					var price = (ProPrice)item;
 
 					if (price.Product == null)
 					{
@@ -384,7 +358,7 @@ namespace Praeclarum.UI
 		class ProRestoreSection : PFormSection
 		{
 			public ProRestoreSection()
-				: base("Restore Subscriptions")
+				: base("Restore Pro Subscription")
 			{
 			}
 
@@ -465,7 +439,7 @@ namespace Praeclarum.UI
 
 		public override bool SelectItem(object item)
 		{
-			var f = new ProForm(DocumentAppDelegate.Shared.GetProPrices());
+			var f = new ProForm();
 			f.NavigationItem.RightBarButtonItem = new UIKit.UIBarButtonItem(UIKit.UIBarButtonSystemItem.Done, (s, e) => {
 				if (f != null && f.PresentingViewController != null)
 				{
@@ -481,14 +455,150 @@ namespace Praeclarum.UI
 
 		public override string GetItemTitle(object item)
 		{
-			var isp = DocumentAppDelegate.Shared.Settings.SubscribedToPro;
-			var appName = DocumentAppDelegate.Shared.App.Name;
+			var isp = ProService.Shared.SubscribedToPro;
+			var app = DocumentAppDelegate.Shared.App;
+			var appName = app.Name;
 			return isp ?
-				$"Subscribed to {appName} Pro!" :
+				$"{app.ProSymbol} Subscribed to {appName} Pro!" :
 				$"Upgrade to {appName} Pro";
 		}
 	}
 
+	public class ProPrice
+	{
+		public readonly string Id;
+		public readonly string Name;
+		public string Price;
+		public StoreKit.SKProduct? Product;
+		public readonly int Months;
+		public ProPrice (string id, int months, string name)
+		{
+			Console.WriteLine ("Created pro subscription: " + id);
+			Id = id;
+			Name = name;
+			Price = "";
+			Months = months;
+		}
+	}
 
+	public class ProService
+	{
+		public static readonly ProService Shared = new ProService();
+
+		bool restoredSubs = false;
+		(DateTime Time, int Months)? restoredSubDate = null;
+
+		readonly ProPrice[] prices;
+
+		public ProPrice[] Prices => prices;
+
+		public bool SubscribedToPro
+		{
+			get
+			{
+				var settings = DocumentAppDelegate.Shared.Settings;
+				return DateTime.UtcNow <= settings.SubscribedToProEndDate ();
+			}
+		}
+
+		public int SubscribedToProMonths
+		{
+			get
+			{
+				var settings = DocumentAppDelegate.Shared.Settings;
+				return settings.SubscribedToProMonths;
+			}
+		}
+
+		private ProService()
+		{
+			var appdel = DocumentAppDelegate.Shared;
+			var app = appdel.App;
+			var appName = app.Name;
+			IEnumerable<(int Months, string Name)> names = appdel.GetProPrices();
+			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
+			prices = names.Select(x => new ProPrice(bundleId + ".pro." + x.Months + "_month", x.Months, appName + " Pro (" + x.Name + ")")).ToArray();
+		}
+
+		public void Restore ()
+		{
+			restoredSubs = false;
+			restoredSubDate = null;
+			StoreManager.Shared.Restore ();
+		}
+
+		public async Task HandlePurchaseRestoredAsync (NSError? error)
+		{
+			var settings = DocumentAppDelegate.Shared.Settings;
+			if (error is not null)
+			{
+				// Error, do nothing
+			}
+			else if (restoredSubs && restoredSubDate is { } subDate)
+			{
+				settings.SubscribedToProDate = subDate.Time;
+				settings.SubscribedToProMonths = subDate.Months;
+			}
+			else
+			{
+				settings.SubscribedToProDate = DateTime.UtcNow.AddMonths(-1);
+				settings.SubscribedToProMonths = 0;
+			}
+		}
+
+		public async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
+		{
+			var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
+			if (p == null)
+				return;
+			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p);
+		}
+
+		async Task AddSubscriptionAsync (string transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p)
+		{
+			if (transactionState == SKPaymentTransactionState.Restored)
+			{
+				restoredSubs = true;
+				if (restoredSubDate is { } subDate)
+				{
+					if (transactionDate > subDate.Time)
+					{
+						restoredSubDate = (transactionDate, p.Months);
+					}
+				}
+				else
+				{
+					restoredSubDate = (transactionDate, p.Months);
+				}
+			}
+			else if (transactionState == SKPaymentTransactionState.Purchased)
+			{
+				var settings = DocumentAppDelegate.Shared.Settings;
+				settings.SubscribedToProDate = transactionDate;
+				settings.SubscribedToProMonths = p.Months;
+			}
+		}
+
+		public async Task DeletePastPurchasesAsync ()
+		{
+			try
+			{
+
+				var settings = DocumentAppDelegate.Shared.Settings;
+				settings.SubscribedToProDate = new DateTime (1970, 1, 1);
+				settings.SubscribedToProMonths = 0;
+
+			}
+			catch (NSErrorException ex)
+			{
+				Console.WriteLine ("ERROR: {0}", ex.Error);
+				Log.Error (ex);
+			}
+			catch (Exception ex)
+			{
+				Log.Error (ex);
+			}
+		}
+	}
 }
 

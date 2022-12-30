@@ -232,10 +232,10 @@ namespace Praeclarum.UI
 				cell.TextLabel.BackgroundColor = UIColor.Clear;
 
 				var display = section.GetItemDisplay (item);
-				if (display != PFormItemDisplay.Title) {
-					cell.DetailTextLabel.Text = section.GetItemDetails (item) ?? "";
+				if (display != PFormItemDisplay.Title && cell.DetailTextLabel is UILabel detailTextLabel) {
+					detailTextLabel.Text = section.GetItemDetails (item) ?? "";
 					if (display == PFormItemDisplay.TitleAndValue) {
-						cell.DetailTextLabel.TextColor = UIApplication.SharedApplication.KeyWindow.TintColor;
+						detailTextLabel.TextColor = UIApplication.SharedApplication.KeyWindow.TintColor;
 					}
 				}
 

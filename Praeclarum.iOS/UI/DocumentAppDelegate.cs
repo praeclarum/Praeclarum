@@ -167,10 +167,6 @@ namespace Praeclarum.UI
 					if (Settings.IsPatron) {
 						Settings.IsPatron = DateTime.UtcNow <= Settings.PatronEndDate;
 					}
-					if (Settings.SubscribedToPro)
-					{
-						Settings.SubscribedToPro = DateTime.UtcNow <= Settings.SubscribedToProEndDate ();
-					}
 					StoreManager.Shared.RestoredActions.Add (HandlePurchaseRestoredAsync);
 					StoreManager.Shared.CompletionActions.Add (HandlePurchaseCompletionAsync);
 					StoreManager.Shared.FailActions.Add (HandlePurchaseFailAsync);
@@ -323,22 +319,27 @@ namespace Praeclarum.UI
 		static async Task HandlePurchaseRestoredAsync (NSError? error)
 		{
 			// await TipJarForm.HandlePurchaseRestoredAsync(error);
+			await ProService.Shared.HandlePurchaseRestoredAsync(error);
 			await ProForm.HandlePurchaseRestoredAsync(error);
 			// await PatronForm.HandlePurchaseRestoredAsync (error);
 		}
 
-		static Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
+		static async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
 		{
 			var pid = t.Payment.ProductIdentifier;
 			if (pid.Contains(".tip."))
 			{
-				return TipJarForm.HandlePurchaseCompletionAsync(t);
+				await TipJarForm.HandlePurchaseCompletionAsync(t);
 			}
 			else if (pid.Contains(".pro."))
 			{
-				return ProForm.HandlePurchaseCompletionAsync(t);
+				await ProService.Shared.HandlePurchaseCompletionAsync(t);
+				await ProForm.HandlePurchaseCompletionAsync(t);
 			}
-			return PatronForm.HandlePurchaseCompletionAsync (t);
+			else
+			{
+				await PatronForm.HandlePurchaseCompletionAsync(t);
+			}
 		}
 
 		static Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
@@ -2153,7 +2154,7 @@ namespace Praeclarum.UI
 			BeginInvokeOnMainThread(() =>
 			{
 				var pvc = presenterController ?? PresenterController;
-				var pform = new ProForm (GetProPrices());
+				var pform = new ProForm ();
 				var nav = new UINavigationController (pform);
 				nav.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 				pvc.PresentViewController (nav, true, null);

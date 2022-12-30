@@ -205,7 +205,7 @@ namespace Praeclarum.UI
 
 			gotSubs = true;
 
-			ShowAlert("Thank you!", "Your continued support is very much appreciated.");
+			ShowAlert("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared.App.Name} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
 			if (visibleForm is not null)
 				await visibleForm.RefreshProDataAsync ();
 		}
@@ -217,7 +217,7 @@ namespace Praeclarum.UI
 			}
 			else if (!gotSubs)
 			{
-				ShowAlert("No Subscriptions Found", $"There is no record of you ever subscribing to {DocumentAppDelegate.Shared.App.Name} Pro.");
+				ShowAlert("No Subscriptions Found", $"There is no record of you subscribing to {DocumentAppDelegate.Shared.App.Name} Pro.");
 			}
 			if (visibleForm is not null)
 				await visibleForm.RefreshProDataAsync();
@@ -252,7 +252,7 @@ namespace Praeclarum.UI
 				Hint = $"Pro is awesome.";
 				if (form.subscribedToPro)
 				{
-					Hint += $"\n\n⭐️⭐️⭐️ Thank you for your subscription! ⭐️⭐️⭐️";
+					Hint += $"\n\n⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️";
 				}
 			}
 		}
@@ -307,6 +307,7 @@ namespace Praeclarum.UI
 				Id = id;
 				Name = name;
 				Price = "";
+				Months = months;
 			}
 		}
 
@@ -315,7 +316,7 @@ namespace Praeclarum.UI
 			public SubscribeSection(SubscriptionPrice[] prices)
 				: base(prices)
 			{
-				Hint = "Tapping one of the above will subscribe you to iCircuit Pro.";
+				Hint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be re-subscribed to that plan.";
 			}
 
 			public void SetPatronage()
@@ -442,7 +443,7 @@ namespace Praeclarum.UI
 	public class ProSection : PFormSection
 	{
 		public ProSection()
-			: base(new Command("Upgrade to iCircuit Pro"))
+			: base(new Command($"Upgrade to {DocumentAppDelegate.Shared.App.Name} Pro"))
 		{
 			var appdel = DocumentAppDelegate.Shared;
 			var appName = appdel.App.Name;
@@ -481,9 +482,10 @@ namespace Praeclarum.UI
 		public override string GetItemTitle(object item)
 		{
 			var isp = DocumentAppDelegate.Shared.Settings.SubscribedToPro;
+			var appName = DocumentAppDelegate.Shared.App.Name;
 			return isp ?
-				"You're a Pro!" :
-				"Upgrade to iCircuit Pro";
+				$"Subscribed to {appName} Pro!" :
+				$"Upgrade to {appName} Pro";
 		}
 	}
 

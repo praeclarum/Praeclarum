@@ -44,5 +44,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Localization.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\EmptyFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Theme.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\ProService.cs" />
   </ItemGroup>
 </Project>

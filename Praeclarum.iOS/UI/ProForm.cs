@@ -227,12 +227,17 @@ namespace Praeclarum.UI
 			public void SetPatronage()
 			{
 				var form = (ProForm)Form;
-				var appName = DocumentAppDelegate.Shared.App.Name;
+				DocumentApplication app = DocumentAppDelegate.Shared.App;
+				var appName = app.Name;
 				Title = appName + " Pro";
-				Hint = $"Pro is awesome.";
+				Hint = app.ProMarketing;
 				if (form.subscribedToPro)
 				{
-					Hint += $"\n\n⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️";
+					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\n" + Hint;
+				}
+				else
+				{
+					Hint += "\n\nClick one of the plans below to start enjoying the full iCircuit experience.";
 				}
 			}
 		}

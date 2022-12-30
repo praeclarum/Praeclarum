@@ -13,6 +13,7 @@ namespace Praeclarum.App
 		public virtual Color TintColor { get { return Colors.Blue; } }
 		public virtual Color VibrantTintColor { get { return Colors.Blue; } }
 		public virtual string ProSymbol { get { return "🔷"; } }
+		public virtual string ProMarketing { get { return "Upgrade to Pro"; } }
 	}
 }
 

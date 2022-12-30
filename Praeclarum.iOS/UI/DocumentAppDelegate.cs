@@ -2137,13 +2137,13 @@ namespace Praeclarum.UI
 			BeginInvokeOnMainThread(() =>
 			{
 				var pvc = presenterController ?? PresenterController;
-				var message = $"{App.ProSymbol} This feature is only available in {App.Name} Pro.\n\nYou can upgrade by clicking \"Learn More\" below.";
+				var message = $"{App.ProSymbol} This feature is only available in {App.Name} Pro.\n\nYou can unlock this feature and others by clicking \"Learn More\" below.";
 
 				var alert = UIAlertController.Create(failure, message, UIAlertControllerStyle.Alert);
 				alert.AddAction(UIAlertAction.Create("Cancel", UIAlertActionStyle.Cancel, (a) =>
 				{
 				}));
-				alert.AddAction(UIAlertAction.Create("Learn More about Pro", UIAlertActionStyle.Default, (a) =>
+				alert.AddAction(UIAlertAction.Create("Learn More About Pro", UIAlertActionStyle.Default, (a) =>
 				{
 					ShowPro (pvc);
 				}));

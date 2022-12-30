@@ -204,6 +204,8 @@ namespace Praeclarum.UI
 
 		public class PFormCell : UITableViewCell, IThemeAware
 		{
+			static readonly bool ios15 = UIDevice.CurrentDevice.CheckSystemVersion(15, 0);
+
 			static readonly Dictionary<string, UIImage> imageCache =
 				new Dictionary<string, UIImage> ();
 
@@ -235,7 +237,14 @@ namespace Praeclarum.UI
 				if (display != PFormItemDisplay.Title && cell.DetailTextLabel is UILabel detailTextLabel) {
 					detailTextLabel.Text = section.GetItemDetails (item) ?? "";
 					if (display == PFormItemDisplay.TitleAndValue) {
-						detailTextLabel.TextColor = UIApplication.SharedApplication.KeyWindow.TintColor;
+						if (ios15)
+						{
+							detailTextLabel.TextColor = UIColor.Tint;
+						}
+						else
+						{
+							detailTextLabel.TextColor = UIApplication.SharedApplication?.KeyWindow?.TintColor ?? UIColor.Blue;
+						}
 					}
 				}
 

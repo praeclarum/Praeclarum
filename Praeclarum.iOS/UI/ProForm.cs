@@ -495,8 +495,15 @@ namespace Praeclarum.UI
 		{
 			get
 			{
-				var settings = DocumentAppDelegate.Shared.Settings;
-				return DateTime.UtcNow <= settings.SubscribedToProEndDate ();
+				try
+				{
+					var settings = DocumentAppDelegate.Shared.Settings;
+					return DateTime.UtcNow <= settings.SubscribedToProEndDate();
+				}
+				catch
+				{
+					return false;
+				}
 			}
 		}
 

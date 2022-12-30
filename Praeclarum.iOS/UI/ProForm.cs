@@ -24,14 +24,13 @@ namespace Praeclarum.UI
 
 		readonly ProService service;
 
-		static ProPrice[] prices;
+		static ProPrice[] prices => ProService.Shared.Prices;
 
 		bool subscribedToPro => service.SubscribedToPro;
 
 		public ProForm()
 		{
 			service = ProService.Shared;
-			prices = service.Prices;
 
 			var appdel = DocumentAppDelegate.Shared;			
 			var app = appdel.App;

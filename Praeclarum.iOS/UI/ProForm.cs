@@ -237,7 +237,7 @@ namespace Praeclarum.UI
 				}
 				else
 				{
-					Hint += "\n\nClick one of the plans below to start enjoying the full iCircuit experience.";
+					Hint += "\n\nTap one of the plans below to start enjoying the full iCircuit experience.";
 				}
 			}
 		}

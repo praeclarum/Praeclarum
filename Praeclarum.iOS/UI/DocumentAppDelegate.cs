@@ -170,8 +170,6 @@ namespace Praeclarum.UI
 					StoreManager.Shared.RestoredActions.Add (HandlePurchaseRestoredAsync);
 					StoreManager.Shared.CompletionActions.Add (HandlePurchaseCompletionAsync);
 					StoreManager.Shared.FailActions.Add (HandlePurchaseFailAsync);
-					BeginInvokeOnMainThread(() =>
-						StoreManager.Shared.Restore());
 				}
 			}
 			catch (Exception ex) {

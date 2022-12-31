@@ -39,10 +39,6 @@ namespace Praeclarum.UI
 		{
 		}
 
-		public void ShowError (Exception ex)
-		{
-		}
-
 		public void PushForm (PForm f)
 		{
 		}

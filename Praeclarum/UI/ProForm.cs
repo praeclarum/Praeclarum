@@ -126,23 +126,6 @@ namespace Praeclarum.UI
 			return subscribedToPro ? 1 : 0;
 		}
 
-		void ShowFormError(string title, Exception ex)
-		{
-			try
-			{
-				var iex = ex;
-				while (iex.InnerException != null)
-				{
-					iex = iex.InnerException;
-				}
-				var m = iex.Message;
-				ShowAlert (title, m);
-			}
-			catch (Exception ex2)
-			{
-				Log.Error(ex2);
-			}
-		}
 		public static async Task HandlePurchaseFailAsync(StoreKit.SKPaymentTransaction t)
 		{
 			try
@@ -210,12 +193,11 @@ namespace Praeclarum.UI
 
 			public void SetPatronage()
 			{
-				var form = (ProForm)Form;
 				DocumentApplication app = DocumentAppDelegate.Shared.App;
 				var appName = app.Name;
 				Title = appName + " Pro";
 				Hint = app.ProMarketing;
-				if (form.subscribedToPro)
+				if (ProService.SubscribedToPro)
 				{
 					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\n" + Hint;
 				}
@@ -257,15 +239,13 @@ namespace Praeclarum.UI
 					featuresForm.Sections.Add(s);
 				}
 #if __IOS__
-				if (this.Form.NavigationController is UIKit.UINavigationController nav)
+				if (Form?.NavigationController is UIKit.UINavigationController nav)
 				{
 					nav.PushViewController(featuresForm, true);
 				}
 #endif
 			}
 		}
-
-		
 
 		class SubscribeSection : PFormSection
 		{
@@ -316,7 +296,6 @@ namespace Praeclarum.UI
 
 			async Task BuyAsync(object item)
 			{
-				var form = (ProForm)Form;
 				try
 				{
 					var price = (ProPrice)item;
@@ -329,13 +308,13 @@ namespace Praeclarum.UI
 					{
 						var m =
 							"The prices have not been loaded. Are you connected to the internet? If so, please wait for the prices to appear.";
-						form.ShowAlert ("Unable to Proceed", m);
+						Form?.ShowAlert ("Unable to Proceed", m);
 						return;
 					}
 				}
 				catch (Exception ex)
 				{
-					form.ShowFormError("Purchase Failed", ex);
+					Form?.ShowFormError("Purchase Failed", ex);
 					Log.Error(ex);
 				}
 			}
@@ -368,11 +347,11 @@ namespace Praeclarum.UI
 						return;
 
 					var n = await form.RestorePastPurchasesAsync();
-					form.ReloadSection(this);
+					Form?.ReloadSection(this);
 				}
 				catch (Exception ex)
 				{
-					form.ShowFormError("Restore Failed", ex);
+					Form?.ShowFormError("Restore Failed", ex);
 					Log.Error(ex);
 				}
 			}

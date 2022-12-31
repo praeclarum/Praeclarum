@@ -24,6 +24,29 @@ namespace Praeclarum.UI
 				foreach (PFormSection o in e.NewItems)
 					o.Form = this;
 		}
+
+		public void ShowFormError (string title, Exception ex)
+		{
+			try
+			{
+				var iex = ex;
+				while (iex.InnerException != null)
+				{
+					iex = iex.InnerException;
+				}
+				var m = iex.Message;
+				ShowAlert (title, m);
+			}
+			catch (Exception ex2)
+			{
+				Log.Error (ex2);
+			}
+		}
+
+		public void ShowError (Exception ex)
+		{
+			ShowFormError("Error", ex);
+		}
 	}
 
 	public enum PFormItemDisplay

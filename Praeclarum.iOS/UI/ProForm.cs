@@ -5,7 +5,6 @@ using Praeclarum.App;
 using System.Linq;
 using System.Threading.Tasks;
 using Foundation;
-using UIKit;
 using System.Collections.Generic;
 using StoreKit;
 using System.Diagnostics;
@@ -137,9 +136,7 @@ namespace Praeclarum.UI
 					iex = iex.InnerException;
 				}
 				var m = iex.Message;
-				var alert = UIAlertController.Create(title, m, UIAlertControllerStyle.Alert);
-				alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, a => { }));
-				PresentViewController(alert, true, null);
+				ShowAlert (title, m);
 			}
 			catch (Exception ex2)
 			{
@@ -155,25 +152,12 @@ namespace Praeclarum.UI
 					return;
 
 				var m = t.Error != null ? t.Error.LocalizedDescription : "Unknown error";
-				var alert = UIAlertController.Create("Pro Subscription Failed", m, UIAlertControllerStyle.Alert);
-				alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, a => { }));
-
-				visibleForm?.PresentViewController(alert, true, null);
+				visibleForm?.ShowAlert("Pro Subscription Failed", m);
 			}
 			catch (Exception ex)
 			{
 				visibleForm?.ShowError(ex);
 				Log.Error(ex);
-			}
-		}
-		static void ShowAlert(string title, string m)
-		{
-			var v = visibleForm;
-			if (v != null)
-			{
-				var alert = UIAlertController.Create(title, m, UIAlertControllerStyle.Alert);
-				alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, a => { }));
-				v.PresentViewController(alert, true, null);
 			}
 		}
 		
@@ -189,18 +173,18 @@ namespace Praeclarum.UI
 
 		private static void ShowThanksAlert ()
 		{
-			ShowAlert ("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared.App.Name} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
+			visibleForm?.ShowAlert ("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared.App.Name} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
 		}
 
 		public static async Task HandlePurchaseRestoredAsync(NSError? error)
 		{
 			if (error is not null)
 			{
-				ShowAlert("Error Restoring Pro Subscription", error.LocalizedDescription);
+				visibleForm?.ShowAlert("Error Restoring Pro Subscription", error.LocalizedDescription);
 			}
 			else if (!ProService.SubscribedToPro)
 			{
-				ShowAlert("No Subscriptions Found", $"You are not currently subscribed to {DocumentAppDelegate.Shared.App.Name} Pro.\n\nChoose one of the pricing plans to subscribe.");
+				visibleForm?.ShowAlert ("No Subscriptions Found", $"You are not currently subscribed to {DocumentAppDelegate.Shared.App.Name} Pro.\n\nChoose one of the pricing plans to subscribe.");
 			}
 			else
 			{
@@ -272,10 +256,12 @@ namespace Praeclarum.UI
 					}
 					featuresForm.Sections.Add(s);
 				}
-				if (this.Form.NavigationController is UINavigationController nav)
+#if __IOS__
+				if (this.Form.NavigationController is UIKit.UINavigationController nav)
 				{
 					nav.PushViewController(featuresForm, true);
 				}
+#endif
 			}
 		}
 
@@ -345,9 +331,7 @@ namespace Praeclarum.UI
 					{
 						var m =
 							"The prices have not been loaded. Are you connected to the internet? If so, please wait for the prices to appear.";
-						var alert = UIAlertController.Create("Unable to Proceed", m, UIAlertControllerStyle.Alert);
-						alert.AddAction(UIAlertAction.Create("OK", UIAlertActionStyle.Default, a => { }));
-						Form.PresentViewController(alert, true, null);
+						form.ShowAlert ("Unable to Proceed", m);
 						return;
 					}
 				}

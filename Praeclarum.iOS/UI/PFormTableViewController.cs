@@ -202,6 +202,13 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public void ShowAlert (string title, string m)
+		{
+			var alert = UIAlertController.Create (title, m, UIAlertControllerStyle.Alert);
+			alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
+			PresentViewController (alert, true, null);
+		}
+
 		public class PFormCell : UITableViewCell, IThemeAware
 		{
 			static readonly bool ios15 = UIDevice.CurrentDevice.CheckSystemVersion(15, 0);

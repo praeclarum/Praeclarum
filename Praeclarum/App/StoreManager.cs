@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using StoreKit;
 using Foundation;
 using System.Collections.Generic;

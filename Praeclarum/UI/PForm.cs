@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -10,21 +12,8 @@ namespace Praeclarum.UI
 {
 	public partial class PForm
 	{
-		ObservableCollection<PFormSection> sections;
+		readonly ObservableCollection<PFormSection> sections;
 		public IList<PFormSection> Sections { get { return sections; } }
-
-		public PForm (string title = "")
-			: base (UIKit.UITableViewStyle.Grouped)
-		{
-			Title = (title ?? "").Localize ();
-
-			sections = new ObservableCollection<PFormSection> ();
-			sections.CollectionChanged += HandleSectionsChanged;
-
-			InitializeUI ();
-		}
-
-		partial void InitializeUI ();
 
 		void HandleSectionsChanged (object sender, NotifyCollectionChangedEventArgs e)
 		{
@@ -46,12 +35,12 @@ namespace Praeclarum.UI
 
 	public class PFormSection
 	{
-		public PForm Form { get; internal set; }
+		public PForm? Form { get; internal set; }
 
-		public string Title { get; set; }
-		public string Hint { get; set; }
+		public string Title { get; set; } = "";
+		public string Hint { get; set; } = "";
 
-		ObservableCollection<object> items;
+		readonly ObservableCollection<object> items;
 		public IList<object> Items { get { return items; } }
 
 		public PFormSection (params object[] items)
@@ -75,7 +64,7 @@ namespace Praeclarum.UI
 		public virtual void SetNeedsReloadAll ()
 		{
 			if (Form != null)
-				Form.ReloadAll (this);
+				Form.ReloadAll ();
 		}
 
 		public virtual void SetNeedsFormat ()
@@ -130,7 +119,7 @@ namespace Praeclarum.UI
 				c.ExecuteAsync ().ContinueWith (t => {
 
 					if (t.IsFaulted) {
-						Console.WriteLine ("Execute command async failed: " + t.Exception);
+						Log.Error ("Execute command async failed", t.Exception);
 					}
 
 				}, TaskScheduler.FromCurrentSynchronizationContext ());

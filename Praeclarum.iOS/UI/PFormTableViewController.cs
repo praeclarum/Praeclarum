@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using CoreGraphics;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace Praeclarum.UI
 {
@@ -23,8 +24,14 @@ namespace Praeclarum.UI
 		readonly bool useBlur = false;//!UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 		UIBlurEffect blurEffect;
 
-		partial void InitializeUI ()
+		public PForm (string title = "")
+			: base (UIKit.UITableViewStyle.Grouped)
 		{
+			Title = (title ?? "").Localize ();
+
+			sections = new ObservableCollection<PFormSection> ();
+			sections.CollectionChanged += HandleSectionsChanged;
+
 			AutoCancelButton = false;
 			AutoDoneButton = true;
 
@@ -157,7 +164,7 @@ namespace Praeclarum.UI
 			TableView.ReloadData ();//.ReloadSections (NSIndexSet.FromIndex (si), UITableViewRowAnimation.Automatic);
 		}
 
-		public virtual void ReloadAll (PFormSection section)
+		public virtual void ReloadAll ()
 		{
 			if (!IsViewLoaded)
 				return;
@@ -207,6 +214,20 @@ namespace Praeclarum.UI
 			var alert = UIAlertController.Create (title, m, UIAlertControllerStyle.Alert);
 			alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
 			PresentViewController (alert, true, null);
+		}
+
+		public void PushForm (PForm f)
+		{
+			f.NavigationItem.RightBarButtonItem = new UIKit.UIBarButtonItem (UIKit.UIBarButtonSystemItem.Done, (s, e) => {
+				if (f != null && f.PresentingViewController != null)
+				{
+					f.DismissViewController (true, null);
+				}
+			});
+			if (NavigationController is { } n)
+			{
+				n.PushViewController (f, true);
+			}
 		}
 
 		public class PFormCell : UITableViewCell, IThemeAware

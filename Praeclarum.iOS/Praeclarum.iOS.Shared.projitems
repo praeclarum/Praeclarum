@@ -31,7 +31,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\Layout.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\MoveDocumentsForm.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\OldForm.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UI\PForm.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\PFormTableViewController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ProceduralImage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ScrollableCanvas.cs" />
@@ -44,7 +43,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\DynamicSplitViewController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DarkModeSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\DropboxCoreFileSystem.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)App\StoreManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\PatronForm.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\StorageSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\AnalyticsSection.cs" />
@@ -52,6 +50,5 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\TranslateSection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\GalleryViewController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\TipJarForm.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UI\ProForm.cs" />
   </ItemGroup>
 </Project>

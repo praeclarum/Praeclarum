@@ -5,11 +5,6 @@ using System.Collections.Generic;
 
 namespace Praeclarum.UI
 {
-	public interface IThemeAware
-	{
-		void ApplyTheme (Theme theme);
-	}
-
 	public class Theme
 	{
 		static protected readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);

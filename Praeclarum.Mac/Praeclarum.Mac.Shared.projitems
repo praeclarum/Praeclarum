@@ -13,6 +13,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\UserInterfaceWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Theme.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentAppDelegate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\PFormViewController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)App\" />

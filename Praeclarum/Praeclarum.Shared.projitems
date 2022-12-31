@@ -46,5 +46,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\Theme.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\ProService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\DocumentAppSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ProForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\PForm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\IThemeAware.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\StoreManager.cs" />
   </ItemGroup>
 </Project>

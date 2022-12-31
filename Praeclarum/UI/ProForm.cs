@@ -277,8 +277,6 @@ namespace Praeclarum.UI
 
 			public void SetPatronage()
 			{
-				var form = (ProForm)Form;
-				var appName = DocumentAppDelegate.Shared.App.Name;
 				Title = "Pro Subscription Options";
 			}
 
@@ -428,16 +426,7 @@ namespace Praeclarum.UI
 		public override bool SelectItem(object item)
 		{
 			var f = new ProForm();
-			f.NavigationItem.RightBarButtonItem = new UIKit.UIBarButtonItem(UIKit.UIBarButtonSystemItem.Done, (s, e) => {
-				if (f != null && f.PresentingViewController != null)
-				{
-					f.DismissViewController(true, null);
-				}
-			});
-			if (this.Form.NavigationController != null)
-			{
-				this.Form.NavigationController.PushViewController(f, true);
-			}
+			Form?.PushForm (f);
 			return false;
 		}
 

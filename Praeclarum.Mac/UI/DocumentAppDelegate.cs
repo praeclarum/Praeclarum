@@ -29,6 +29,7 @@ namespace Praeclarum.UI
 		public override void DidFinishLaunching(NSNotification notification)
 		{
 			Shared = this;
+			Settings = CreateSettings();
 		}
 
 		protected virtual IDocumentAppSettings CreateSettings()

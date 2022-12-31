@@ -72,7 +72,12 @@ namespace Praeclarum.UI
 			var visibleSectionViews = new List<PFormSectionView> (sectionsStack.ArrangedSubviews.OfType<PFormSectionView> ());
 			visibleSectionViews.MergeInto(sections,
 				(s, d) => s.Section.Equals(d),
-				s => new PFormSectionView(s),
+				(s =>
+				{
+					var d = new PFormSectionView(s);
+					sectionViews.Add(s, d);
+					return d;
+				}),
 				(s, d) => s.ReloadSection(),
 				d => { });
 			sectionsStack.SetViews(visibleSectionViews.ToArray(), NSStackViewGravity.Top);
@@ -132,6 +137,7 @@ namespace Praeclarum.UI
 		public PFormSectionView(PFormSection section)
 		{
 			Section = section;
+			
 			Orientation = NSUserInterfaceLayoutOrientation.Vertical;
 			Alignment = NSLayoutAttribute.Leading;
 
@@ -149,13 +155,63 @@ namespace Praeclarum.UI
 		{
 			titleLabel.StringValue = Section.Title;
 			hintLabel.StringValue = Section.Hint;
+
+			var visibleItemViews = new List<PFormItemView>(ArrangedSubviews.OfType<PFormItemView>());
+			visibleItemViews.MergeInto(Section.Items,
+				(s, d) => s.Item.Equals(d),
+				s => new PFormItemView(s, Section),
+				(s, d) => s.ReloadItem(),
+				d => { });
+			var visibleViews = new List<NSView>(visibleItemViews);
+			visibleViews.Insert(0, titleLabel);
+			visibleViews.Add(hintLabel);
+			SetViews(visibleViews.ToArray(), NSStackViewGravity.Top);
 		}
 
 		public void FormatSection ()
 		{
-
 		}
 
+		public void ApplyTheme (Theme theme)
+		{
+		}
+	}
+
+	class PFormItemView : NSStackView, IThemeAware
+	{
+		public object Item { get; }
+		public PFormSection Section { get; }
+
+		NSButton? button;
+
+		public PFormItemView(object item, PFormSection section)
+		{
+			Orientation = NSUserInterfaceLayoutOrientation.Horizontal;
+			Item = item;
+			Section = section;
+			ReloadItem();
+		}
+		public void ReloadItem()
+		{
+			var display = Section.GetItemDisplay(Item);
+			var title = Section.GetItemTitle(Item);
+			var details = Section.GetItemDetails(Item);
+			var navigates = Section.GetItemNavigates(Item);
+
+			if (button is { } b)
+			{
+			}
+			else
+			{
+				b = new NSButton();
+				button = b;
+				AddView(button, NSStackViewGravity.Leading);
+			}
+			b.Title = title;
+		}
+		public void FormatItem ()
+		{
+		}
 		public void ApplyTheme (Theme theme)
 		{
 		}

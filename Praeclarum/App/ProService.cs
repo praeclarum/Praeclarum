@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using Foundation;
 using Praeclarum.UI;
 using StoreKit;
@@ -7,6 +9,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Runtime;
 using System.IO;
+
+#if __IOS__ || __MACOS__
+using CloudKit;
+#endif
 
 namespace Praeclarum.App
 {
@@ -259,5 +265,82 @@ namespace Praeclarum.App
 			}
 		}
 	}
+
+#if __IOS__ || __MACOS__
+	public class ProSubscriptionCloudRecord
+	{
+		public readonly CKRecord Record;
+
+		public ProSubscriptionCloudRecord ()
+			: this (new CKRecord ("ProSubscription"))
+		{
+		}
+
+		public ProSubscriptionCloudRecord (CKRecord record)
+		{
+			Record = record;
+		}
+
+		public int NumMonths
+		{
+			get
+			{
+				var v = Record["NumMonths"];
+				return v != null ? ((NSNumber)v).Int32Value : 0;
+			}
+			set
+			{
+				Record["NumMonths"] = (NSNumber)value;
+			}
+		}
+
+		public DateTime PurchaseDate
+		{
+			get
+			{
+				var v = Record["PurchaseDate"];
+				return v != null ? (DateTime)(NSDate)v : DateTime.MinValue;
+			}
+			set
+			{
+				Record["PurchaseDate"] = (NSDate)value;
+			}
+		}
+
+		public DateTime PurchaseEndDate
+		{
+			get
+			{
+				return PurchaseDate.AddMonths (NumMonths);
+			}
+		}
+
+		public string TransactionId
+		{
+			get
+			{
+				var v = Record["TransactionId"];
+				return v != null ? v.ToString () : "";
+			}
+			set
+			{
+				Record["TransactionId"] = new NSString (value ?? "");
+			}
+		}
+
+		public string ProductId
+		{
+			get
+			{
+				var v = Record["ProductId"];
+				return v != null ? v.ToString () : "";
+			}
+			set
+			{
+				Record["ProductId"] = new NSString (value ?? "");
+			}
+		}
+	}
+#endif
 }
 

@@ -88,7 +88,9 @@ namespace Praeclarum.App
 		{
 			restoredSubs = false;
 			restoredSubDate = null;
+#if __IOS__
 			StoreManager.Shared.Restore ();
+#endif
 		}
 
 		public async Task HandlePurchaseRestoredAsync (NSError? error)
@@ -150,9 +152,9 @@ namespace Praeclarum.App
 #if __IOS__
 					var thisPlat = SubPlatform.iOS;
 #elif __MACOS__
-				var thisPlat = SubPlatform.Mac;
+					var thisPlat = SubPlatform.Mac;
 #elif __ANDROID__
-				var thisPlat = SubPlatform.Android;
+					var thisPlat = SubPlatform.Android;
 #endif
 					var saveName = $"ProSub-{thisPlat}.txt";
 #if __IOS__ || __MACOS__

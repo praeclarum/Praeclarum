@@ -45,5 +45,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)IO\EmptyFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Theme.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\ProService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\DocumentAppSettings.cs" />
   </ItemGroup>
 </Project>

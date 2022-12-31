@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+
 using Foundation;
 using Praeclarum.IO;
 using Praeclarum.UI;
@@ -7,6 +9,7 @@ namespace Praeclarum.App
 {
 	public class DocumentAppSettings : IDocumentAppSettings
 	{
+#if __IOS__ || __MACOS__
 		protected readonly NSUserDefaults defs;
 
 		public DocumentAppSettings (NSUserDefaults defaults)
@@ -15,6 +18,16 @@ namespace Praeclarum.App
 				throw new ArgumentNullException ("defaults");
 			defs = defaults;
 		}
+#else
+		protected readonly Dictionary<string, object> defs;
+
+		public DocumentAppSettings (Dictionary<string, object> defaults)
+		{
+			if (defaults == null)
+				throw new ArgumentNullException ("defaults");
+			defs = defaults;
+		}
+#endif
 
 		public DocumentsSort DocumentsSort {
 			get {

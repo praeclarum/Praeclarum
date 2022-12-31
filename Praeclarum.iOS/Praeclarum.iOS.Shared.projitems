@@ -13,7 +13,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)NSMutableAttributedStringWrapper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)OpenUrlCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SingleThreadQueue.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)App\DocumentAppSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\TextDocument.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\CoreGraphicsGraphics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\CloudFileSystem.cs" />

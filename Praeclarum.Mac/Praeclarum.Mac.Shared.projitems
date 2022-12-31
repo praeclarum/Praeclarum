@@ -9,9 +9,12 @@
     <Import_RootNamespace>Praeclarum.Mac.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)UI\Canvas.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Timer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\UserInterfaceWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Theme.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentAppDelegate.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)App\" />
   </ItemGroup>
 </Project>

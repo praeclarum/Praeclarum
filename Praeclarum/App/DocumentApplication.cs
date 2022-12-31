@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using Praeclarum.UI;
 using System.Collections.Generic;
@@ -14,22 +16,22 @@ namespace Praeclarum.App
 
 		public bool UseDocumentBrowser { get; set; }
 
-		public virtual IDocument CreateDocument (string localFilePath)
+		public virtual IDocument? CreateDocument (string localFilePath)
 		{
 			return null;
 		}
 
-		public virtual IDocument CreateDocument (NSUrl url)
+		public virtual IDocument? CreateDocument (NSUrl url)
 		{
 			return null;
 		}
 
-		public virtual IDocumentEditor CreateDocumentEditor (int docIndex, List<DocumentReference> docs)
+		public virtual IDocumentEditor? CreateDocumentEditor (int docIndex, List<DocumentReference> docs)
 		{
 			return null;
 		}
 
-		public virtual IDocumentEditor CreateDocumentEditor (NSUrl url)
+		public virtual IDocumentEditor? CreateDocumentEditor (NSUrl url)
 		{
 			return null;
 		}

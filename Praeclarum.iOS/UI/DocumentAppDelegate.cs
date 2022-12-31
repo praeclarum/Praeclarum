@@ -2161,11 +2161,6 @@ namespace Praeclarum.UI
 			});
 		}
 
-		public virtual IEnumerable<(int Months, string Name)> GetProPrices()
-		{
-			return Enumerable.Empty<ValueTuple<int, string>>();
-		}
-
 		public virtual IEnumerable<Tuple<int, string>> GetPatronMonthlyPrices ()
 		{
 			return Enumerable.Empty<Tuple<int, string>> ();

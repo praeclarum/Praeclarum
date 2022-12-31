@@ -26,14 +26,14 @@ namespace Praeclarum.UI
 			private set;
 		}
 
+		public override void DidFinishLaunching(NSNotification notification)
+		{
+			Shared = this;
+		}
+
 		protected virtual IDocumentAppSettings CreateSettings()
 		{
 			return new DocumentAppSettings(NSUserDefaults.StandardUserDefaults);
-		}
-
-		public virtual IEnumerable<(int Months, string Name)> GetProPrices ()
-		{
-			return Enumerable.Empty<ValueTuple<int, string>> ();
 		}
 	}
 }

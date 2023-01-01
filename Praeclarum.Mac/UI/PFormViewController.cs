@@ -14,15 +14,24 @@ namespace Praeclarum.UI
 {
 	public partial class PForm : NSViewController, IThemeAware
 	{
-		readonly NSStackView sectionsStack = new NSStackView
+		readonly NSScrollView backView = new NSScrollView();
+		readonly NSView formFooterView = new NSView();
+
+		readonly PFormSectionsView sectionsStack = new PFormSectionsView
 		{
 			Orientation = NSUserInterfaceLayoutOrientation.Vertical,
 			Alignment = NSLayoutAttribute.Leading,
+			HasEqualSpacing = true,
+			Spacing = 22.0f,
 		};
 
 		readonly Dictionary<PFormSection, PFormSectionView> sectionViews = new();
 
-		public PForm(string title = "")
+		//public override CGSize PreferredContentSize {
+		//	get => new CGSize(400, 500);
+		//	set { } }
+
+		public PForm (string title = "")
 			: base(nibNameOrNull: null, nibBundleOrNull: null)
 		{
 			Title = (title ?? "").Localize ();
@@ -33,16 +42,29 @@ namespace Praeclarum.UI
 
 		public override void LoadView ()
 		{
-			View = sectionsStack;
-			ReloadAll();
+			var frame = new CGRect(0, 0, 320, 480);
+			backView.Frame = frame;
+			//backView.AutoresizingMask = NSViewResizingMask.WidthSizable | NSViewResizingMask.HeightSizable;
+
+			var sframe = new CGRect (0, 0, 320, 480);
+			//sframe.Inflate(-22, -22);
+			sectionsStack.Frame = sframe;
+			sectionsStack.AutoresizingMask = NSViewResizingMask.WidthSizable;// | NSViewResizingMask.HeightSizable;
+			//sectionsStack.TranslatesAutoresizingMaskIntoConstraints = true;
+			//backView.AddSubview(sectionsStack);
+			backView.HasVerticalScroller = true;
+			backView.DocumentView = sectionsStack;
+
+			//sectionsStack.ScrollPoint(new CGPoint(0, 0));
+			//backView.ScrollPoint(new CGPoint(0, 0));
+
+			View = backView;
 		}
 
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
-			//sectionsStack.Frame = this.View.Bounds;
-			//sectionsStack.TranslatesAutoresizingMaskIntoConstraints = true;
-			//this.View.AddSubview(sectionsStack);
+			ReloadAll();
 		}
 
 		public override void ViewWillAppear ()
@@ -65,6 +87,8 @@ namespace Praeclarum.UI
 
 		public void PushForm (PForm f)
 		{
+			NSWindow? w = null;
+			ShowWindow(this, ref w, () => f);
 		}
 
 		public void ReloadAll ()
@@ -80,7 +104,9 @@ namespace Praeclarum.UI
 				}),
 				(s, d) => s.ReloadSection(),
 				d => { });
-			sectionsStack.SetViews(visibleSectionViews.ToArray(), NSStackViewGravity.Top);
+			var visibleViews = new List<NSView>(visibleSectionViews);
+			visibleViews.Add(formFooterView);
+			sectionsStack.SetViews(visibleViews.ToArray(), NSStackViewGravity.Top);
 		}
 
 		public void ReloadSection (PFormSection section)
@@ -111,20 +137,20 @@ namespace Praeclarum.UI
 		{
 			if (window is NSWindow w)
 			{
-				w.OrderFront(sender);
 			}
 			else
 			{
 				var form = createForm();
-				w = new PFormWindow(form);
+				w = NSWindow.GetWindowWithContentViewController (form);
 				window = w;
-				w.MakeKeyAndOrderFront(sender);
 			}
+			w.MakeKeyAndOrderFront(sender);
 		}
+	}
 
-		public override CGSize PreferredContentSize {
-			get => new CGSize(320.0, 480.0);
-			set { } }
+	class PFormSectionsView : NSStackView
+	{
+		public override bool IsFlipped => true;
 	}
 
 	class PFormSectionView : NSStackView, IThemeAware
@@ -146,25 +172,26 @@ namespace Praeclarum.UI
 			hintLabel = NSTextField.CreateWrappingLabel (section.Hint);
 			hintLabel.Font = NSFont.SystemFontOfSize(NSFont.SystemFontSizeForControlSize(NSControlSize.Regular));
 
-			AddView(titleLabel, NSStackViewGravity.Top);
-			AddView(hintLabel, NSStackViewGravity.Top);
 			ReloadSection();
 		}
 
 		public void ReloadSection ()
 		{
-			titleLabel.StringValue = Section.Title;
-			hintLabel.StringValue = Section.Hint;
-
 			var visibleItemViews = new List<PFormItemView>(ArrangedSubviews.OfType<PFormItemView>());
 			visibleItemViews.MergeInto(Section.Items,
 				(s, d) => s.Item.Equals(d),
 				s => new PFormItemView(s, Section),
 				(s, d) => s.ReloadItem(),
 				d => { });
+
 			var visibleViews = new List<NSView>(visibleItemViews);
+			titleLabel.StringValue = Section.Title;
 			visibleViews.Insert(0, titleLabel);
-			visibleViews.Add(hintLabel);
+			if (!string.IsNullOrEmpty(Section.Hint))
+			{
+				hintLabel.StringValue = Section.Hint;
+				visibleViews.Add(hintLabel);
+			}
 			SetViews(visibleViews.ToArray(), NSStackViewGravity.Top);
 		}
 
@@ -204,6 +231,10 @@ namespace Praeclarum.UI
 			else
 			{
 				b = new NSButton();
+				b.BezelStyle = NSBezelStyle.Rounded;
+				b.Target = this;
+				b.Action = new ObjCRuntime.Selector("tapItem:");
+				//b.SetButtonType(NSButtonType.MomentaryPushIn);
 				button = b;
 				AddView(button, NSStackViewGravity.Leading);
 			}
@@ -215,17 +246,10 @@ namespace Praeclarum.UI
 		public void ApplyTheme (Theme theme)
 		{
 		}
-	}
-
-	class PFormWindow : NSWindow
-	{
-		private readonly PForm form;
-
-		public PFormWindow(PForm form)
-			: base(new CGRect(CGPoint.Empty, form.PreferredContentSize), NSWindowStyle.Titled | NSWindowStyle.Closable | NSWindowStyle.Resizable, NSBackingStore.Buffered, deferCreation: false)
+		[Export("tapItem:")]
+		public void TapItem(NSObject sender)
 		{
-			this.form = form;
-			this.ContentViewController = form;
+			Section.SelectItem(Item);
 		}
 	}
 }

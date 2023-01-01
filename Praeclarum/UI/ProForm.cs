@@ -238,12 +238,7 @@ namespace Praeclarum.UI
 					}
 					featuresForm.Sections.Add(s);
 				}
-#if __IOS__
-				if (Form?.NavigationController is UIKit.UINavigationController nav)
-				{
-					nav.PushViewController(featuresForm, true);
-				}
-#endif
+				Form?.PushForm(featuresForm);
 			}
 		}
 

@@ -23,13 +23,10 @@ namespace Praeclarum.UI
 			Alignment = NSLayoutAttribute.Leading,
 			HasEqualSpacing = true,
 			Spacing = 22.0f,
+			EdgeInsets = new NSEdgeInsets(22, 22, 22, 22),
 		};
 
 		readonly Dictionary<PFormSection, PFormSectionView> sectionViews = new();
-
-		//public override CGSize PreferredContentSize {
-		//	get => new CGSize(400, 500);
-		//	set { } }
 
 		public PForm (string title = "")
 			: base(nibNameOrNull: null, nibBundleOrNull: null)
@@ -42,21 +39,15 @@ namespace Praeclarum.UI
 
 		public override void LoadView ()
 		{
-			var frame = new CGRect(0, 0, 320, 480);
+			var frame = new CGRect(0, 0, 512, 480);
 			backView.Frame = frame;
-			//backView.AutoresizingMask = NSViewResizingMask.WidthSizable | NSViewResizingMask.HeightSizable;
-
-			var sframe = new CGRect (0, 0, 320, 480);
-			//sframe.Inflate(-22, -22);
-			sectionsStack.Frame = sframe;
-			sectionsStack.AutoresizingMask = NSViewResizingMask.WidthSizable;// | NSViewResizingMask.HeightSizable;
-			//sectionsStack.TranslatesAutoresizingMaskIntoConstraints = true;
-			//backView.AddSubview(sectionsStack);
 			backView.HasVerticalScroller = true;
-			backView.DocumentView = sectionsStack;
 
-			//sectionsStack.ScrollPoint(new CGPoint(0, 0));
-			//backView.ScrollPoint(new CGPoint(0, 0));
+			sectionsStack.TranslatesAutoresizingMaskIntoConstraints = false;
+			backView.DocumentView = sectionsStack;
+			backView.AddConstraints(new[] {
+				NSLayoutConstraint.Create(backView, NSLayoutAttribute.Width, NSLayoutRelation.Equal, sectionsStack, NSLayoutAttribute.Width, 1, 22),
+			});
 
 			View = backView;
 		}

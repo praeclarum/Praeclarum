@@ -88,7 +88,7 @@ namespace Praeclarum.App
 		{
 			restoredSubs = false;
 			restoredSubDate = null;
-#if __IOS__
+#if __IOS__ || __MACOS__
 			StoreManager.Shared.Restore ();
 #endif
 		}
@@ -124,6 +124,20 @@ namespace Praeclarum.App
 			if (p == null)
 				return;
 			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p);
+		}
+
+		public async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
+		{
+			try
+			{
+				var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
+				if (p == null)
+					return;
+			}
+			catch (Exception ex)
+			{
+				Log.Error (ex);
+			}
 		}
 
 		enum SubPlatform

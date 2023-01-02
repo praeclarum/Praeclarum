@@ -347,6 +347,9 @@ namespace Praeclarum.UI
 			if (t.Payment.ProductIdentifier.Contains (".tip.")) {
 				return TipJarForm.HandlePurchaseFailAsync (t);
 			}
+			else if (t.Payment.ProductIdentifier.Contains (".pro.")) {
+				return ProForm.HandlePurchaseFailAsync (t);
+			}
 			return PatronForm.HandlePurchaseFailAsync (t);
 		}
 

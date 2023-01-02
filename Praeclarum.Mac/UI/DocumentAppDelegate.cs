@@ -14,7 +14,7 @@ using System.Threading;
 namespace Praeclarum.UI
 {
 	[Register("DocumentAppDelegate")]
-	public class DocumentAppDelegate : NSApplicationDelegate
+	public abstract class DocumentAppDelegate : NSApplicationDelegate
 	{
 		public DocumentApplication App { get; protected set; }
 
@@ -26,15 +26,22 @@ namespace Praeclarum.UI
 			private set;
 		}
 
-		public override void DidFinishLaunching(NSNotification notification)
+		public override void WillFinishLaunching(NSNotification notification)
 		{
 			Shared = this;
+			App = CreateApplication();
 			Settings = CreateSettings();
+		}
+
+		public override void DidFinishLaunching(NSNotification notification)
+		{
 		}
 
 		protected virtual IDocumentAppSettings CreateSettings()
 		{
 			return new DocumentAppSettings(NSUserDefaults.StandardUserDefaults);
 		}
+
+		protected abstract DocumentApplication CreateApplication();
 	}
 }

@@ -166,7 +166,7 @@ namespace Praeclarum.UI
 			ReloadSection();
 		}
 
-		public void ReloadSection ()
+		public void ReloadSection()
 		{
 			var visibleItemViews = new List<PFormItemView>(ArrangedSubviews.OfType<PFormItemView>());
 			visibleItemViews.MergeInto(Section.Items,
@@ -176,8 +176,11 @@ namespace Praeclarum.UI
 				d => { });
 
 			var visibleViews = new List<NSView>(visibleItemViews);
-			titleLabel.StringValue = Section.Title;
-			visibleViews.Insert(0, titleLabel);
+			if (!string.IsNullOrEmpty(Section.Title))
+			{
+				titleLabel.StringValue = Section.Title;
+				visibleViews.Insert(0, titleLabel);
+			}
 			if (!string.IsNullOrEmpty(Section.Hint))
 			{
 				hintLabel.StringValue = Section.Hint;

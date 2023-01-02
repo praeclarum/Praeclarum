@@ -74,7 +74,7 @@ namespace Praeclarum.UI
 
 		public void ShowAlert(string title, string message)
 		{
-			Console.WriteLine($"ALERT {title}: {message}");
+			//Console.WriteLine($"ALERT {title}: {message}");
 			BeginInvokeOnMainThread(() =>
 			{
 				var alert = NSAlert.WithMessage(title, "OK", null, null, message);

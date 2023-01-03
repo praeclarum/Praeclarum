@@ -202,7 +202,7 @@ namespace Praeclarum.UI
 				Hint = app.ProMarketing;
 				if (ProService.SubscribedToPro)
 				{
-					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\n" + Hint;
+					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\nYou last renewed on {ProService.SubscribedToProDate.ToShortDateString()} for {ProService.SubscribedToProMonths} months.\n\n" + Hint;
 				}
 				else
 				{
@@ -262,7 +262,7 @@ namespace Praeclarum.UI
 			{
 				var p = (ProPrice)item;
 				var app = DocumentAppDelegate.Shared.App;
-				if (p.Months == ProService.Shared.SubscribedToProMonths)
+				if (p.Months == ProService.SubscribedToProMonths)
 				{
 					return app.ProSymbol + " " + p.Name;
 				}

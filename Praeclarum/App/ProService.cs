@@ -57,7 +57,16 @@ namespace Praeclarum.App
 			}
 		}
 
-		public int SubscribedToProMonths
+		public static DateTime SubscribedToProDate
+		{
+			get
+			{
+				var settings = DocumentAppDelegate.Shared.Settings;
+				return settings.SubscribedToProDate;
+			}
+		}
+
+		public static int SubscribedToProMonths
 		{
 			get
 			{
@@ -193,8 +202,7 @@ namespace Praeclarum.App
 		async Task SaveSubscriptionIfNewerAsync(DateTime date, int months)
 		{
 			var settings = DocumentAppDelegate.Shared.Settings;
-			var newEndDate = date.AddMonths(months);
-			if (newEndDate > settings.SubscribedToProEndDate())
+			if (date > settings.SubscribedToProDate)
 			{
 				await SaveSubscriptionAsync(date, months);
 				SignalProChanged ();

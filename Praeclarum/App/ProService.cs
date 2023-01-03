@@ -87,7 +87,8 @@ namespace Praeclarum.App
 
 		void SignalProChanged ()
 		{
-			NSNotificationCenter.DefaultCenter.PostNotificationName (nameof (SubscribedToPro), null);
+			DocumentAppDelegate.Shared.BeginInvokeOnMainThread(() =>
+				NSNotificationCenter.DefaultCenter.PostNotificationName (nameof (SubscribedToPro), null));
 		}
 
 		public void Restore ()

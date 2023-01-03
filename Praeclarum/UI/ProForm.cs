@@ -61,16 +61,32 @@ namespace Praeclarum.UI
 
 		static ProForm? visibleForm;
 
+		NSObject? proObserver = null;
+
 		public override void ViewWillAppear(bool animated)
 		{
 			base.ViewWillAppear(animated);
 			visibleForm = this;
+			NSNotificationCenter.DefaultCenter.AddObserver(new NSString(nameof(ProService.SubscribedToPro)), n =>
+			{
+				BeginInvokeOnMainThread(() =>
+				{
+					aboutSection.SetPatronage();
+					buySection.SetPatronage();
+					ReloadAll();
+				});
+			});
 		}
 
 		public override void ViewWillDisappear(bool animated)
 		{
 			base.ViewWillDisappear(animated);
 			visibleForm = null;
+			if (proObserver is not null)
+			{
+				NSNotificationCenter.DefaultCenter.RemoveObserver(proObserver);
+				proObserver = null;
+			}
 		}
 
 		bool hasCloud = false;
@@ -161,21 +177,8 @@ namespace Praeclarum.UI
 
 		public static async Task HandlePurchaseRestoredAsync(NSError? error)
 		{
-			if (error is not null)
-			{
-				visibleForm?.ShowAlert("Error Restoring Pro Subscription", error.LocalizedDescription);
-			}
-			else if (!ProService.SubscribedToPro)
-			{
-				visibleForm?.ShowAlert ("No Subscriptions Found", $"You are not currently subscribed to {DocumentAppDelegate.Shared.App.Name} Pro.\n\nChoose one of the pricing plans to subscribe.");
-			}
-			else
-			{
-				ShowThanksAlert();
-			}
-			if (visibleForm is not null)
-				await visibleForm.RefreshProDataAsync();
 		}
+
 		public static async Task HandlePurchaseCompletionAsync(StoreKit.SKPaymentTransaction t)
 		{
 			var p = prices.FirstOrDefault(x => x.Id == t.Payment.ProductIdentifier);

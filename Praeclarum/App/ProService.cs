@@ -37,9 +37,6 @@ namespace Praeclarum.App
 	{
 		public static readonly ProService Shared = new ProService ();
 
-		bool restoredSubs = false;
-		(DateTime Time, int Months)? restoredSubDate = null;
-
 		readonly ProPrice[] prices;
 
 		public ProPrice[] Prices => prices;
@@ -86,8 +83,6 @@ namespace Praeclarum.App
 
 		public void Restore ()
 		{
-			restoredSubs = false;
-			restoredSubDate = null;
 #if __IOS__ || __MACOS__
 			StoreManager.Shared.Restore ();
 #endif
@@ -95,27 +90,6 @@ namespace Praeclarum.App
 
 		public async Task HandlePurchaseRestoredAsync (NSError? error)
 		{
-			if (error is not null)
-			{
-				// Error, do nothing
-			}
-			else if (restoredSubs && restoredSubDate is { } subDate)
-			{
-				SaveSubscription (subDate.Time, subDate.Months, thisPlat: true);
-				SignalProChanged ();
-			}
-			else
-			{
-				if (SavedSub.TryLoadOther() is SavedSub otherSub)
-				{
-					SaveSubscription(otherSub.Date, otherSub.Months, thisPlat: false);
-				}
-				else
-				{
-					SaveSubscription(DateTime.UtcNow.AddMonths(-2), 0, thisPlat: true);
-				}
-				SignalProChanged();
-			}
 		}
 
 		public async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
@@ -128,16 +102,6 @@ namespace Praeclarum.App
 
 		public async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
 		{
-			try
-			{
-				var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
-				if (p == null)
-					return;
-			}
-			catch (Exception ex)
-			{
-				Log.Error (ex);
-			}
 		}
 
 		enum SubPlatform
@@ -226,48 +190,36 @@ namespace Praeclarum.App
 			}
 		}
 
-		void SaveSubscription(DateTime date, int months, bool thisPlat)
+		async Task SaveSubscriptionIfNewerAsync(DateTime date, int months)
+		{
+			var settings = DocumentAppDelegate.Shared.Settings;
+			var newEndDate = date.AddMonths(months);
+			if (newEndDate > settings.SubscribedToProEndDate())
+			{
+				await SaveSubscriptionAsync(date, months);
+				SignalProChanged ();
+			}
+		}
+
+		async Task SaveSubscriptionAsync (DateTime date, int months)
 		{
 			var settings = DocumentAppDelegate.Shared.Settings;
 			settings.SubscribedToProDate = date;
 			settings.SubscribedToProMonths = months;
-
-			if (thisPlat)
-			{
-				var save = new SavedSub(date, months);
-				save.TrySave();
-			}
+			//var save = new SavedSub (date, months);
+			//save.TrySave ();
 		}
 
 		async Task AddSubscriptionAsync (string transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p)
 		{
-			if (transactionState == SKPaymentTransactionState.Restored)
-			{
-				restoredSubs = true;
-				if (restoredSubDate is { } subDate)
-				{
-					if (transactionDate > subDate.Time)
-					{
-						restoredSubDate = (transactionDate, p.Months);
-					}
-				}
-				else
-				{
-					restoredSubDate = (transactionDate, p.Months);
-				}
-			}
-			else if (transactionState == SKPaymentTransactionState.Purchased)
-			{
-				SaveSubscription(transactionDate, p.Months, thisPlat: true);
-				SignalProChanged ();
-			}
+			await SaveSubscriptionIfNewerAsync(transactionDate, p.Months);
 		}
 
 		public async Task DeletePastPurchasesAsync ()
 		{
 			try
 			{
-				SaveSubscription (new DateTime (1970, 1, 1), 0, thisPlat: true);
+				await SaveSubscriptionAsync (new DateTime (1970, 1, 1), 0);
 				SignalProChanged ();
 			}
 			catch (NSErrorException ex)

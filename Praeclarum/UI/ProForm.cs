@@ -27,6 +27,8 @@ namespace Praeclarum.UI
 
 		bool subscribedToPro => ProService.SubscribedToPro;
 
+		bool isPurchasing = false;
+
 		public ProForm()
 		{
 			service = ProService.Shared;
@@ -51,12 +53,9 @@ namespace Praeclarum.UI
 #endif
 
 			aboutSection.SetPatronage();
-			buySection.SetPatronage();
+			buySection.SetPatronage(isPurchasing);
 
-			RefreshProDataAsync().ContinueWith(t => {
-				if (t.IsFaulted)
-					Log.Error(t.Exception);
-			});
+			BeginRefreshProData();
 		}
 
 		static ProForm? visibleForm;
@@ -72,7 +71,7 @@ namespace Praeclarum.UI
 				BeginInvokeOnMainThread(() =>
 				{
 					aboutSection.SetPatronage();
-					buySection.SetPatronage();
+					buySection.SetPatronage(isPurchasing);
 					ReloadAll();
 				});
 			});
@@ -101,10 +100,21 @@ namespace Praeclarum.UI
 		async Task DeletePastPurchasesAsync()
 		{
 			await service.DeletePastPurchasesAsync();
-			await RefreshProDataAsync();
+			BeginRefreshProData();
 		}
 
 		bool needsPrices = true;
+
+		void BeginRefreshProData()
+		{
+			BeginInvokeOnMainThread(() =>
+			{
+				RefreshProDataAsync ().ContinueWith (t => {
+					if (t.IsFaulted)
+						Log.Error (t.Exception);
+				});
+			});
+		}
 
 		async Task<int> RefreshProDataAsync()
 		{
@@ -130,10 +140,8 @@ namespace Praeclarum.UI
 				needsPrices = false;
 			}
 
-			ReloadSection(buySection);
-
 			aboutSection.SetPatronage();
-			buySection.SetPatronage();
+			buySection.SetPatronage(isPurchasing);
 
 			ReloadSection(aboutSection);
 			ReloadSection(buySection);
@@ -151,7 +159,12 @@ namespace Praeclarum.UI
 					return;
 
 				var m = t.Error != null ? t.Error.LocalizedDescription : "Unknown error";
-				visibleForm?.ShowAlert("Pro Subscription Failed", m);
+				if (visibleForm is { } f)
+				{
+					f.isPurchasing = false;
+					f.BeginRefreshProData ();
+					f.ShowAlert("Pro Subscription Failed", m);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -165,8 +178,11 @@ namespace Praeclarum.UI
 			if (transactionState == SKPaymentTransactionState.Purchased)
 			{
 				ShowThanksAlert();
-				if (visibleForm is not null)
-					await visibleForm.RefreshProDataAsync();
+				if (visibleForm is { } f)
+				{
+					f.isPurchasing = false;
+					f.BeginRefreshProData();
+				}
 			}
 		}
 
@@ -177,6 +193,15 @@ namespace Praeclarum.UI
 
 		public static async Task HandlePurchaseRestoredAsync(NSError? error)
 		{
+		}
+
+		public static async Task HandlePurchasingAsync(StoreKit.SKPaymentTransaction t)
+		{
+			if (visibleForm is { } f)
+			{
+				f.isPurchasing = true;
+				f.BeginRefreshProData ();
+			}
 		}
 
 		public static async Task HandlePurchaseCompletionAsync(StoreKit.SKPaymentTransaction t)
@@ -247,15 +272,18 @@ namespace Praeclarum.UI
 
 		class SubscribeSection : PFormSection
 		{
+			readonly string baseHint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be able to re-subscribe using that plan.";
+
 			public SubscribeSection(ProPrice[] prices)
 				: base(prices)
 			{
-				Hint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be able to re-subscribe using that plan.";
+				Hint = baseHint;
 			}
 
-			public void SetPatronage()
+			public void SetPatronage(bool purchasing)
 			{
 				Title = "Pro Subscription Options";
+				Hint = purchasing ? "Purchasing...\n\n" + baseHint : baseHint;
 			}
 
 			public override string GetItemTitle(object item)
@@ -370,9 +398,11 @@ namespace Praeclarum.UI
 
 			async void DeleteAsync()
 			{
-				var form = (ProForm)Form;
-				await form.DeletePastPurchasesAsync();
-				await form.RefreshProDataAsync();
+				if (Form is ProForm form)
+				{
+					await form.DeletePastPurchasesAsync();
+					await form.RefreshProDataAsync();
+				}
 			}
 		}
 	}

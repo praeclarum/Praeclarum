@@ -18,6 +18,7 @@ namespace Praeclarum.App
 		readonly List<SKPaymentTransaction> productsRestored = new List<SKPaymentTransaction> ();
 
 		public readonly List<Func<NSError?, Task>> RestoredActions = new List<Func<NSError?, Task>> ();
+		public readonly List<Func<SKPaymentTransaction, Task>> PurchasingActions = new List<Func<SKPaymentTransaction, Task>> ();
 		public readonly List<Func<SKPaymentTransaction, Task>> CompletionActions = new List<Func<SKPaymentTransaction, Task>> ();
 		public readonly List<Func<SKPaymentTransaction, Task>> FailActions = new List<Func<SKPaymentTransaction, Task>> ();
 
@@ -72,6 +73,12 @@ namespace Praeclarum.App
 					try {
 						Console.WriteLine ("STORE Transaction: {0} {1} {2} {3} {4}", t.Payment.ProductIdentifier, t.TransactionState, t.TransactionIdentifier, t.TransactionDate, t.Error);
 						switch (t.TransactionState) {
+						case SKPaymentTransactionState.Purchasing:
+							foreach (var a in PurchasingActions)
+							{
+								await a (t);
+							}
+							break;
 						case SKPaymentTransactionState.Purchased:
 							productsPurchased.Add (t);
 							await CompleteTransactionAsync (t);

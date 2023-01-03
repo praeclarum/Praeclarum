@@ -213,6 +213,18 @@ namespace Praeclarum.UI
 		NSButton? button;
 		NSTextField? valueLabel;
 
+		static readonly NSStringAttributes valueAttrs = new NSStringAttributes
+		{
+			ForegroundColor = NSColor.SystemBlue,
+			Font = NSFont.BoldSystemFontOfSize(NSFont.SystemFontSize),
+			Shadow = new NSShadow
+			{
+				ShadowOffset = new CGSize(1, 1),
+				ShadowColor = NSColor.FromWhite(0.0f, 0.5f),
+				ShadowBlurRadius = 2,
+			},
+		};
+
 		public PFormItemView(object item, PFormSection section)
 		{
 			Orientation = NSUserInterfaceLayoutOrientation.Horizontal;
@@ -242,17 +254,7 @@ namespace Praeclarum.UI
 			var titleAS = new NSMutableAttributedString(title);
 			if (display == PFormItemDisplay.TitleAndValue)
 			{
-				var valueAS = new NSAttributedString (" " + details, new NSStringAttributes
-				{
-					ForegroundColor = NSColor.SystemBlue,
-					Font = NSFont.BoldSystemFontOfSize (NSFont.SystemFontSize),
-					Shadow = new NSShadow
-					{
-						ShadowOffset = new CGSize (1, 1),
-						ShadowColor = NSColor.FromWhite (0.0f, 0.5f),
-						ShadowBlurRadius = 2,
-					},
-				});
+				var valueAS = new NSAttributedString (" " + details, valueAttrs);
 				if (valueLabel is not object)
 				{
 					valueLabel = NSTextField.CreateLabel(valueAS);

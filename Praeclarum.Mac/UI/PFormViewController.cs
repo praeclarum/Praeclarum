@@ -163,6 +163,7 @@ namespace Praeclarum.UI
 			
 			Orientation = NSUserInterfaceLayoutOrientation.Vertical;
 			Alignment = NSLayoutAttribute.Leading;
+			Distribution = NSStackViewDistribution.FillEqually;
 
 			titleLabel = NSTextField.CreateLabel (section.Title);
 			titleLabel.Font = NSFont.BoldSystemFontOfSize(NSFont.SystemFontSizeForControlSize(NSControlSize.Large));
@@ -210,6 +211,7 @@ namespace Praeclarum.UI
 		public PFormSection Section { get; }
 
 		NSButton? button;
+		NSTextField? valueLabel;
 
 		public PFormItemView(object item, PFormSection section)
 		{
@@ -234,11 +236,34 @@ namespace Praeclarum.UI
 				b.BezelStyle = NSBezelStyle.Rounded;
 				b.Target = this;
 				b.Action = new ObjCRuntime.Selector("tapItem:");
-				//b.SetButtonType(NSButtonType.MomentaryPushIn);
 				button = b;
-				AddView(button, NSStackViewGravity.Leading);
+				AddView(button, NSStackViewGravity.Top);
 			}
-			b.Title = title;
+			var titleAS = new NSMutableAttributedString(title);
+			if (display == PFormItemDisplay.TitleAndValue)
+			{
+				var valueAS = new NSAttributedString (" " + details, new NSStringAttributes
+				{
+					ForegroundColor = NSColor.SystemBlue,
+					Font = NSFont.BoldSystemFontOfSize (NSFont.SystemFontSize),
+					Shadow = new NSShadow
+					{
+						ShadowOffset = new CGSize (1, 1),
+						ShadowColor = NSColor.FromWhite (0.0f, 0.5f),
+						ShadowBlurRadius = 2,
+					},
+				});
+				if (valueLabel is not object)
+				{
+					valueLabel = NSTextField.CreateLabel(valueAS);
+					AddView(valueLabel, NSStackViewGravity.Trailing);
+				}
+				else
+				{
+					valueLabel.AttributedStringValue = valueAS;
+				}
+			}
+			b.AttributedTitle = titleAS;
 		}
 		public void FormatItem ()
 		{

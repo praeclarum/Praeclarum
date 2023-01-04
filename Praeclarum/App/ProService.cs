@@ -104,7 +104,11 @@ namespace Praeclarum.App
 		public void Restore ()
 		{
 			StoreManager.Shared.Restore ();
-			RestoreFromCloudKitAsync().ContinueWith(Log.TaskError);
+			RestoreFromCloudKit ();
+		}
+		public void RestoreFromCloudKit ()
+		{
+			RestoreFromCloudKitAsync ().ContinueWith (Log.TaskError);
 		}
 
 		async Task<CKDatabase?> GetCloudKitDatabaseAsync()
@@ -194,6 +198,9 @@ namespace Praeclarum.App
 		}
 #else
 		public void Restore()
+		{
+		}
+		public void RestoreFromCloudKit ()
 		{
 		}
 		async Task RestoreFromCloudKitAsync()

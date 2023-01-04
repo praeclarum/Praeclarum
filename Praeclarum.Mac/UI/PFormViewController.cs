@@ -39,7 +39,7 @@ namespace Praeclarum.UI
 
 		public override void LoadView ()
 		{
-			var frame = new CGRect(0, 0, 512, 480);
+			var frame = new CGRect(0, 0, 512, 512);
 			backView.Frame = frame;
 			backView.HasVerticalScroller = true;
 

@@ -55,6 +55,7 @@ namespace Praeclarum.UI
 			aboutSection.SetPatronage();
 			buySection.SetPatronage(isPurchasing);
 
+			
 			BeginRefreshProData();
 		}
 
@@ -66,15 +67,19 @@ namespace Praeclarum.UI
 		{
 			base.ViewWillAppear(animated);
 			visibleForm = this;
-			NSNotificationCenter.DefaultCenter.AddObserver(new NSString(nameof(ProService.SubscribedToPro)), n =>
+			if (proObserver is not object)
 			{
-				BeginInvokeOnMainThread(() =>
+				proObserver = NSNotificationCenter.DefaultCenter.AddObserver(new NSString(nameof(ProService.SubscribedToPro)), n =>
 				{
-					aboutSection.SetPatronage();
-					buySection.SetPatronage(isPurchasing);
-					ReloadAll();
+					BeginInvokeOnMainThread(() =>
+					{
+						aboutSection.SetPatronage();
+						buySection.SetPatronage(isPurchasing);
+						ReloadAll();
+					});
 				});
-			});
+				BeginInvokeOnMainThread (() => ProService.Shared.RestoreFromCloudKit ());
+			}
 		}
 
 		public override void ViewWillDisappear(bool animated)
@@ -173,7 +178,7 @@ namespace Praeclarum.UI
 			}
 		}
 		
-		static async Task AddSubscriptionAsync(string transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p)
+		static async Task AddSubscriptionAsync(string? transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p)
 		{
 			if (transactionState == SKPaymentTransactionState.Purchased)
 			{
@@ -227,8 +232,9 @@ namespace Praeclarum.UI
 				Hint = app.ProMarketing;
 				if (ProService.SubscribedToPro)
 				{
+					var localDateTime = ProService.SubscribedToProDate.ToLocalTime();
 					var months = ProService.SubscribedToProMonths == 1 ? "monthly" : "yearly";
-					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\nYour {months} renewal was on {ProService.SubscribedToProDate.ToShortDateString()} from {ProService.SubscribedToProFromPlatform}. Your Pro subscription works across both iOS and Mac so you only need to subscribe once!\n\n" + Hint;
+					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\nYour {months} renewal was on {localDateTime.ToShortDateString()} at {localDateTime.ToShortTimeString ()} from {ProService.SubscribedToProFromPlatform}. Your Pro subscription works across both iOS and Mac so you only need to subscribe once!\n\n" + Hint;
 				}
 				else
 				{

@@ -50,5 +50,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\PForm.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\IThemeAware.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\StoreManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\OpenUrlCommand.cs" />
   </ItemGroup>
 </Project>

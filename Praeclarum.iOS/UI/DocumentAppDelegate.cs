@@ -420,32 +420,42 @@ namespace Praeclarum.UI
 			docBrowser.PresentViewController (nc, true, null);
 		}
 
+		UINavigationController galleryNC = null;
+
 		void HandleGallery (object sender, EventArgs e)
 		{
-			var vc = new GalleryViewController (App.GalleryUrl, new System.Text.RegularExpressions.Regex (App.GalleryDownloadUrlPattern));
-			var nc = new UINavigationController (vc);
-			vc.DownloadUrl += async urlAndMatch => {
-				vc.DownloadUrl = null;
-				try {
-					var url = urlAndMatch.Item1;
-					var name = url.LastPathComponent.Replace ('_', ' ');
-					var path = System.IO.Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments), name);
-					var fileUrl = NSUrl.FromFilename (path);
-					var dataTask = Task.Run (() => {
-						var d = NSData.FromUrl (url);
-						d.Save (fileUrl, atomically: true);
-					});
-					await nc.DismissViewControllerAsync (true);
-					await dataTask;
-					if (docBrowser?.Delegate is Praeclarum.UI.DocumentsBrowserDelegate del) {
-						del.PresentDocument (docBrowser, fileUrl, true);
+			if (galleryNC is not UINavigationController nc)
+			{
+				var vc = new GalleryViewController(App.GalleryUrl, new System.Text.RegularExpressions.Regex(App.GalleryDownloadUrlPattern));
+				nc = new UINavigationController(vc);
+				vc.DownloadUrl += async urlAndMatch =>
+				{
+					try
+					{
+						var url = urlAndMatch.Item1;
+						var name = url.LastPathComponent.Replace('_', ' ');
+						var path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), name);
+						var fileUrl = NSUrl.FromFilename(path);
+						var dataTask = Task.Run(() =>
+						{
+							var d = NSData.FromUrl(url);
+							d.Save(fileUrl, atomically: true);
+						});
+						await nc.DismissViewControllerAsync(true);
+						await dataTask;
+						if (docBrowser?.Delegate is Praeclarum.UI.DocumentsBrowserDelegate del)
+						{
+							del.PresentDocument(docBrowser, fileUrl, true);
+						}
 					}
-				}
-				catch (Exception ex) {
-					Log.Error (ex);
-				}
-			};
+					catch (Exception ex)
+					{
+						Log.Error(ex);
+					}
+				};
+			}
 
+			galleryNC = nc;
 			Theme.Current.Apply (nc);
 			nc.ModalPresentationStyle = UIModalPresentationStyle.PageSheet;
 			docBrowser.PresentViewController (nc, true, null);

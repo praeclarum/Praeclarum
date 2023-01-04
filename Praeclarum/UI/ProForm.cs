@@ -8,7 +8,6 @@ using Foundation;
 using System.Collections.Generic;
 using StoreKit;
 using System.Diagnostics;
-using Circuit;
 using System.Runtime;
 
 namespace Praeclarum.UI

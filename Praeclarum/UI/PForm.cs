@@ -73,6 +73,13 @@ namespace Praeclarum.UI
 				this.items.Add (i);
 		}
 
+		public void SetItems(IEnumerable<object> newItems)
+		{
+			items.Clear();
+			foreach (var i in newItems)
+				this.items.Add (i);
+		}
+
 		public virtual void Dismiss ()
 		{
 			Form = null;

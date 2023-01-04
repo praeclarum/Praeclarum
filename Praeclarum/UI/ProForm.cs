@@ -280,50 +280,109 @@ namespace Praeclarum.UI
 		{
 			readonly string baseHint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be able to re-subscribe using that plan.";
 
+			readonly Command manageItem;
+
+			bool isPurchasing = false;
+
 			public SubscribeSection(ProPrice[] prices)
 				: base(prices)
 			{
 				Hint = baseHint;
+				manageItem = new OpenUrlCommand ("Manage Pro Subscription", "https://support.apple.com/en-us/HT202039");
 			}
 
 			public void SetPatronage(bool purchasing)
 			{
+				isPurchasing = purchasing;
 				Title = "Pro Subscription Options";
 				Hint = purchasing ? "Purchasing...\n\n" + baseHint : baseHint;
+				var items = new List<object>(prices);
+				if (ProService.SubscribedToPro)
+				{
+					items.Add(manageItem);
+				}
+				this.SetItems(items);
 			}
 
 			public override string GetItemTitle(object item)
 			{
-				var p = (ProPrice)item;
-				var app = DocumentAppDelegate.Shared.App;
-				if (p.Months == ProService.SubscribedToProMonths)
+				if (item is ProPrice p)
 				{
-					return app.ProSymbol + " " + p.Name;
+					var app = DocumentAppDelegate.Shared.App;
+					if (p.Months == ProService.SubscribedToProMonths)
+					{
+						return app.ProSymbol + " " + p.Name;
+					}
+					else
+					{
+						return "⬦ " + p.Name;
+					}
 				}
 				else
 				{
-					return "⬦ " + p.Name;
+					return base.GetItemTitle(item);
+				}
+			}
+
+			public override bool GetItemEnabled (object item)
+			{
+				if (item is ProPrice p)
+				{
+					return !isPurchasing;
+				}
+				else
+				{
+					return true;
 				}
 			}
 
 			public override PFormItemDisplay GetItemDisplay(object item)
 			{
-				return PFormItemDisplay.TitleAndValue;
+				if (item is ProPrice p)
+				{
+					return PFormItemDisplay.TitleAndValue;
+				}
+				else
+				{
+					return PFormItemDisplay.Title;
+				}
+			}
+
+			public override bool GetItemNavigates (object item)
+			{
+				if (item is ProPrice p)
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
 			}
 
 			public override string GetItemDetails(object item)
 			{
-				var p = (ProPrice)item;
-				return p.Price;
+				if (item is ProPrice p)
+				{
+					return p.Price;
+				}
+				else
+				{
+					return "";
+				}
 			}
 
 			public override bool SelectItem(object item)
 			{
-				BuyAsync(item).ContinueWith(t => {
-					if (t.IsFaulted)
-						Log.Error(t.Exception);
-				});
-				return false;
+				if (item is ProPrice p)
+				{
+					BuyAsync (p).ContinueWith (Log.TaskError);
+					return false;
+				}
+				else
+				{
+					return base.SelectItem(item);
+				}
 			}
 
 			async Task BuyAsync(object item)

@@ -14,6 +14,7 @@ namespace Praeclarum.UI
 		private readonly string galleryUrl;
 		private readonly Regex downloadUrlRe;
 		WKWebView? webBrowser;
+		UIBarButtonItem backItem;
 
 		public Action<(NSUrl, Match)>? DownloadUrl;
 
@@ -23,10 +24,12 @@ namespace Praeclarum.UI
 			this.downloadUrlRe = downloadUrlRe;
 			Title = "Gallery".Localize ();
 
+			backItem = new UIBarButtonItem("Back", UIBarButtonItemStyle.Plain, (s, e) => {
+				webBrowser?.GoBack();
+			});
+			backItem.Enabled = false;
 			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] {
-				new UIBarButtonItem ("Back", UIBarButtonItemStyle.Plain, (s, e) => {
-					webBrowser?.GoBack ();
-				}),
+				backItem,
 			};
 
 			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] {
@@ -66,6 +69,12 @@ namespace Praeclarum.UI
 			else {
 				decisionHandler (WKNavigationActionPolicy.Allow);
 			}
+		}
+
+		[Export ("webView:didFinishNavigation:")]
+		public void DidFinishNavigation (WKWebView webView, WKNavigation navigation)
+		{
+			backItem.Enabled = webView.CanGoBack;
 		}
 	}
 }

@@ -91,12 +91,107 @@ namespace Praeclarum.App
 				NSNotificationCenter.DefaultCenter.PostNotificationName (nameof (SubscribedToPro), null));
 		}
 
+#if __IOS__ || __MACOS__
 		public void Restore ()
 		{
-#if __IOS__ || __MACOS__
 			StoreManager.Shared.Restore ();
-#endif
+			RestoreFromCloudKitAsync().ContinueWith(Log.TaskError);
 		}
+
+		async Task<CKDatabase?> GetCloudKitDatabaseAsync()
+		{
+			try
+			{
+				var containerId = DocumentAppDelegate.Shared.App.CloudKitContainerId;
+				var container = containerId is { } cid ? CKContainer.FromIdentifier(cid) : CKContainer.DefaultContainer;
+				var status = await container.GetAccountStatusAsync();
+				var hasCloud = status == CKAccountStatus.Available;
+				if (!hasCloud)
+					return null;
+				return container.PrivateCloudDatabase;
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+				return null;
+			}
+		}
+
+		async Task<ProSubscriptionCloudRecord?> GetPlatformCloudKitSubAsync(SubPlatform platform, CKDatabase db)
+		{
+			try
+			{
+				var pred = NSPredicate.FromFormat($"Platform == '{platform}'");
+				var query = new CKQuery(ProSubscriptionCloudRecord.RecordName, pred);
+
+				var recs = await db.PerformQueryAsync(query, CKRecordZone.DefaultRecordZone().ZoneId);
+
+				Console.WriteLine("NUM PRO RECS = {0}", recs.Length);
+
+				return
+					recs
+					.Select(x => new ProSubscriptionCloudRecord(x))
+					.OrderByDescending(x => x.PurchaseDate)
+					.FirstOrDefault();
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+				return null;
+			}
+		}
+
+		async Task RestoreFromCloudKitAsync()
+		{
+			try
+			{
+				if ((await GetCloudKitDatabaseAsync()) is { } db)
+				{
+					var record = await GetPlatformCloudKitSubAsync(GetOtherPlatform(), db);
+					Console.WriteLine("OTHER SUB = {0}", record);
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex);
+			}
+		}
+
+		async Task SaveToCloudKitAsync (DateTime date, int months)
+		{
+			try
+			{
+				if ((await GetCloudKitDatabaseAsync ()) is { } db)
+				{
+					var record = await GetPlatformCloudKitSubAsync (GetThisPlatform (), db);
+
+					if (record is not object)
+					{
+						record = new ProSubscriptionCloudRecord();
+						record.Platform = GetThisPlatform().ToString();
+					}
+
+					record.PurchaseDate = date;
+					record.NumMonths = months;
+					await db.SaveRecordAsync(record.Record);
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error (ex);
+			}
+		}
+#else
+		public void Restore()
+		{
+		}
+		async Task RestoreFromCloudKitAsync()
+		{
+		}
+		async Task SaveToCloudKitAsync ()
+		{
+		}
+#endif
 
 		public async Task HandlePurchaseRestoredAsync (NSError? error)
 		{
@@ -112,6 +207,28 @@ namespace Praeclarum.App
 
 		public async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
 		{
+		}
+
+		private static SubPlatform GetThisPlatform ()
+		{
+#if __IOS__
+			return SubPlatform.iOS;
+#elif __MACOS__
+					return SubPlatform.Mac;
+#elif __ANDROID__
+					return SubPlatform.Android;
+#endif
+		}
+
+		private static SubPlatform GetOtherPlatform ()
+		{
+#if __IOS__
+			return SubPlatform.Mac;
+#elif __MACOS__
+					return SubPlatform.iOS;
+#elif __ANDROID__
+					return SubPlatform.Android;
+#endif
 		}
 
 		enum SubPlatform
@@ -136,21 +253,15 @@ namespace Praeclarum.App
 			{
 				try
 				{
-					var saveText = Date.ToString("O") + "\n" + Months;
-#if __IOS__
-					var thisPlat = SubPlatform.iOS;
-#elif __MACOS__
-					var thisPlat = SubPlatform.Mac;
-#elif __ANDROID__
-					var thisPlat = SubPlatform.Android;
-#endif
+					var saveText = Date.ToString ("O") + "\n" + Months;
+					SubPlatform thisPlat = GetThisPlatform ();
 					var saveName = $"ProSub-{thisPlat}.txt";
 #if __IOS__ || __MACOS__
 					NSFileManager defaultManager = Foundation.NSFileManager.DefaultManager;
 					if (DocumentAppDelegate.Shared.App.AppGroup is string appGroup && defaultManager.GetContainerUrl (appGroup) is NSUrl saveDirUrl)
 					{
-						var saveUrl = saveDirUrl.Append(saveName, false);
-						NSData.FromString(saveText, NSStringEncoding.UTF8).Save(saveUrl, true);
+						var saveUrl = saveDirUrl.Append (saveName, false);
+						NSData.FromString (saveText, NSStringEncoding.UTF8).Save (saveUrl, true);
 					}
 #else
 #endif
@@ -166,13 +277,7 @@ namespace Praeclarum.App
 				try
 				{
 					string saveText = "";
-#if __IOS__
-					var otherPlat = SubPlatform.Mac;
-#elif __MACOS__
-					var otherPlat = SubPlatform.iOS;
-#elif __ANDROID__
-					var otherPlat = SubPlatform.Android;
-#endif
+					var otherPlat = GetOtherPlatform();
 					var saveName = $"ProSub-{otherPlat}.txt";
 #if __IOS__ || __MACOS__
 					NSFileManager defaultManager = Foundation.NSFileManager.DefaultManager;
@@ -217,6 +322,7 @@ namespace Praeclarum.App
 			settings.SubscribedToProMonths = months;
 			//var save = new SavedSub (date, months);
 			//save.TrySave ();
+			await SaveToCloudKitAsync(date, months);
 		}
 
 		async Task AddSubscriptionAsync (string transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p)
@@ -228,7 +334,7 @@ namespace Praeclarum.App
 		{
 			try
 			{
-				await SaveSubscriptionAsync (new DateTime (1970, 1, 1), 0);
+				await SaveSubscriptionAsync (new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), 0);
 				SignalProChanged ();
 			}
 			catch (NSErrorException ex)
@@ -248,8 +354,10 @@ namespace Praeclarum.App
 	{
 		public readonly CKRecord Record;
 
+		public const string RecordName = "ProSubscription";
+
 		public ProSubscriptionCloudRecord ()
-			: this (new CKRecord ("ProSubscription"))
+			: this (new CKRecord (RecordName))
 		{
 		}
 
@@ -289,6 +397,19 @@ namespace Praeclarum.App
 			get
 			{
 				return PurchaseDate.AddMonths (NumMonths);
+			}
+		}
+
+		public string Platform
+		{
+			get
+			{
+				var v = Record["Platform"];
+				return v != null ? v.ToString () : "";
+			}
+			set
+			{
+				Record["Platform"] = new NSString (value ?? "");
 			}
 		}
 

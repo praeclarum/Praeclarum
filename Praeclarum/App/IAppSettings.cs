@@ -38,6 +38,7 @@ namespace Praeclarum.App
 		DateTime TipDate { get; set; }
 
 		DateTime SubscribedToProDate { get; set; }
+		string SubscribedToProFromPlatform { get; set; }
 		int SubscribedToProMonths { get; set; }
 	}
 

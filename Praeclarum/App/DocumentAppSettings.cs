@@ -232,6 +232,18 @@ namespace Praeclarum.App
 			}
 		}
 
+		public string SubscribedToProFromPlatform
+		{
+			get
+			{
+				return defs.StringForKey ("SubscribedToProFromPlatform") ?? "";
+			}
+			set
+			{
+				defs.SetString (value ?? "", "SubscribedToProFromPlatform");
+				defs.Synchronize ();
+			}
+		}
 	}
 }
 

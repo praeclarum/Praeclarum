@@ -66,6 +66,15 @@ namespace Praeclarum.App
 			}
 		}
 
+		public static string SubscribedToProFromPlatform
+		{
+			get
+			{
+				var settings = DocumentAppDelegate.Shared.Settings;
+				return settings.SubscribedToProFromPlatform;
+			}
+		}
+
 		public static int SubscribedToProMonths
 		{
 			get
@@ -123,11 +132,8 @@ namespace Praeclarum.App
 			{
 				var pred = NSPredicate.FromFormat($"Platform == '{platform}'");
 				var query = new CKQuery(ProSubscriptionCloudRecord.RecordName, pred);
-
 				var recs = await db.PerformQueryAsync(query, CKRecordZone.DefaultRecordZone().ZoneId);
-
-				Console.WriteLine("NUM PRO RECS = {0}", recs.Length);
-
+				//Console.WriteLine("NUM PRO RECS = {0}", recs.Length);
 				return
 					recs
 					.Select(x => new ProSubscriptionCloudRecord(x))
@@ -147,8 +153,13 @@ namespace Praeclarum.App
 			{
 				if ((await GetCloudKitDatabaseAsync()) is { } db)
 				{
+					var otherPlat = GetOtherPlatform();
 					var record = await GetPlatformCloudKitSubAsync(GetOtherPlatform(), db);
-					Console.WriteLine("OTHER SUB = {0}", record);
+					if (record is { } sub && prices.FirstOrDefault(x => x.Months == sub.NumMonths) is { } price)
+					{
+						Console.WriteLine("PRO FOUND OTHER SUB = {0} on {1}", record.PurchaseDate, record.Platform);
+						await AddSubscriptionAsync(null, record.PurchaseDate, SKPaymentTransactionState.Restored, price, otherPlat);
+					}
 				}
 			}
 			catch (Exception ex)
@@ -202,7 +213,7 @@ namespace Praeclarum.App
 			var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
 			if (p == null)
 				return;
-			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p);
+			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p, GetThisPlatform());
 		}
 
 		public async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
@@ -305,36 +316,40 @@ namespace Praeclarum.App
 			}
 		}
 
-		async Task SaveSubscriptionIfNewerAsync(DateTime date, int months)
+		async Task SaveSubscriptionIfNewerAsync(DateTime date, int months, SubPlatform fromPlatform)
 		{
 			var settings = DocumentAppDelegate.Shared.Settings;
 			if (date > settings.SubscribedToProDate)
 			{
-				await SaveSubscriptionAsync(date, months);
+				await SaveSubscriptionAsync(date, months, fromPlatform);
 				SignalProChanged ();
 			}
 		}
 
-		async Task SaveSubscriptionAsync (DateTime date, int months)
+		async Task SaveSubscriptionAsync (DateTime date, int months, SubPlatform fromPlatform)
 		{
 			var settings = DocumentAppDelegate.Shared.Settings;
 			settings.SubscribedToProDate = date;
 			settings.SubscribedToProMonths = months;
+			settings.SubscribedToProFromPlatform = fromPlatform.ToString();
 			//var save = new SavedSub (date, months);
 			//save.TrySave ();
-			await SaveToCloudKitAsync(date, months);
+			if (fromPlatform == GetThisPlatform())
+			{
+				await SaveToCloudKitAsync(date, months);
+			}
 		}
 
-		async Task AddSubscriptionAsync (string transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p)
+		async Task AddSubscriptionAsync (string? transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p, SubPlatform fromPlatform)
 		{
-			await SaveSubscriptionIfNewerAsync(transactionDate, p.Months);
+			await SaveSubscriptionIfNewerAsync(transactionDate, p.Months, fromPlatform);
 		}
 
 		public async Task DeletePastPurchasesAsync ()
 		{
 			try
 			{
-				await SaveSubscriptionAsync (new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), 0);
+				await SaveSubscriptionAsync (new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), 0, GetThisPlatform());
 				SignalProChanged ();
 			}
 			catch (NSErrorException ex)

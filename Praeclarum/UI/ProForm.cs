@@ -227,11 +227,12 @@ namespace Praeclarum.UI
 				Hint = app.ProMarketing;
 				if (ProService.SubscribedToPro)
 				{
-					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\nYou last renewed on {ProService.SubscribedToProDate.ToShortDateString()} for {ProService.SubscribedToProMonths} months.\n\n" + Hint;
+					var months = ProService.SubscribedToProMonths == 1 ? "monthly" : "yearly";
+					Hint = $"⭐️⭐️⭐️ Thank you for your Pro subscription! ⭐️⭐️⭐️\n\nYour {months} renewal was on {ProService.SubscribedToProDate.ToShortDateString()} from {ProService.SubscribedToProFromPlatform}. Your Pro subscription works across both iOS and Mac so you only need to subscribe once!\n\n" + Hint;
 				}
 				else
 				{
-					Hint += "\n\nTap one of the plans below to start enjoying the full iCircuit experience.";
+					Title = "Upgrade to " + Title;
 				}
 			}
 		}
@@ -361,7 +362,7 @@ namespace Praeclarum.UI
 
 			public override bool GetItemEnabled (object item)
 			{
-				return !StoreManager.Shared.IsRestoring;
+				return true;
 			}
 
 			async void RestoreAsync()

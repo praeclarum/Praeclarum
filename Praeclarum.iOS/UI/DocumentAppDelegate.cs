@@ -168,6 +168,7 @@ namespace Praeclarum.UI
 						Settings.IsPatron = DateTime.UtcNow <= Settings.PatronEndDate;
 					}
 					StoreManager.Shared.RestoredActions.Add (HandlePurchaseRestoredAsync);
+					StoreManager.Shared.PurchasingActions.Add (HandlePurchasingAsync);
 					StoreManager.Shared.CompletionActions.Add (HandlePurchaseCompletionAsync);
 					StoreManager.Shared.FailActions.Add (HandlePurchaseFailAsync);
 				}
@@ -322,6 +323,21 @@ namespace Praeclarum.UI
 			await ProService.Shared.HandlePurchaseRestoredAsync(error);
 			await ProForm.HandlePurchaseRestoredAsync(error);
 			// await PatronForm.HandlePurchaseRestoredAsync (error);
+		}
+
+		static async Task HandlePurchasingAsync (StoreKit.SKPaymentTransaction t)
+		{
+			var pid = t.Payment.ProductIdentifier;
+			if (pid.Contains(".tip."))
+			{
+			}
+			else if (pid.Contains(".pro."))
+			{
+				await ProForm.HandlePurchasingAsync(t);
+			}
+			else
+			{
+			}
 		}
 
 		static async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)

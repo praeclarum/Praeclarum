@@ -26,7 +26,7 @@ namespace Praeclarum.UI
 
 		bool subscribedToPro => ProService.SubscribedToPro;
 
-		bool isPurchasing = false;
+		string? isPurchasing = null;
 
 		public ProForm()
 		{
@@ -162,12 +162,16 @@ namespace Praeclarum.UI
 				if (p == null)
 					return;
 
-				var m = t.Error != null ? t.Error.LocalizedDescription : "Unknown error";
+				var alertError = t.Error is NSError error && (int)error.Code != (int)StoreKit.SKError.PaymentCancelled;
 				if (visibleForm is { } f)
 				{
-					f.isPurchasing = false;
-					f.BeginRefreshProData ();
-					f.ShowAlert("Pro Subscription Failed", m);
+					f.isPurchasing = null;
+					f.BeginRefreshProData();
+					if (alertError)
+					{
+						var m = t.Error != null ? t.Error.LocalizedDescription : "Unknown error";
+						f.ShowAlert("Pro Subscription Failed", m);
+					}
 				}
 			}
 			catch (Exception ex)
@@ -184,7 +188,7 @@ namespace Praeclarum.UI
 				ShowThanksAlert();
 				if (visibleForm is { } f)
 				{
-					f.isPurchasing = false;
+					f.isPurchasing = null;
 					f.BeginRefreshProData();
 				}
 			}
@@ -197,13 +201,25 @@ namespace Praeclarum.UI
 
 		public static async Task HandlePurchaseRestoredAsync(NSError? error)
 		{
+#if __IOS__
+			if (!ProService.SubscribedToPro)
+			{
+				visibleForm?.ShowAlert ("No Subscriptions Found", $"You are not currently subscribed to {DocumentAppDelegate.Shared.App.Name} Pro.\n\nChoose one of the pricing plans to subscribe.");
+			}
+			else
+			{
+				ShowThanksAlert ();
+			}
+			if (visibleForm is not null)
+				await visibleForm.RefreshProDataAsync ();
+#endif
 		}
 
 		public static async Task HandlePurchasingAsync(StoreKit.SKPaymentTransaction t)
 		{
 			if (visibleForm is { } f)
 			{
-				f.isPurchasing = true;
+				f.isPurchasing = t.Payment?.ProductIdentifier;
 				f.BeginRefreshProData ();
 			}
 		}
@@ -282,7 +298,7 @@ namespace Praeclarum.UI
 
 			readonly Command manageItem;
 
-			bool isPurchasing = false;
+			string? purchasingProductId = null;
 
 			public SubscribeSection(ProPrice[] prices)
 				: base(prices)
@@ -291,11 +307,11 @@ namespace Praeclarum.UI
 				manageItem = new OpenUrlCommand ("Manage Pro Subscription", "https://support.apple.com/en-us/HT202039");
 			}
 
-			public void SetPatronage(bool purchasing)
+			public void SetPatronage(string? purchasingProductId)
 			{
-				isPurchasing = purchasing;
+				this.purchasingProductId = purchasingProductId;
 				Title = "Pro Subscription Options";
-				Hint = purchasing ? "Purchasing...\n\n" + baseHint : baseHint;
+				Hint = purchasingProductId is string ? "Purchasing...\n\n" + baseHint : baseHint;
 				var items = new List<object>(prices);
 				if (ProService.SubscribedToPro)
 				{
@@ -328,7 +344,7 @@ namespace Praeclarum.UI
 			{
 				if (item is ProPrice p)
 				{
-					return !isPurchasing;
+					return purchasingProductId is not string;
 				}
 				else
 				{

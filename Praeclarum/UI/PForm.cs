@@ -158,6 +158,11 @@ namespace Praeclarum.UI
 
 			return true;
 		}
+
+		public virtual bool GetItemDisplayActivity (object item)
+		{
+			return false;
+		}
 	}
 }
 

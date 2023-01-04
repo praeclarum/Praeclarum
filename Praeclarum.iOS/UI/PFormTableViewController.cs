@@ -239,6 +239,8 @@ namespace Praeclarum.UI
 
 			readonly bool useBlur = !UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 
+			UIActivityIndicatorView activityView = null;
+
 			public PFormCell (PFormItemDisplay display, string reuseId)
 				: base (
 					(display == PFormItemDisplay.Title) ? UITableViewCellStyle.Default
@@ -274,6 +276,29 @@ namespace Praeclarum.UI
 							detailTextLabel.TextColor = UIApplication.SharedApplication?.KeyWindow?.TintColor ?? UIColor.Blue;
 						}
 					}
+				}
+
+				if (section.GetItemDisplayActivity (item))
+				{
+					if (activityView is not UIActivityIndicatorView a)
+					{
+						a = new UIActivityIndicatorView();
+						var bounds = cell.ContentView.Bounds;
+						var asize = NMath.Max(a.Frame.Width, 22);
+						cell.IndentationWidth = asize + 11;
+						
+						a.Frame = new CGRect(22, (bounds.Height - asize)/2, asize, asize);
+						cell.ContentView.AddSubview(a);
+						a.StartAnimating();
+					}
+					cell.IndentationLevel = 1;
+				}
+				else
+				{
+					activityView?.StopAnimating();
+					activityView?.RemoveFromSuperview();
+					activityView = null;
+					cell.IndentationLevel = 0;
 				}
 
 				var imageUrl = section.GetItemImage (item);

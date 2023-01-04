@@ -388,6 +388,18 @@ namespace Praeclarum.UI
 				}
 			}
 
+			public override bool GetItemDisplayActivity (object item)
+			{
+				if (item is ProPrice p && p.Product is StoreKit.SKProduct prod)
+				{
+					return prod.ProductIdentifier == purchasingProductId;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
 			public override bool SelectItem(object item)
 			{
 				if (item is ProPrice p)

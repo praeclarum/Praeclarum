@@ -77,7 +77,7 @@ namespace Praeclarum.UI
 
 		protected abstract DocumentApplication CreateApplication();
 
-		static async Task HandlePurchaseRestoredAsync (NSError? error)
+		static async Task HandlePurchaseRestoredAsync (NSError error)
 		{
 			// await TipJarForm.HandlePurchaseRestoredAsync(error);
 			await ProService.Shared.HandlePurchaseRestoredAsync (error);

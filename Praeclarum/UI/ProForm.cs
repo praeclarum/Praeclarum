@@ -10,6 +10,8 @@ using StoreKit;
 using System.Diagnostics;
 using System.Runtime;
 
+#pragma warning disable 1998
+
 namespace Praeclarum.UI
 {
 	public class ProForm : PForm
@@ -91,8 +93,6 @@ namespace Praeclarum.UI
 				proObserver = null;
 			}
 		}
-
-		bool hasCloud = false;
 
 		public async Task<int> RestorePastPurchasesAsync()
 		{
@@ -459,19 +459,21 @@ namespace Praeclarum.UI
 
 			async void RestoreAsync()
 			{
-				var form = (ProForm)Form;
-				try
+				if (Form is ProForm form)
 				{
-					if (StoreManager.Shared.IsRestoring)
-						return;
+					try
+					{
+						if (StoreManager.Shared.IsRestoring)
+							return;
 
-					var n = await form.RestorePastPurchasesAsync();
-					Form?.ReloadSection(this);
-				}
-				catch (Exception ex)
-				{
-					Form?.ShowFormError("Restore Failed", ex);
-					Log.Error(ex);
+						var n = await form.RestorePastPurchasesAsync();
+						Form?.ReloadSection(this);
+					}
+					catch (Exception ex)
+					{
+						Form?.ShowFormError("Restore Failed", ex);
+						Log.Error(ex);
+					}
 				}
 			}
 		}

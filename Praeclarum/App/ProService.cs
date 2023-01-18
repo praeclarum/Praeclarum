@@ -211,8 +211,9 @@ namespace Praeclarum.App
 		}
 #endif
 
-		public async Task HandlePurchaseRestoredAsync (NSError? error)
+		public Task HandlePurchaseRestoredAsync (NSError? error)
 		{
+			return Task.CompletedTask;
 		}
 
 		public async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
@@ -223,8 +224,9 @@ namespace Praeclarum.App
 			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p, GetThisPlatform());
 		}
 
-		public async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
+		public Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
 		{
+			return Task.CompletedTask;
 		}
 
 		private static SubPlatform GetThisPlatform ()
@@ -301,12 +303,18 @@ namespace Praeclarum.App
 					NSFileManager defaultManager = Foundation.NSFileManager.DefaultManager;
 					if (DocumentAppDelegate.Shared.App.AppGroup is string appGroup && defaultManager.GetContainerUrl(appGroup) is NSUrl saveDirUrl)
 					{
-						var saveUrl = saveDirUrl.Append(saveName, false);
-						if (!defaultManager.FileExists(saveUrl.FilePathUrl.Path))
+						var saveUrlO = saveDirUrl.Append(saveName, false);
+						if (saveUrlO is { } saveUrl)
+						{
+							if (saveUrl.FilePathUrl?.Path is { } path && !defaultManager.FileExists(saveUrl.FilePathUrl.Path))
+								return null;
+							saveText = NSData.FromUrl(saveUrl).ToString(NSStringEncoding.UTF8);
+						}
+						else
+						{
 							return null;
-						saveText = NSData.FromUrl(saveUrl).ToString(NSStringEncoding.UTF8);
+						}
 					}
-
 #else
 #endif
 					var lines = saveText.Split("\n").Select(x => x.Trim()).Where(x => x.Length > 0).ToArray();

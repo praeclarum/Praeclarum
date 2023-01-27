@@ -1233,13 +1233,21 @@ namespace Praeclarum.UI
 
 			ReviewNagging?.RegisterPositiveAction ();
 
-			await AddAndOpenDocRef (await DocumentReference.New (
-				directory,
-				App.DocumentBaseName,
-				App.DefaultExtension,
-				ActiveFileSystem,
-				App.CreateDocument,
-				GetNewDocumentText ()));
+			if (docBrowser is { } db && db.Delegate is Praeclarum.UI.DocumentsBrowserDelegate del)
+			{
+				var url = del.CreateTempUrl();
+				await docBrowser.RevealDocumentAsync(url, true);				
+			}
+			else
+			{
+				await AddAndOpenDocRef(await DocumentReference.New(
+					directory,
+					App.DocumentBaseName,
+					App.DefaultExtension,
+					ActiveFileSystem,
+					App.CreateDocument,
+					GetNewDocumentText()));
+			}
 		}
 
 #pragma warning disable 1998
@@ -2226,18 +2234,27 @@ namespace Praeclarum.UI
 			this.app = app;
 		}
 
+		public NSUrl CreateTempUrl()
+		{
+			var docsDir = Path.GetTempPath ();
+			string urlPath = Path.Combine (docsDir, app.DocumentBaseName + "." + app.DefaultExtension);
+			try
+			{
+				if (File.Exists (urlPath))
+					File.Delete (urlPath);
+				File.WriteAllBytes(urlPath, Array.Empty<byte>());
+			}
+			catch
+			{
+			}
+			var url = NSUrl.FromFilename (urlPath);
+			return url;
+		}
+
 		public override void DidRequestDocumentCreation (UIDocumentBrowserViewController controller, System.Action<NSUrl, UIDocumentBrowserImportMode> importHandler)
 		{
 			try {
-				var docsDir = Path.GetTempPath ();
-				string urlPath = Path.Combine (docsDir, app.DocumentBaseName + "." + app.DefaultExtension);
-				try {
-					if (File.Exists (urlPath))
-						File.Delete (urlPath);
-				}
-				catch {
-				}
-				var url = NSUrl.FromFilename (urlPath);
+				var url = CreateTempUrl();
 				var doc = (UIDocument)app.CreateDocument (url);
 				lastCreatedDoc = doc; // Keep it alive for the GC
 				doc.Save (url, UIDocumentSaveOperation.ForCreating, saveSuccess => {

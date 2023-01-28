@@ -284,7 +284,7 @@ namespace Praeclarum.UI
 					{
 						a = new UIActivityIndicatorView();
 						var bounds = cell.ContentView.Bounds;
-						var asize = NMath.Max(a.Frame.Width, 22);
+						var asize = (nfloat)Math.Max(a.Frame.Width, 22);
 						cell.IndentationWidth = asize + 11;
 						
 						a.Frame = new CGRect(22, (bounds.Height - asize)/2, asize, asize);

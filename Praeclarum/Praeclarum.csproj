@@ -13,6 +13,7 @@
     <Compile Remove="UI\OpenUrlCommand.cs" />
     <Compile Remove="UI\PForm.cs" />
     <Compile Remove="UI\ProForm.cs" />
+    <Compile Remove="App\DocumentApplication.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Properties\" />

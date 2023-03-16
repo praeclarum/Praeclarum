@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Mac", "Praeclarum.Mac\Praeclarum.Mac.csproj", "{D02FAE64-9438-4D14-A06A-3C21DCADC101}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.Shared", "Praeclarum\Praeclarum.Shared.shproj", "{B8A8BCD4-7815-4994-A9AF-3E603C844835}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum", "Praeclarum\Praeclarum.csproj", "{4A09F863-81C8-481B-8017-FDFC1F92D5B8}"
 EndProject
 Global

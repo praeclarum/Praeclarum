@@ -634,5 +634,52 @@ namespace Praeclarum.Graphics
 			c.AddLineToPoint (b.Left, b.Top);
 		}
 	}
+
+	public static class RectangleEx
+	{
+		public static NativeRect ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
+		{
+			return new NativeRect (rect.Left, rect.Top, rect.Width, rect.Height);
+		}
+
+		public static Praeclarum.Graphics.RectangleF ToRectangleF (this NativeRect rect)
+		{
+			return new Praeclarum.Graphics.RectangleF ((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
+		}
+
+		public static Praeclarum.Graphics.SizeF ToSizeF (this NativeSize size)
+		{
+			return new Praeclarum.Graphics.SizeF ((float)size.Width, (float)size.Height);
+		}
+
+		public static NativeSize ToSizeF (this Praeclarum.Graphics.SizeF size)
+		{
+			return new NativeSize (size.Width, size.Height);
+		}
+
+		public static NativePoint ToPointF (this Praeclarum.Graphics.PointF point)
+		{
+			return new NativePoint (point.X, point.Y);
+		}
+
+		public static Praeclarum.Graphics.PointF ToPointF (this NativePoint point)
+		{
+			return new Praeclarum.Graphics.PointF ((float)point.X, (float)point.Y);
+		}
+
+		public static NativePoint GetCenter (this NativeRect r)
+		{
+			return new NativePoint (
+				r.Left + r.Width / 2,
+				r.Top + r.Height / 2);
+		}
+
+#if __ANDROID__
+		public static global::Android.Graphics.Rect ToRect (this Praeclarum.Graphics.RectangleF rect)
+		{
+			return new global::Android.Graphics.Rect ((int)rect.Left, (int)rect.Top, (int)rect.Right, (int)rect.Bottom);
+		}
+#endif
+	}
 }
 

@@ -122,16 +122,3 @@ namespace Praeclarum.App
 		public virtual (string Section, string[] Features)[] GetProFeatures () { return Array.Empty<(string,string[])>(); }
 	}
 }
-
-
-#if !(__IOS__ || __MACOS__)
-
-namespace Foundation
-{
-    public class NSUrl
-    {
-    }
-}
-
-#endif
-

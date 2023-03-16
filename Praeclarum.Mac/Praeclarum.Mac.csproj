@@ -45,9 +45,14 @@
     <Compile Include="..\Praeclarum\UI\OpenUrlCommand.cs">
       <Link>UI\OpenUrlCommand.cs</Link>
     </Compile>
+    <Compile Include="..\Praeclarum\App\DocumentApplication.cs">
+      <Link>App\DocumentApplication.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App\" />
   </ItemGroup>
-  <Import Project="..\Praeclarum\Praeclarum.Shared.projitems" Label="Shared" Condition="Exists('..\Praeclarum\Praeclarum.Shared.projitems')" />
+  <ItemGroup>
+    <ProjectReference Include="..\Praeclarum\Praeclarum.csproj" />
+  </ItemGroup>
 </Project>

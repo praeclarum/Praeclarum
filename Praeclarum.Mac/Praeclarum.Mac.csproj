@@ -15,6 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
       <None Remove="Praeclarum.Mac.Shared.projitems" />
+      <None Remove="App\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Praeclarum.iOS\Graphics\CoreGraphicsGraphics.cs">
@@ -26,6 +27,27 @@
     <Compile Include="..\Praeclarum.iOS\CTStringAttributesWrapper.cs">
       <Link>CTStringAttributesWrapper.cs</Link>
     </Compile>
+    <Compile Include="..\Praeclarum\App\StoreManager.cs">
+      <Link>App\StoreManager.cs</Link>
+    </Compile>
+    <Compile Include="..\Praeclarum\UI\ProForm.cs">
+      <Link>UI\ProForm.cs</Link>
+    </Compile>
+    <Compile Include="..\Praeclarum\App\ProService.cs">
+      <Link>App\ProService.cs</Link>
+    </Compile>
+    <Compile Include="..\Praeclarum\UI\PForm.cs">
+      <Link>UI\PForm.cs</Link>
+    </Compile>
+    <Compile Include="..\Praeclarum\App\DocumentAppSettings.cs">
+      <Link>App\DocumentAppSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Praeclarum\UI\OpenUrlCommand.cs">
+      <Link>UI\OpenUrlCommand.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App\" />
   </ItemGroup>
   <Import Project="..\Praeclarum\Praeclarum.Shared.projitems" Label="Shared" Condition="Exists('..\Praeclarum\Praeclarum.Shared.projitems')" />
 </Project>

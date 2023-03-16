@@ -9,7 +9,7 @@ using NativeCTStringAttributes = CoreText.CTStringAttributes;
 using CGColor = CoreGraphics.CGColor;
 #if __IOS__
 using NativeColor = UIKit.UIColor;
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 using NativeColor = AppKit.NSColor;
 #endif
 

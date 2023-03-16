@@ -10,7 +10,7 @@ using CGColor = CoreGraphics.CGColor;
 #if __IOS__
 using NativeColor = UIKit.UIColor;
 using NativeStringAttributes = UIKit.UIStringAttributes;
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 using NativeColor = AppKit.NSColor;
 using NativeStringAttributes = AppKit.NSStringAttributes;
 #endif
@@ -35,7 +35,7 @@ namespace Praeclarum
 		static readonly NSString BackgroundColorAttributeName = new NSString ("NSBackgroundColor");
 		static readonly NSString UnderlineColorAttributeName = new NSString ("NSUnderlineColor");
 		public static readonly NSString LinkAttributeName = new NSString ("NSLink");
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 		public static readonly NSString ForegroundColorAttributeName = AppKit.NSStringAttributeKey.ForegroundColor;
 		public static readonly NSString BackgroundColorAttributeName = AppKit.NSStringAttributeKey.BackgroundColor;
 		public static readonly NSString LinkAttributeName = AppKit.NSStringAttributeKey.Link;
@@ -75,7 +75,7 @@ namespace Praeclarum
 
 #if __IOS__
 			attrs.Dictionary.SetValue (FontAttributeName, UIKit.UIFont.FromName (fontName, size));
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 			attrs.Font = new CoreText.CTFont (fontName, size);
 #endif
 		}
@@ -97,7 +97,7 @@ namespace Praeclarum
 				color.Green,
 				color.Blue,
 				color.Alpha);
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 			return NativeColor.FromDeviceRgba (
 				color.RedValue,
 				color.GreenValue,
@@ -163,7 +163,7 @@ namespace Praeclarum
 			attrs.UnderlineStyle = underlineStyle == UnderlineStyle.None ?
 				CoreText.CTUnderlineStyle.None :
 								   CoreText.CTUnderlineStyle.Single;
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 			attrs.Dictionary.SetValue (AppKit.NSStringAttributeKey.UnderlineColor, ToNativeColor (underlineColor));
 			var ns = underlineStyle == UnderlineStyle.None ? 0 :
 			         (underlineStyle == UnderlineStyle.Single ? 0x1 : 0x9);
@@ -181,7 +181,7 @@ namespace Praeclarum
 				if (!string.IsNullOrEmpty (link)) {
 #if __IOS__
 					attrs.Dictionary.SetValue (LinkAttributeName, new NSString (link));
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 					attrs.Dictionary.SetValue (LinkAttributeName, new NSString (link));
 #endif
 				}
@@ -240,7 +240,7 @@ namespace Praeclarum
 
 #if __IOS__
 			attrs.Font = UIKit.UIFont.FromName (fontName, size);
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 			attrs.Font = AppKit.NSFont.FromFontName (fontName, size);
 #endif
 		}
@@ -253,7 +253,7 @@ namespace Praeclarum
 				color.Green,
 				color.Blue,
 				color.Alpha);
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 			return NativeColor.FromDeviceRgba (
 				color.RedValue,
 				color.GreenValue,
@@ -317,7 +317,7 @@ namespace Praeclarum
 			attrs.UnderlineColor = color;
 			attrs.UnderlineStyle = underlineStyle == UnderlineStyle.None ?
 				NSUnderlineStyle.None : NSUnderlineStyle.Single;
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 			attrs.Dictionary.SetValue (AppKit.NSStringAttributeKey.UnderlineColor, ToNativeColor (underlineColor));
 			var ns = underlineStyle == UnderlineStyle.None ? 0 :
 			         (underlineStyle == UnderlineStyle.Single ? 0x1 : 0x9);
@@ -336,7 +336,7 @@ namespace Praeclarum
 					try {
 #if __IOS__
 						attrs.Link = new NSUrl (link);
-#elif MONOMAC
+#elif MONOMAC || __MACOS__
 						attrs.LinkUrl = new NSUrl (link);
 #endif
 					}

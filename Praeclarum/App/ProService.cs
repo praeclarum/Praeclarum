@@ -89,7 +89,7 @@ namespace Praeclarum.App
 			var appdel = DocumentAppDelegate.Shared;
 			var app = appdel.App;
 			var appName = app.Name;
-			IEnumerable<(int Months, string Name)> names = app.GetProPrices ();
+			IEnumerable<ProPriceSpec> names = app.GetProPrices ();
 			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
 			prices = names.Select (x => new ProPrice (bundleId + ".pro." + x.Months + "_month", x.Months, appName + " Pro (" + x.Name + ")")).ToArray ();
 		}

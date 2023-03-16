@@ -35,7 +35,7 @@ using NativeValue = System.Runtime.InteropServices.NFloat;
 using NativeValue = System.nfloat;
 #endif
 
-#if MONOMAC
+#if MONOMAC || __MACOS__
 using AppKit;
 #else
 using UIKit;
@@ -43,7 +43,7 @@ using UIKit;
 
 namespace Praeclarum.Graphics
 {
-#if !MONOMAC
+#if !(MONOMAC || __MACOS__)
 	public class UIKitGraphics : CoreGraphicsGraphics
 	{
 		public UIKitGraphics (CGContext c, bool highQuality)
@@ -52,7 +52,7 @@ namespace Praeclarum.Graphics
 		}
 	}
 #endif
-	
+
 	public class CoreGraphicsGraphics : IGraphics
 	{
 		CGContext _c;
@@ -284,7 +284,7 @@ namespace Praeclarum.Graphics
 				}
 			}
 			else if (f.FontFamily == "DBLCDTempBlack") {
-#if MONOMAC
+#if MONOMAC || __MACOS__
 				name = "Courier-Bold";
 #else
 				name = f.FontFamily;
@@ -400,7 +400,7 @@ namespace Praeclarum.Graphics
 
 		public IImage ImageFromFile (string filename)
 		{
-#if MONOMAC
+#if MONOMAC || __MACOS__
 			var img = new NSImage ("Images/" + filename);
 			var rect = new NativeRect (NativePoint.Empty, img.Size);
 			return new UIKitImage (img.AsCGImage (ref rect, NSGraphicsContext.CurrentContext, new Foundation.NSDictionary ()));
@@ -417,15 +417,15 @@ namespace Praeclarum.Graphics
 	public static class ColorEx
 	{
 		class ColorTag {
-#if MONOMAC
+#if MONOMAC || __MACOS__
 			public NSColor NSColor;
 #else
 			public UIColor UIColor;
 #endif
 			public CGColor CGColor;
 		}
-		
-#if MONOMAC
+
+#if MONOMAC || __MACOS__
 		public static NSColor GetNSColor (this Color c)
 		{
 			var t = c.Tag as ColorTag;
@@ -587,7 +587,7 @@ namespace Praeclarum.Graphics
 
 	public static class CGContextEx
 	{
-#if !MONOMAC
+#if !(MONOMAC || __MACOS__)
 		[System.Runtime.InteropServices.DllImport (ObjCRuntime.Constants.CoreGraphicsLibrary)]
 		extern static void CGContextShowTextAtPoint(IntPtr c, float x, float y, byte[] bytes, int size_t_length);
 		public static void ShowTextAtPoint (this CGContext c, float x, float y, byte[] bytes)

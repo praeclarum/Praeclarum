@@ -1,178 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{05E9FE96-8FBA-403A-879C-16A59954CEB8}</ProjectGuid>
-    <ProjectTypeGuids>{42C0BBD9-55CE-4FC1-8D90-A7348ABAFB23};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Praeclarum</RootNamespace>
-    <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>
-    <AssemblyName>Praeclarum.Mac</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFramework>net7.0-macos</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>false</ImplicitUsings>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;MONOMAC</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <UseSGen>false</UseSGen>
-    <IncludeMonoRuntime>false</IncludeMonoRuntime>
-    <EnablePackageSigning>false</EnablePackageSigning>
-    <CodeSigningKey>Mac Developer</CodeSigningKey>
-    <EnableCodeSigning>false</EnableCodeSigning>
     <CreatePackage>false</CreatePackage>
-    <UseRefCounting>false</UseRefCounting>
+    <UseSGen>false</UseSGen>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <LinkMode>Full</LinkMode>
+    <CreatePackage>false</CreatePackage>
     <UseSGen>false</UseSGen>
-    <IncludeMonoRuntime>true</IncludeMonoRuntime>
-    <EnablePackageSigning>false</EnablePackageSigning>
-    <CodeSigningKey>Developer ID Application</CodeSigningKey>
-    <EnableCodeSigning>true</EnableCodeSigning>
-    <CreatePackage>true</CreatePackage>
-    <DefineConstants>MONOMAC</DefineConstants>
-    <UseRefCounting>false</UseRefCounting>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'AppStore|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\AppStore</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <LinkMode>Full</LinkMode>
-    <UseSGen>false</UseSGen>
-    <IncludeMonoRuntime>true</IncludeMonoRuntime>
-    <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
-    <CreatePackage>true</CreatePackage>
-    <CodeSigningKey>3rd Party Mac Developer Application</CodeSigningKey>
-    <EnableCodeSigning>true</EnableCodeSigning>
-    <EnablePackageSigning>true</EnablePackageSigning>
-    <DefineConstants>MONOMAC</DefineConstants>
-    <UseRefCounting>false</UseRefCounting>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="XamMac" />
+      <None Remove="Praeclarum.Mac.Shared.projitems" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\Praeclarum.iOS\Graphics\CoreGraphicsGraphics.cs">
-      <Link>Graphics\CoreGraphicsGraphics.cs</Link>
+      <Link>CoreGraphicsGraphics.cs</Link>
     </Compile>
-    <Compile Include="MainWindowController.cs" />
-    <Compile Include="UI\UserInterfaceWindow.cs" />
-    <Compile Include="UI\Timer.cs" />
-    <Compile Include="UI\Canvas.cs" />
     <Compile Include="..\Praeclarum.iOS\NSMutableAttributedStringWrapper.cs">
       <Link>NSMutableAttributedStringWrapper.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\App\Document.cs">
-      <Link>App\Document.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Graphics.cs">
-      <Link>Graphics\Graphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\NullGraphics.cs">
-      <Link>Graphics\NullGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Point.cs">
-      <Link>Graphics\Point.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Rectangle.cs">
-      <Link>Graphics\Rectangle.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\SvgGraphics.cs">
-      <Link>Graphics\SvgGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Vector.cs">
-      <Link>Graphics\Vector.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\WmfGraphics.cs">
-      <Link>Graphics\WmfGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\IConsole.cs">
-      <Link>IO\IConsole.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\RichText.cs">
-      <Link>RichText.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\StringRange.cs">
-      <Link>StringRange.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ICanvas.cs">
-      <Link>UI\ICanvas.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ITextEditor.cs">
-      <Link>UI\ITextEditor.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ITimer.cs">
-      <Link>UI\ITimer.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\IView.cs">
-      <Link>UI\IView.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\UserInterface.cs">
-      <Link>UI\UserInterface.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\FileSystemManager.cs">
-      <Link>IO\FileSystemManager.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\IFileSystem.cs">
-      <Link>IO\IFileSystem.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\ListDiff.cs">
-      <Link>ListDiff.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Command.cs">
-      <Link>Command.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\DocumentReference.cs">
-      <Link>App\DocumentReference.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\IDocument.cs">
-      <Link>App\IDocument.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\IAppSettings.cs">
-      <Link>App\IAppSettings.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\Application.cs">
-      <Link>App\Application.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\DocumentApplication.cs">
-      <Link>App\DocumentApplication.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\IDocumentEditor.cs">
-      <Link>UI\IDocumentEditor.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\IDocumentsView.cs">
-      <Link>UI\IDocumentsView.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\StringHelper.cs">
-      <Link>StringHelper.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\AsyncExtensions.cs">
-      <Link>AsyncExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\HtmlRichText.cs">
-      <Link>HtmlRichText.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Log.cs">
-      <Link>Log.cs</Link>
+    <Compile Include="..\Praeclarum.iOS\CTStringAttributesWrapper.cs">
+      <Link>CTStringAttributesWrapper.cs</Link>
     </Compile>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\Praeclarum\Praeclarum.Shared.projitems" Label="Shared" Condition="Exists('..\Praeclarum\Praeclarum.Shared.projitems')" />
 </Project>

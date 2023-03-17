@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net7.0-ios;net7.0-maccatalyst;net7.0-macos</TargetFrameworks>
+    <TargetFrameworks>net7.0;net7.0-android;net7.0-ios;net7.0-maccatalyst;net7.0-macos</TargetFrameworks>
 
     <PackageId>Praeclarum.Utilities</PackageId>
     <Version>1.0.0</Version>
@@ -35,8 +35,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Praeclarum\Praeclarum.csproj" PrivateAssets="all" />
-    <ProjectReference Condition="$(TargetFramework.Contains('-macos'))" Include="..\Praeclarum.Mac\Praeclarum.Mac.csproj" PrivateAssets="all" />
+    <ProjectReference Condition="$(TargetFramework.Contains('-android'))" Include="..\Praeclarum.Android\Praeclarum.Android.csproj" PrivateAssets="all" />
     <ProjectReference Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))" Include="..\Praeclarum.iOS\Praeclarum.iOS.csproj" PrivateAssets="all" />
+    <ProjectReference Condition="$(TargetFramework.Contains('-macos'))" Include="..\Praeclarum.Mac\Praeclarum.Mac.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

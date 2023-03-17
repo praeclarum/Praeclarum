@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Utilities", "Praeclarum.Utilities\Praeclarum.Utilities.csproj", "{AAAD441D-9D26-4E7B-A560-86E22F01B2CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum", "Praeclarum\Praeclarum.csproj", "{1BFC2CDF-74DA-41CF-8D3A-FD50287EE821}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.Shared", "Praeclarum\Praeclarum.Shared.shproj", "{B8A8BCD4-7815-4994-A9AF-3E603C844835}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Mac", "Praeclarum.Mac\Praeclarum.Mac.csproj", "{6A6ED4BB-D71A-4CC6-937C-BA4B5A9323E7}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Praeclarum.iOS.Shared", "Praeclarum.iOS\Praeclarum.iOS.Shared.shproj", "{97D7EEB3-E116-4790-824A-54A8BB53D102}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Utilities", "Praeclarum.Utilities\Praeclarum.Utilities.csproj", "{1C9A9972-A715-4D0E-8D94-912F8F5E9748}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,9 +18,17 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AAAD441D-9D26-4E7B-A560-86E22F01B2CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AAAD441D-9D26-4E7B-A560-86E22F01B2CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AAAD441D-9D26-4E7B-A560-86E22F01B2CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AAAD441D-9D26-4E7B-A560-86E22F01B2CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BFC2CDF-74DA-41CF-8D3A-FD50287EE821}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BFC2CDF-74DA-41CF-8D3A-FD50287EE821}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BFC2CDF-74DA-41CF-8D3A-FD50287EE821}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BFC2CDF-74DA-41CF-8D3A-FD50287EE821}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A6ED4BB-D71A-4CC6-937C-BA4B5A9323E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A6ED4BB-D71A-4CC6-937C-BA4B5A9323E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A6ED4BB-D71A-4CC6-937C-BA4B5A9323E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A6ED4BB-D71A-4CC6-937C-BA4B5A9323E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C9A9972-A715-4D0E-8D94-912F8F5E9748}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C9A9972-A715-4D0E-8D94-912F8F5E9748}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C9A9972-A715-4D0E-8D94-912F8F5E9748}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C9A9972-A715-4D0E-8D94-912F8F5E9748}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

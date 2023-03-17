@@ -28,7 +28,7 @@ jobs:
       with:
         dotnet-version: 7.0.101
     - name: Install workloads
-      run: dotnet workload install ios maccatalyst macos
+      run: dotnet workload install ios maccatalyst macos android
     - name: Restore dependencies
       run: dotnet restore Praeclarum.Utilities.sln
     - name: Build

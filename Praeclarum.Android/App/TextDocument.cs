@@ -50,6 +50,8 @@ namespace Praeclarum.App
 		}
 
 		string textData = "";
+		private bool _disposedValue;
+
 		public virtual string TextData {
 			get {
 				return textData;
@@ -57,6 +59,24 @@ namespace Praeclarum.App
 			set {
 				textData = value ?? "";
 			}
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+			if (!_disposedValue)
+			{
+				if (disposing)
+				{
+				}
+				_disposedValue = true;
+			}
+		}
+
+		public void Dispose ()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose (disposing: true);
+			GC.SuppressFinalize (this);
 		}
 
 		#endregion

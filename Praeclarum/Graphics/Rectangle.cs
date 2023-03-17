@@ -154,13 +154,6 @@ namespace Praeclarum.Graphics
 		{
 			return new RectangleF (rect.X, rect.Y, rect.Width, rect.Height);
 		}
-
-#if __ANDROID__
-		public static global::Android.Graphics.Rect ToRect (this Praeclarum.Graphics.RectangleF rect)
-		{
-			return new global::Android.Graphics.Rect ((int)rect.Left, (int)rect.Top, (int)rect.Right, (int)rect.Bottom);
-		}
-#endif
 	}
 }
 

@@ -1,149 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{1A598D1A-2E83-4387-8F57-15A42ED5549D}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{F278D4AB-4730-4720-B08E-FE5E31564D9E};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Praeclarum</RootNamespace>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
-    <AndroidResgenClass>Resource</AndroidResgenClass>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
-    <AssemblyName>Praeclarum.Android</AssemblyName>
-    <TargetFrameworkVersion>v4.0.3</TargetFrameworkVersion>
+    <TargetFramework>net7.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>false</ImplicitUsings>
+    <Version>1.0.0</Version>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;__MOBILE__;__ANDROID__;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>__MOBILE__;__ANDROID__;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Mono.Android" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="..\Praeclarum\Properties\AssemblyInfo.cs">
-      <Link>Properties\AssemblyInfo.cs</Link>
+    <Compile Include="..\Praeclarum\UI\IThemeAware.cs">
+      <Link>UI\IThemeAware.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\AsyncExtensions.cs">
-      <Link>AsyncExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\ListDiff.cs">
-      <Link>ListDiff.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\RichText.cs">
-      <Link>RichText.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\StringRange.cs">
-      <Link>StringRange.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\Document.cs">
-      <Link>App\Document.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Graphics.cs">
-      <Link>Graphics\Graphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\NullGraphics.cs">
-      <Link>Graphics\NullGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Point.cs">
-      <Link>Graphics\Point.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Rectangle.cs">
-      <Link>Graphics\Rectangle.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\SvgGraphics.cs">
-      <Link>Graphics\SvgGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Vector.cs">
-      <Link>Graphics\Vector.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\WmfGraphics.cs">
-      <Link>Graphics\WmfGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\FileSystemManager.cs">
-      <Link>IO\FileSystemManager.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\IConsole.cs">
-      <Link>IO\IConsole.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\IFileSystem.cs">
-      <Link>IO\IFileSystem.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ICanvas.cs">
-      <Link>UI\ICanvas.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ITextEditor.cs">
-      <Link>UI\ITextEditor.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ITimer.cs">
-      <Link>UI\ITimer.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\IView.cs">
-      <Link>UI\IView.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\UserInterface.cs">
-      <Link>UI\UserInterface.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Command.cs">
-      <Link>Command.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\DocumentReference.cs">
-      <Link>App\DocumentReference.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\IDocument.cs">
-      <Link>App\IDocument.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\IAppSettings.cs">
-      <Link>App\IAppSettings.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\Application.cs">
-      <Link>App\Application.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\DocumentApplication.cs">
-      <Link>App\DocumentApplication.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\IDocumentEditor.cs">
-      <Link>UI\IDocumentEditor.cs</Link>
-    </Compile>
-    <Compile Include="UI\Canvas.cs" />
-    <Compile Include="Graphics\AndroidGraphics.cs" />
-    <Compile Include="UI\DocumentEditor.cs" />
-    <Compile Include="App\TextDocument.cs" />
-    <Compile Include="UI\DocumentListAppActivity.cs" />
-    <Compile Include="..\Praeclarum\UI\IDocumentsView.cs">
-      <Link>UI\IDocumentsView.cs</Link>
+    <Compile Include="..\Praeclarum\UI\Theme.cs">
+      <Link>UI\Theme.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\AboutResources.txt" />
+    <ProjectReference Include="..\Praeclarum\Praeclarum.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\values\Strings.xml" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>

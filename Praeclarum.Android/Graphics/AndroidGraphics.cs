@@ -401,4 +401,12 @@ namespace Praeclarum.Graphics
 
 		public int Descent { get; private set; }
 	}
+
+	public static class AndroidRectangleEx
+	{
+		public static global::Android.Graphics.Rect ToRect (this Praeclarum.Graphics.RectangleF rect)
+		{
+			return new global::Android.Graphics.Rect ((int)rect.Left, (int)rect.Top, (int)rect.Right, (int)rect.Bottom);
+		}
+	}
 }

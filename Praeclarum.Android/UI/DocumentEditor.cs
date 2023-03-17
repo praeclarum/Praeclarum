@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -35,6 +37,10 @@ namespace Praeclarum.UI
 			}
 		}
 
+		public IDocument Document => null;
+
+		public virtual bool IsPreviewing { get; set; }
+
 		public virtual void OnCreated ()
 		{
 		}
@@ -57,6 +63,11 @@ namespace Praeclarum.UI
 
 		public virtual void UnbindUI ()
 		{
+		}
+
+		public virtual Task SaveDocument ()
+		{
+			return Task.CompletedTask;
 		}
 
 		#endregion

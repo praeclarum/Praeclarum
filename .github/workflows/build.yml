@@ -19,6 +19,9 @@ jobs:
         VERSION_SUFFIX: ${{github.run_number}}
       run: |
         VERSION=$VERSION_PREFIX.$VERSION_SUFFIX
+        sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum/Praeclarum.csproj
+        sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.iOS/Praeclarum.iOS.csproj
+        sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Mac/Praeclarum.Mac.csproj
         sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Utilities/Praeclarum.Utilities.csproj
     - name: Setup .NET
       uses: actions/setup-dotnet@v3

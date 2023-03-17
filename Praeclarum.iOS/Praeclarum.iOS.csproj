@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
+    <Version>1.0.0</Version>
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <DefineConstants>NO_DROPBOX</DefineConstants>

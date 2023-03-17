@@ -3,6 +3,7 @@
     <TargetFramework>net7.0-macos</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

@@ -14,6 +14,8 @@
     <Compile Remove="UI\PForm.cs" />
     <Compile Remove="UI\ProForm.cs" />
     <Compile Remove="App\DocumentApplication.cs" />
+    <Compile Remove="UI\Theme.cs" />
+    <Compile Remove="UI\IThemeAware.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Properties\" />

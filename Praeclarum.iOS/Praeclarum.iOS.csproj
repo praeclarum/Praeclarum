@@ -1,184 +1,57 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BAEC0100-059C-4750-90E4-2D0392A76713}</ProjectGuid>
-    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Praeclarum</RootNamespace>
-    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>Praeclarum.iOS</AssemblyName>
-    <TargetFrameworkIdentifier>Xamarin.iOS</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
+    <TargetFrameworks>net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>false</ImplicitUsings>
+    <DefineConstants>NO_DROPBOX</DefineConstants>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;MONOTOUCH;UNIFIED</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
+    <CreatePackage>false</CreatePackage>
+    <UseSGen>false</UseSGen>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <DefineConstants>MONOTOUCH;UNIFIED</DefineConstants>
-    <MtouchDebug>true</MtouchDebug>
-    <MtouchProfiling>true</MtouchProfiling>
+    <CreatePackage>false</CreatePackage>
+    <UseSGen>false</UseSGen>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Xamarin.iOS" />
-    <Reference Include="OpenTK-1.0" />
-    <Reference Include="DropBoxSync.iOS">
-      <HintPath>..\Components\dropboxsync-3.1.2\lib\ios-unified\DropBoxSync.iOS.dll</HintPath>
-    </Reference>
+      <None Remove="Praeclarum.iOS.Shared.projitems" />
+      <None Remove="App\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UI\Layout.cs" />
-    <Compile Include="UI\ProceduralImage.cs" />
-    <Compile Include="UI\OldForm.cs" />
-    <Compile Include="UI\PForm.cs" />
-    <Compile Include="UI\PFormTableViewController.cs" />
-    <Compile Include="IO\CloudFileSystem.cs" />
-    <Compile Include="UI\TextInputController.cs" />
-    <Compile Include="UI\WhiteTheme.cs" />
-    <Compile Include="OpenUrlCommand.cs" />
-    <Compile Include="UI\Editor.cs" />
-    <Compile Include="Graphics\CoreGraphicsGraphics.cs" />
-    <Compile Include="NSMutableAttributedStringWrapper.cs" />
-    <Compile Include="CTStringAttributesWrapper.cs" />
-    <Compile Include="IO\DeviceFileSystem.cs" />
-    <Compile Include="IO\EmptyFileSystem.cs" />
-    <Compile Include="..\Praeclarum\App\Document.cs">
-      <Link>App\Document.cs</Link>
+    <Folder Include="App\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="IO\DropboxCoreFileSystem.cs" />
+    <Compile Remove="IO\DropboxFileSystem.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Praeclarum\App\StoreManager.cs">
+      <Link>App\StoreManager.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Graphics.cs">
-      <Link>Graphics\Graphics.cs</Link>
+    <Compile Include="..\Praeclarum\UI\ProForm.cs">
+      <Link>UI\ProForm.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\Graphics\NullGraphics.cs">
-      <Link>Graphics\NullGraphics.cs</Link>
+    <Compile Include="..\Praeclarum\App\ProService.cs">
+      <Link>App\ProService.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Point.cs">
-      <Link>Graphics\Point.cs</Link>
+    <Compile Include="..\Praeclarum\UI\PForm.cs">
+      <Link>UI\PForm.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Rectangle.cs">
-      <Link>Graphics\Rectangle.cs</Link>
+    <Compile Include="..\Praeclarum\App\DocumentAppSettings.cs">
+      <Link>App\DocumentAppSettings.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\Graphics\SvgGraphics.cs">
-      <Link>Graphics\SvgGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\Vector.cs">
-      <Link>Graphics\Vector.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Graphics\WmfGraphics.cs">
-      <Link>Graphics\WmfGraphics.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\IConsole.cs">
-      <Link>IO\IConsole.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Properties\AssemblyInfo.cs">
-      <Link>Properties\AssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\RichText.cs">
-      <Link>RichText.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\StringRange.cs">
-      <Link>StringRange.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ICanvas.cs">
-      <Link>UI\ICanvas.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ITextEditor.cs">
-      <Link>UI\ITextEditor.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\ITimer.cs">
-      <Link>UI\ITimer.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\IView.cs">
-      <Link>UI\IView.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\UI\UserInterface.cs">
-      <Link>UI\UserInterface.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\AsyncExtensions.cs">
-      <Link>AsyncExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\FileSystemManager.cs">
-      <Link>IO\FileSystemManager.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\IO\IFileSystem.cs">
-      <Link>IO\IFileSystem.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\ListDiff.cs">
-      <Link>ListDiff.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\Command.cs">
-      <Link>Command.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\DocumentReference.cs">
-      <Link>App\DocumentReference.cs</Link>
-    </Compile>
-    <Compile Include="..\Praeclarum\App\IDocument.cs">
-      <Link>App\IDocument.cs</Link>
-    </Compile>
-    <Compile Include="UI\StorageForm.cs" />
-    <Compile Include="UI\DocumentListAppDelegate.cs" />
-    <Compile Include="UI\TitleView.cs" />
-    <Compile Include="..\Praeclarum\App\IAppSettings.cs">
-      <Link>App\IAppSettings.cs</Link>
-    </Compile>
-    <Compile Include="App\DocumentAppSettings.cs" />
-    <Compile Include="IO\DropboxFileSystem.cs" />
-    <Compile Include="UI\ActivityIndicator.cs" />
-    <Compile Include="UI\DocumentEditor.cs" />
-    <Compile Include="App\TextDocument.cs" />
-    <Compile Include="..\Praeclarum\App\Application.cs">
-      <Link>App\Application.cs</Link>
+    <Compile Include="..\Praeclarum\UI\OpenUrlCommand.cs">
+      <Link>UI\OpenUrlCommand.cs</Link>
     </Compile>
     <Compile Include="..\Praeclarum\App\DocumentApplication.cs">
       <Link>App\DocumentApplication.cs</Link>
     </Compile>
-    <Compile Include="..\Praeclarum\UI\IDocumentEditor.cs">
-      <Link>UI\IDocumentEditor.cs</Link>
+    <Compile Include="..\Praeclarum\UI\IThemeAware.cs">
+      <Link>UI\IThemeAware.cs</Link>
     </Compile>
-    <Compile Include="UI\Canvas.cs" />
-    <Compile Include="UI\DocumentAppDelegate.cs" />
-    <Compile Include="UI\DocumentsViewController.cs" />
-    <Compile Include="UI\DocumentListView.cs" />
-    <Compile Include="UI\DocumentThumbnailsView.cs" />
-    <Compile Include="UI\DocumentThumbnailsAppDelegate.cs" />
-    <Compile Include="UI\ImageCache.cs" />
-    <Compile Include="..\Praeclarum\UI\IDocumentsView.cs">
-      <Link>UI\IDocumentsView.cs</Link>
-    </Compile>
-    <Compile Include="SingleThreadQueue.cs" />
-    <Compile Include="UI\ScrollableCanvas.cs" />
-    <Compile Include="..\Praeclarum\Graphics\Stroke.cs">
-      <Link>Graphics\Stroke.cs</Link>
-    </Compile>
-    <Compile Include="UI\ViewAnimation.cs" />
-    <Compile Include="..\Praeclarum\StringHelper.cs">
-      <Link>StringHelper.cs</Link>
-    </Compile>
-    <Compile Include="Graphics\GLGraphics.cs" />
-    <Compile Include="UI\SelectableButtonItem.cs" />
-    <Compile Include="UI\MoveDocumentsForm.cs" />
-    <Compile Include="..\Praeclarum\Log.cs">
-      <Link>Log.cs</Link>
-    </Compile>
-    <Compile Include="UI\DarkModeSection.cs" />
-    <Compile Include="UI\DynamicSplitViewController.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Praeclarum\Praeclarum.csproj" />
+  </ItemGroup>
 </Project>

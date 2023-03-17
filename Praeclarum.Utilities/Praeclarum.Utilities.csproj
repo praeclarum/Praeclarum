@@ -36,6 +36,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Praeclarum\Praeclarum.csproj" PrivateAssets="all" />
     <ProjectReference Condition="$(TargetFramework.Contains('-macos'))" Include="..\Praeclarum.Mac\Praeclarum.Mac.csproj" PrivateAssets="all" />
+    <ProjectReference Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst'))" Include="..\Praeclarum.iOS\Praeclarum.iOS.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

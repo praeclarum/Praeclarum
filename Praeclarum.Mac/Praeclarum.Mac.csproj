@@ -48,6 +48,12 @@
     <Compile Include="..\Praeclarum\App\DocumentApplication.cs">
       <Link>App\DocumentApplication.cs</Link>
     </Compile>
+    <Compile Include="..\Praeclarum\UI\IThemeAware.cs">
+      <Link>UI\IThemeAware.cs</Link>
+    </Compile>
+    <Compile Include="..\Praeclarum\UI\Theme.cs">
+      <Link>UI\Theme.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App\" />

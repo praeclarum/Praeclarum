@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Mac", "Praeclaru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.Utilities", "Praeclarum.Utilities\Praeclarum.Utilities.csproj", "{1C9A9972-A715-4D0E-8D94-912F8F5E9748}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Praeclarum.iOS", "Praeclarum.iOS\Praeclarum.iOS.csproj", "{1715EDA6-58D5-48B5-B278-FD4323D88E8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{1C9A9972-A715-4D0E-8D94-912F8F5E9748}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C9A9972-A715-4D0E-8D94-912F8F5E9748}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C9A9972-A715-4D0E-8D94-912F8F5E9748}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1715EDA6-58D5-48B5-B278-FD4323D88E8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1715EDA6-58D5-48B5-B278-FD4323D88E8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1715EDA6-58D5-48B5-B278-FD4323D88E8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1715EDA6-58D5-48B5-B278-FD4323D88E8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

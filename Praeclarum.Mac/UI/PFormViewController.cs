@@ -166,9 +166,15 @@ namespace Praeclarum.UI
 			Distribution = NSStackViewDistribution.FillEqually;
 
 			titleLabel = NSTextField.CreateLabel (section.Title);
-			titleLabel.Font = NSFont.BoldSystemFontOfSize(NSFont.SystemFontSize * 1.25f);
+			if (NSFont.BoldSystemFontOfSize (NSFont.SystemFontSize * 1.25f) is { } titleFont)
+			{
+				titleLabel.Font = titleFont;
+			}
 			hintLabel = NSTextField.CreateWrappingLabel (section.Hint);
-			hintLabel.Font = NSFont.SystemFontOfSize(NSFont.SystemFontSize);
+			if (NSFont.SystemFontOfSize(NSFont.SystemFontSize) is { } hintFont)
+			{
+				hintLabel.Font = hintFont;
+			}
 
 			ReloadSection();
 		}

@@ -221,7 +221,8 @@ namespace Praeclarum.App
 			var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
 			if (p == null)
 				return;
-			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p, GetThisPlatform());
+			DateTime transactionDate = (DateTime)(t.TransactionDate ?? NSDate.Now);
+			await AddSubscriptionAsync (t.TransactionIdentifier, transactionDate, t.TransactionState, p, GetThisPlatform());
 		}
 
 		public Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)

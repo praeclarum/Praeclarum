@@ -229,7 +229,8 @@ namespace Praeclarum.UI
 			var p = prices.FirstOrDefault(x => x.Id == t.Payment.ProductIdentifier);
 			if (p == null)
 				return;
-			await AddSubscriptionAsync(t.TransactionIdentifier, (DateTime)t.TransactionDate, t.TransactionState, p);
+			DateTime transactionDate = (DateTime)(t.TransactionDate ?? NSDate.Now);
+			await AddSubscriptionAsync(t.TransactionIdentifier, transactionDate, t.TransactionState, p);
 		}
 
 		class ProAboutSection : PFormSection

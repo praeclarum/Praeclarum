@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -357,8 +358,10 @@ namespace Praeclarum
         [JsonIgnore, Praeclarum.Inspector.InspectorIgnore]
         public string Json {
             get {
-                try {
-                    return JsonConvert.SerializeObject (this, JsonSerializerSettings);
+                try
+                {
+	                var settings = GetJsonSerializerSettings (GetType ().Assembly);
+                    return JsonConvert.SerializeObject (this, settings);
                 }
                 catch (Exception ex) {
                     Log.Error ($"Failed to serialize {this}", ex);
@@ -367,7 +370,7 @@ namespace Praeclarum
             }
         }
 
-        static Lazy<JsonSerializerSettings> jsonSerializerSettings = new Lazy<JsonSerializerSettings> (() => {
+        public static JsonSerializerSettings GetJsonSerializerSettings(Assembly assembly) {
             return new JsonSerializerSettings {
                 Formatting = Formatting.Indented,
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
@@ -378,13 +381,20 @@ namespace Praeclarum
                     new SceneKitConverter ()
                     #endif
                 },
-                SerializationBinder = new AssemblylessTypeBinder (),
+                SerializationBinder = new AssemblylessTypeBinder (assembly),
             };
-        });
+        }
 
         class AssemblylessTypeBinder : Newtonsoft.Json.Serialization.ISerializationBinder
         {
-            public void BindToName (Type serializedType, out string? assemblyName, out string typeName)
+	        private readonly Assembly assembly;
+
+	        public AssemblylessTypeBinder(Assembly assembly)
+	        {
+		        this.assembly = assembly;
+	        }
+
+	        public void BindToName (Type serializedType, out string? assemblyName, out string typeName)
             {
                 assemblyName = null;
                 typeName = serializedType.FullName;
@@ -392,15 +402,17 @@ namespace Praeclarum
 
             public Type BindToType (string? assemblyName, string typeName)
             {
-                var t = Type.GetType (typeName);
+                var t = assembly.GetType (typeName);
+                if (t is null)
+                {
+	                t = Type.GetType (typeName);
+                }
                 if (t == null || t.IsAbstract) {
-                    t = typeof (Entity);
+                    t = typeof (Praeclarum.Entity);
                 }
                 return t;
             }
         }
-
-        public static JsonSerializerSettings JsonSerializerSettings => jsonSerializerSettings.Value;
 
 		#if __MACOS__ || __IOS__
         class SceneKitConverter : JsonConverter

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Praeclarum
@@ -40,6 +41,18 @@ namespace Praeclarum
 			{
 			}
 		}
+		
+		public static void QuietError (string context, Exception ex)
+		{
+			try {
+				if (ex == null)
+					return;
+				WriteLine("E", String.Format ("{0}: {1}", context, ex));
+			}
+			catch
+			{
+			}
+		}
 
 		public static void Error (string message)
 		{
@@ -57,6 +70,16 @@ namespace Praeclarum
 			try {
 				Logger?.TrackEvent (message, null);
 				WriteLine ("A", message);
+			}
+			catch {
+			}
+		}
+		
+		public static void Analytics (string message, params ValueTuple<string, string>[] values)
+		{
+			try {
+				Logger?.TrackEvent (message, null);
+				WriteLine ("A", message + " " + string.Join (" ", values.Select (v => v.Item1 + "=" + v.Item2)));
 			}
 			catch {
 			}

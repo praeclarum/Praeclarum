@@ -9,7 +9,11 @@
     <Import_RootNamespace>Praeclarum.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)App\ProPriceSpec.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Inspector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MathEx.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NumberFormatting.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UIKit.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AsyncExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HtmlRichText.cs" />
@@ -24,6 +28,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)App\DocumentReference.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\IAppSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)App\IDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\ProPriceSpec.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\ProService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)App\DocumentAppSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\Graphics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\NullGraphics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Graphics\Rectangle.cs" />
@@ -45,8 +52,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Localization.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\EmptyFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Theme.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)App\ProService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)App\DocumentAppSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ProForm.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\PForm.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\IThemeAware.cs" />

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFrameworks>net7.0;net7.0-macos;net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <Version>1.0.0</Version>

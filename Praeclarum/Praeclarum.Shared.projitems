@@ -9,6 +9,7 @@
     <Import_RootNamespace>Praeclarum.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)App\ProPriceSpec.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AsyncExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Command.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HtmlRichText.cs" />

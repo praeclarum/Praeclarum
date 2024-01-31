@@ -677,8 +677,7 @@ namespace UIKit
             var stack = contextStack.Value;
             if (stack != null) {
                 if (stack.TryPop (out var ctx)) {
-                    //NSGraphicsContext.CurrentContext = ctx.PrevContext;
-                    var handle = ctx.PrevContext != null ? ctx.PrevContext.Handle : IntPtr.Zero;
+                    var handle = ctx.PrevContext != null ? (IntPtr)ctx.PrevContext.Handle : IntPtr.Zero;
                     void_objc_msgSend_IntPtr (classNSGraphicsContext_Handle, selSetCurrentContext_Handle, handle);
                     ctx.Context.Dispose ();
                 }

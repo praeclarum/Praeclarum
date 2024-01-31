@@ -141,7 +141,7 @@ namespace Praeclarum
             if (method != null) {
                 newAction = (Action<T>)method.CreateDelegate (typeof (Action<T>), this);
             }
-            else if (this is IHasEditInfos hei) {
+            else if (this is Praeclarum.Inspector.IHasEditInfos hei) {
                 newAction = newValue => {
                     hei.SetEditValue (propertyName, newValue);
                 };
@@ -354,7 +354,7 @@ namespace Praeclarum
             public override string ToString () => $"#{EventId} {Message}";
         }
 
-        [JsonIgnore, InspectorIgnore]
+        [JsonIgnore, Praeclarum.Inspector.InspectorIgnore]
         public string Json {
             get {
                 try {

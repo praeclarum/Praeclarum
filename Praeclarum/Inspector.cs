@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using Foundation;
 using System.Reflection;
 using System.Linq;
 
@@ -16,10 +15,14 @@ using SCNFloat = System.Single;
 #elif __MACOS__
 using SceneKit;
 using UIKit;
+#if NET6_0_OR_GREATER
+using SCNFloat = System.Runtime.InteropServices.NFloat;
+#else
 using SCNFloat = System.nfloat;
 #endif
+#endif
 
-namespace Praeclarum
+namespace Praeclarum.Inspector
 {
     public class InspectorAttribute : Attribute
     {
@@ -46,9 +49,11 @@ namespace Praeclarum
     {
     }
 
-    public class EditContext
+    public class EditContextBase
     {
-        public virtual NSUndoManager? UndoManager => null;
+        #if __IOS__ || __MACOS__
+        public virtual Foundation.NSUndoManager? UndoManager => null;
+        #endif
         
         public virtual object? EvalExpression (string exp)
         {
@@ -62,15 +67,17 @@ namespace Praeclarum
 
     public interface IHasEditInfos
     {
-        IEnumerable<EditInfo> GetEditInfos (EditContext context);
+        IEnumerable<EditInfo> GetEditInfos (EditContextBase context);
         void SetEditValue (string name, object? value);
     }
 
     public class EditInfo
     {
-        public EditContext Context { get; }
+        public EditContextBase Context { get; }
 
-        public NSUndoManager? UndoManager => Context.UndoManager;
+        #if __IOS__ || __MACOS__
+        public Foundation.NSUndoManager? UndoManager => Context.UndoManager;
+        #endif
 
         public readonly InspectorAttribute Attributes;
 
@@ -114,7 +121,7 @@ namespace Praeclarum
 
         public event EventHandler? ValueUpdated;
 
-        public EditInfo (EditContext context, object? target, string englishName, object? initialValue, Type valueType, InspectorAttribute attributes)
+        public EditInfo (EditContextBase context, object? target, string englishName, object? initialValue, Type valueType, InspectorAttribute attributes)
         {
             Context = context;
             Target = target;
@@ -147,18 +154,29 @@ namespace Praeclarum
             }
         }
 
-        public void BeginEdit () => UndoManager?.BeginUndoGrouping ();
-        public void EndEdit () => UndoManager?.EndUndoGrouping ();
+        public void BeginEdit ()
+        {
+	        #if __IOS__ || __MACOS__
+	        UndoManager?.BeginUndoGrouping ();
+	        #endif
+        }
+
+        public void EndEdit ()
+        {
+			#if __IOS__ || __MACOS__
+	        UndoManager?.EndUndoGrouping ();
+	        #endif
+        }
 
         public bool IsCommand => Executor != null;
 
-        public bool IsVector => Value is SCNVector3;
-
         public bool IsColor =>
+	        #if __IOS__ || __MACOS__
             (Value == null && (ValueType == typeof (UIColor) || ValueType == typeof (Color)))
             || Value is UIColor
-            || Value is Color
-            || (Attributes.IsColor && (Value is SCNVector3 || Value is SCNVector4));
+            || (Attributes.IsColor && (Value is SCNVector3 || Value is SCNVector4)) ||
+            #endif
+            Value is Color;
 
         public bool IsBool => Value is bool;
 
@@ -252,6 +270,8 @@ namespace Praeclarum
 
         public static readonly string NullString = "None".Localize ();
 
+        #if __IOS__ || __MACOS__
+	    public bool IsVector => Value is SCNVector3;
         public SCNVector3 VectorValue {
             get {
                 try {
@@ -278,6 +298,7 @@ namespace Praeclarum
                 }
             }
         }
+        #endif
 
         public Color ColorValue {
             get {
@@ -285,9 +306,11 @@ namespace Praeclarum
                     return Value switch
                     {
                         Color ngc => ngc,
+                        #if __IOS__ || __MACOS__
                         SCNVector3 v3 => v3.GetNGraphicsColor (),
                         SCNVector4 v4 => v4.GetNGraphicsColor (),
                         UIColor uic => uic.GetNGraphicsColor (),
+                        #endif
                         _ => Colors.Black,
                     };
                 }
@@ -298,12 +321,13 @@ namespace Praeclarum
             set {
                 try {
                     switch (Value) {
-                        case null when ValueType == typeof (UIColor):
-                            Value = Rgbaf (value.Red, value.Green, value.Blue, value.Alpha);
-                            break;
                         case Color ngc:
                             Value = value;
                             break;
+                        #if __IOS__ || __MACOS__
+                        case null when ValueType == typeof (UIColor):
+	                        Value = Rgbaf (value.Red, value.Green, value.Blue, value.Alpha);
+	                        break;
                         case SCNVector3 v3:
                             Value = Xyz (value.Red, value.Green, value.Blue);
                             break;
@@ -313,6 +337,7 @@ namespace Praeclarum
                         case UIColor uic:
                             Value = Rgbaf (value.Red, value.Green, value.Blue, value.Alpha);
                             break;
+                        #endif
                     }
                 }
                 catch (Exception ex) {
@@ -361,10 +386,12 @@ namespace Praeclarum
                             scode += "...";
                         return scode;
                     }
+                    #if __IOS__ || __MACOS__
                     else if (IsVector) {
                         var v = VectorValue;
                         return $"[{((double)v.X).ToUnitsString ("")}, {((double)v.Y).ToUnitsString ("")}, {((double)v.Z).ToUnitsString ("")}]";
                     }
+                    #endif
                     else {
                         return Value?.ToString () ?? "";
                     }
@@ -437,6 +464,7 @@ namespace Praeclarum
                                 break;
                         }
                     }
+                    #if __IOS__ || __MACOS__
                     else if (IsVector) {
                         var exp = Context.EvalExpression (trim);
                         if (exp is double[] ae) {
@@ -450,6 +478,7 @@ namespace Praeclarum
                             VectorValue = r;
                         }
                     }
+                    #endif
                     else if (Value != null) {
                         if (TryChangeType (safeValue, Value.GetType (), out var tvalue)) {
                             Value = tvalue;
@@ -514,7 +543,7 @@ namespace Praeclarum
             return (byte)(b * 16 + l);
         }
 
-        public static EditInfo[] GetEditInfos (object target, EditContext context)
+        public static EditInfo[] GetEditInfos (object target, EditContextBase context)
         {
             var infos = new List<EditInfo> ();
 
@@ -534,7 +563,7 @@ namespace Praeclarum
             return infos.OrderBy (x => x.SortOrder).ToArray ();
         }
 
-        public static IEnumerable<EditInfo> GetEditInfosForMember (object? target, MemberInfo m, EditContext context)
+        public static IEnumerable<EditInfo> GetEditInfosForMember (object? target, MemberInfo m, EditContextBase context)
         {
             if (m.Name.StartsWith ("ShouldInspect", StringComparison.Ordinal) ||
                 m.Name.StartsWith ("ShouldSerialize", StringComparison.Ordinal))
@@ -558,7 +587,7 @@ namespace Praeclarum
                 if (method.IsSpecialName) yield break;
                 var parameters = method.GetParameters ();
                 if (parameters.Length > 1) yield break;
-                if (parameters.Length > 0 && parameters[0].ParameterType != typeof (EditContext)) yield break;
+                if (parameters.Length > 0 && parameters[0].ParameterType != typeof (EditContextBase)) yield break;
                 if (method.ReturnType != typeof (void)) yield break;
 
                 var baseMethod = method;

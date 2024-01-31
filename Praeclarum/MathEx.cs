@@ -8,6 +8,12 @@ using UIKit;
 using CoreGraphics;
 #endif
 
+#if NET7_0_OR_GREATER
+using NFloat = System.Runtime.InteropServices.NFloat;
+#else
+using NFloat = System.nfloat;
+#endif
+
 namespace Praeclarum
 {
     public static class MathEx
@@ -16,7 +22,7 @@ namespace Praeclarum
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return mac;
 #endif
         }
@@ -24,7 +30,7 @@ namespace Praeclarum
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return mac;
 #endif
         }
@@ -32,15 +38,15 @@ namespace Praeclarum
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return mac;
 #endif
         }
-        public static nfloat Plat (nfloat ios, nfloat mac)
+        public static NFloat Plat (NFloat ios, NFloat mac)
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return mac;
 #endif
         }
@@ -48,7 +54,7 @@ namespace Praeclarum
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return mac;
 #endif
         }
@@ -56,7 +62,7 @@ namespace Praeclarum
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return (int)(ios * 0.77 + 0.5);
 #endif
         }
@@ -64,23 +70,23 @@ namespace Praeclarum
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return ios * 0.77f;
 #endif
         }
-        public static nfloat Plat (nfloat ios)
+        public static NFloat Plat (NFloat ios)
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
-            return ios * (nfloat)0.77;
+#else
+            return ios * (NFloat)0.77;
 #endif
         }
         public static double Plat (double ios)
         {
 #if __IOS__
             return ios;
-#elif __MACOS__
+#else
             return ios * 0.77;
 #endif
         }
@@ -252,9 +258,11 @@ namespace Praeclarum
 		    return new NGraphics.Color ((double)color.X, (double)color.Y, (double)color.Z, (double)color.W);
 	    }
         
+		#if !NET6_0_OR_GREATER
 	    public static OpenTK.Vector2 ToVector2 (this CGPoint xy) => new OpenTK.Vector2 ((float)xy.X, (float)xy.Y);
 
 	    public static CGPoint ToCGPoint (this OpenTK.Vector2 xy) => new CGPoint (xy.X, xy.Y);
+	    #endif
 
         public static SCNMatrix4 Rotate (SCNVector3 axis, double radians) => SCNMatrix4.CreateFromAxisAngle (axis, (float)radians);
 

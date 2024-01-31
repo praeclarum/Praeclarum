@@ -41,6 +41,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)IO\FileSystemManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\IConsole.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\IFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\DeviceFileSystem.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ICanvas.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\IDocumentEditor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\IDocumentsView.cs" />

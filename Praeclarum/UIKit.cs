@@ -366,8 +366,8 @@ namespace UIKit
         public static readonly UIColor Blue = new UIColor (NSColor.Blue);
         public static readonly UIColor Yellow = new UIColor (NSColor.Yellow);
 
-        public static readonly UIColor SystemBackgroundColor = new UIColor (NSColor.TextBackground);
-        public static readonly UIColor LabelColor = new UIColor (NSColor.Label);
+        public static readonly UIColor SystemBackground = new UIColor (NSColor.TextBackground);
+        public static readonly UIColor Label = new UIColor (NSColor.Label);
 
         public static readonly ThreadLocal<UIColor> currentFill = new ThreadLocal<UIColor> ();
         public static UIColor CurrentFill => currentFill.Value;

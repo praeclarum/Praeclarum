@@ -4,12 +4,16 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="CLanguage" Version="0.20.74" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageVersion Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageVersion Include="Newtonsoft.Json.Bson" Version="1.0.2" />
     <PackageVersion Include="NGraphics" Version="0.6.0-beta2" />
+    <PackageVersion Include="NUnit" Version="3.12.0" />
+    <PackageVersion Include="NUnit3TestAdapter" Version="3.16.1" />
     <PackageVersion Include="SkiaSharp" Version="2.88.7" />
     <PackageVersion Include="SkiaSharp.Views" Version="2.88.7" />
     <PackageVersion Include="SkiaSharp.Views.Maui.Controls" Version="2.88.7" />
+    <PackageVersion Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage" Version="1.0.0" />
     <PackageVersion Include="Xamarin.Legacy.OpenTK" Version="1.0.2" />
   </ItemGroup>
 </Project>

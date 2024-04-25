@@ -12,10 +12,10 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Update Versions
       env:
-        VERSION_PREFIX: 0.3
+        VERSION_PREFIX: 0.4
         VERSION_SUFFIX: ${{github.run_number}}
       run: |
         VERSION=$VERSION_PREFIX.$VERSION_SUFFIX
@@ -24,9 +24,9 @@ jobs:
         sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Mac/Praeclarum.Mac.csproj
         sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Utilities/Praeclarum.Utilities.csproj
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 7.0.101
+        global-json-file: global.json
     - name: Install workloads
       run: dotnet workload install ios maccatalyst macos android
     - name: Restore dependencies
@@ -36,7 +36,7 @@ jobs:
     - name: Pack
       run: dotnet pack -c Release Praeclarum.Utilities.sln -o .
     - name: Store nuget
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Praeclarum.UtilitiesNuget
         path: "*.nupkg"

@@ -12,6 +12,7 @@ using AppKit;
 using Foundation;
 using CoreGraphics;
 using ObjCRuntime;
+// ReSharper disable InconsistentNaming
 
 namespace UIKit
 {
@@ -171,7 +172,9 @@ namespace UIKit
 
     public enum UIBlurEffectStyle
     {
-        Dark
+        Dark,
+        ExtraDark,
+        Light,
     }
 
     public class UIButton : NSButton
@@ -316,6 +319,17 @@ namespace UIKit
     public class UICollectionViewFlowLayout : NSCollectionViewFlowLayout
     {
     }
+
+    public class UIDevice : NSObject
+	{
+		public static UIDevice CurrentDevice { get; } = new UIDevice ();
+		//public UIUserInterfaceIdiom UserInterfaceIdiom { get; } = UIUserInterfaceIdiom.Desktop;
+
+		public bool CheckSystemVersion (int major, int minor)
+		{
+			return true;
+		}
+	}
 
     abstract class NSDispatcher : NSObject
     {
@@ -859,6 +873,69 @@ namespace UIKit
                 }
             }
         }
+        public new UILineBreakMode LineBreakMode
+        {
+	        get
+	        {
+		        switch (base.LineBreakMode)
+		        {
+			        case NSLineBreakMode.CharWrapping:
+				        return UILineBreakMode.CharacterWrap;
+			        case NSLineBreakMode.Clipping:
+				        return UILineBreakMode.Clip;
+			        case NSLineBreakMode.TruncatingHead:
+				        return UILineBreakMode.HeadTruncation;
+			        case NSLineBreakMode.TruncatingTail:
+				        return UILineBreakMode.TailTruncation;
+			        case NSLineBreakMode.TruncatingMiddle:
+				        return UILineBreakMode.MiddleTruncation;
+			        case NSLineBreakMode.ByWordWrapping:
+				    default:
+				        return UILineBreakMode.WordWrap;
+		        }
+	        }
+	        set
+	        {
+		        switch (value)
+		        {
+			        case UILineBreakMode.Clip:
+				        base.LineBreakMode = NSLineBreakMode.Clipping;
+				        break;
+			        case UILineBreakMode.CharacterWrap:
+				        base.LineBreakMode = NSLineBreakMode.CharWrapping;
+				        break;
+			        case UILineBreakMode.HeadTruncation:
+				        base.LineBreakMode = NSLineBreakMode.TruncatingHead;
+				        break;
+			        case UILineBreakMode.MiddleTruncation:
+				        base.LineBreakMode = NSLineBreakMode.TruncatingMiddle;
+				        break;
+			        case UILineBreakMode.TailTruncation:
+				        base.LineBreakMode = NSLineBreakMode.TruncatingTail;
+				        break;
+			        case UILineBreakMode.WordWrap:
+				    default:
+				        base.LineBreakMode = NSLineBreakMode.ByWordWrapping;
+				        break;
+		        }
+	        }
+        }
+        public int Lines
+        {
+	        get;
+	        set;
+        }
+
+        public bool AdjustsFontSizeToFitWidth
+        {
+	        get;
+	        set;
+        }
+        public nfloat Alpha
+        {
+	        get => base.AlphaValue;
+	        set => base.AlphaValue = value;
+        }
         public UILabel ()
         {
             Initialize ();
@@ -908,6 +985,16 @@ namespace UIKit
     {
         Horizontal,
         Vertical
+    }
+
+    public enum UILineBreakMode
+    {
+	    WordWrap,
+	    CharacterWrap,
+	    Clip,
+	    HeadTruncation,
+	    TailTruncation,
+	    MiddleTruncation,
     }
 
     public enum UIModalPresentationStyle
@@ -1025,6 +1112,14 @@ namespace UIKit
                 Delegate?.Scrolled (this);
             });
         }
+
+        public UIScrollView () : this (CGRect.Empty) { }
+
+        public new UIViewAutoresizing AutoresizingMask {
+	        get => this.GetAutoresizingMask ();
+	        set => this.SetAutoresizingMask (value);
+        }
+
         public void ScrollRectToVisible (CGRect aRect, bool animated)
         {
             ScrollRectToVisible (aRect);
@@ -1333,6 +1428,17 @@ namespace UIKit
             get => this.GetAutoresizingMask ();
             set => this.SetAutoresizingMask (value);
         }
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        static extern bool bool_objc_msgSend(IntPtr receiver, IntPtr selector);
+        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+        static extern bool void_objc_msgSend_bool(IntPtr receiver, IntPtr selector, bool arg0);
+
+        static readonly IntPtr s_clipsToBounds = Selector.GetHandle("clipsToBounds");
+        static readonly IntPtr s_setClipsToBounds = Selector.GetHandle("setClipsToBounds:");
+        public bool ClipsToBounds {
+	        get => bool_objc_msgSend(Handle, s_clipsToBounds);
+	        set => void_objc_msgSend_bool(Handle, s_setClipsToBounds, value);
+        }
         public UIView ()
         {
         }
@@ -1356,7 +1462,7 @@ namespace UIKit
             base.Layout ();
             LayoutSubviews ();
         }
-        public void SetNeedsDisplay ()
+        public virtual void SetNeedsDisplay ()
         {
             this.SetNeedsDisplayInRect (Bounds);
         }
@@ -1411,6 +1517,16 @@ namespace UIKit
             TouchesEnded (new NSSet (new NSObject[] { mouseTouch }), new UIEvent (theEvent));
             mouseTouch = null;
             //base.MouseUp (theEvent);
+        }
+
+        public static void BeginAnimations (string name)
+        {
+	        NSAnimationContext.BeginGrouping ();
+	    }
+
+        public static void CommitAnimations ()
+        {
+	        NSAnimationContext.EndGrouping ();
         }
     }
 
@@ -1626,11 +1742,16 @@ namespace UIKit
     public class UIVisualEffectView : NSVisualEffectView
     {
         public NSView ContentView => this;
+        public UIVisualEffect Effect { get; set; }
         public new UIViewAutoresizing AutoresizingMask {
             get => this.GetAutoresizingMask ();
             set => this.SetAutoresizingMask (value);
         }
         public UIVisualEffectView (UIVisualEffect visualEffect)
+        {
+	        this.Effect = visualEffect;
+        }
+        public UIVisualEffectView ()
         {
         }
     }

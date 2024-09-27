@@ -187,6 +187,12 @@ namespace UIKit
 	        set => base.Highlighted = value;
         }
 
+        public UIColor TintColor
+        {
+	        get => UIColor.FromNSColor (base.ContentTintColor);
+	        set => base.ContentTintColor = value;
+        }
+
         public UIButton ()
         {
             BezelStyle = NSBezelStyle.RoundRect;
@@ -398,6 +404,16 @@ namespace UIKit
         public UIColor (NSColor color)
         {
             this.color = color;
+        }
+
+        public static UIColor FromNSColor (NSColor color)
+        {
+	        if (color is null)
+	        {
+		        return null;
+	        }
+
+	        return new UIColor (color);
         }
 
         public override string ToString () => color?.ToString () ?? "";
@@ -846,6 +862,12 @@ namespace UIKit
             get => this.StringValue;
             set => this.StringValue = value;
         }
+
+        public new UIColor TextColor
+        {
+	        get => new UIColor (base.TextColor);
+	        set => base.TextColor = value;
+        }
         public UITextAlignment TextAlignment {
             get {
                 switch (this.Alignment) {
@@ -1134,6 +1156,7 @@ namespace UIKit
             };
             boundsNote = NSView.Notifications.ObserveBoundsChanged ((s, e) => {
                 Delegate?.Scrolled (this);
+                Scrolled?.Invoke (this, EventArgs.Empty);
             });
         }
 

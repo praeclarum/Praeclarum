@@ -181,6 +181,12 @@ namespace UIKit
     {
         NSActionDispatcher dispatcher;
 
+        public bool Selected
+        {
+	        get => base.Highlighted;
+	        set => base.Highlighted = value;
+        }
+
         public UIButton ()
         {
             BezelStyle = NSBezelStyle.RoundRect;
@@ -427,7 +433,8 @@ namespace UIKit
 
     public enum UIControlState
     {
-        Normal
+        Normal,
+        Selected,
     }
 
     public class UIDocument : NSDocument
@@ -798,7 +805,10 @@ namespace UIKit
     public class UIImageView : NSImageView
     {
         public UIColor BackgroundColor { get; set; }
-        public bool ClipsToBounds { get; set; }
+        public bool ClipsToBounds {
+	        get => Messaging.bool_objc_msgSend(Handle, UIView.s_clipsToBounds);
+	        set => Messaging.void_objc_msgSend_bool(Handle, UIView.s_setClipsToBounds, value);
+        }
     }
 
     public class UIImpactFeedbackGenerator : NSObject
@@ -1041,6 +1051,7 @@ namespace UIKit
         readonly NSPanGestureRecognizer recognizer;
         protected override NSGestureRecognizer NSRecognizer => recognizer;
         public static implicit operator NSPanGestureRecognizer (UIPanGestureRecognizer r) => r.recognizer;
+        public Func<UIGestureRecognizer, bool> ShouldBegin { get; set; }
         public UIPanGestureRecognizer (NSPanGestureRecognizer recognizer)
         {
             this.recognizer = recognizer;
@@ -1048,6 +1059,11 @@ namespace UIKit
         public UIPanGestureRecognizer (Action<UIPanGestureRecognizer> handlePan)
         {
             recognizer = new NSPanGestureRecognizer (_ => handlePan (this));
+        }
+
+        public CGPoint VelocityInView (UIView view)
+        {
+	        return CGPoint.Empty;
         }
     }
 
@@ -1099,9 +1115,17 @@ namespace UIKit
             get => base.ContentInsets;
             set => base.ContentInsets = value;
         }
+
         public UIScrollViewDelegate Delegate { get; set; }
+        public event EventHandler Scrolled;
         public bool AlwaysBounceVertical { get; set; }
         public bool AlwaysBounceHorizontal { get; set; }
+        public bool DirectionalLockEnabled { get; set; }
+        public bool ClipsToBounds {
+	        get => Messaging.bool_objc_msgSend(Handle, UIView.s_clipsToBounds);
+	        set => Messaging.void_objc_msgSend_bool(Handle, UIView.s_setClipsToBounds, value);
+        }
+
         public UIScrollView (CGRect frameRect) : base (frameRect)
         {
             DrawsBackground = false;
@@ -1428,16 +1452,11 @@ namespace UIKit
             get => this.GetAutoresizingMask ();
             set => this.SetAutoresizingMask (value);
         }
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-        static extern bool bool_objc_msgSend(IntPtr receiver, IntPtr selector);
-        [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-        static extern bool void_objc_msgSend_bool(IntPtr receiver, IntPtr selector, bool arg0);
-
-        static readonly IntPtr s_clipsToBounds = Selector.GetHandle("clipsToBounds");
-        static readonly IntPtr s_setClipsToBounds = Selector.GetHandle("setClipsToBounds:");
+        public static readonly IntPtr s_clipsToBounds = Selector.GetHandle("clipsToBounds");
+        public static readonly IntPtr s_setClipsToBounds = Selector.GetHandle("setClipsToBounds:");
         public bool ClipsToBounds {
-	        get => bool_objc_msgSend(Handle, s_clipsToBounds);
-	        set => void_objc_msgSend_bool(Handle, s_setClipsToBounds, value);
+	        get => Messaging.bool_objc_msgSend(Handle, s_clipsToBounds);
+	        set => Messaging.void_objc_msgSend_bool(Handle, s_setClipsToBounds, value);
         }
         public UIView ()
         {
@@ -1754,6 +1773,14 @@ namespace UIKit
         public UIVisualEffectView ()
         {
         }
+    }
+
+    static class Messaging
+    {
+	    [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+	    public static extern bool bool_objc_msgSend(IntPtr receiver, IntPtr selector);
+	    [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+	    public static extern bool void_objc_msgSend_bool(IntPtr receiver, IntPtr selector, bool arg0);
     }
 }
 

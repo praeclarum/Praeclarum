@@ -231,9 +231,25 @@ namespace UIKit
         public bool Bounces { get; set; } = false;
         public bool AlwaysBounceVertical { get; set; } = false;
 
-        public UICollectionViewCell DequeueReusableCell (string v, NSIndexPath indexPath)
+        public UICollectionView (CGRect frame, UICollectionViewLayout layout)
+			: base(frame)
         {
-            throw new NotImplementedException ();
+	        base.CollectionViewLayout = layout;
+        }
+
+        public UICollectionView (CGRect frame, UICollectionViewFlowLayout layout)
+			: base(frame)
+        {
+	        base.CollectionViewLayout = layout;
+        }
+
+        public UICollectionViewCell DequeueReusableCell (string identifier, NSIndexPath indexPath)
+        {
+	        if (base.MakeItem (identifier, indexPath) is UICollectionViewCell c)
+	        {
+		        return c;
+	        }
+	        return new UICollectionViewCell();
         }
 
         public void RegisterClassForCell (Type type, string v)
@@ -251,7 +267,7 @@ namespace UIKit
 
         public UINavigationItem NavigationItem { get; } = new UINavigationItem ();
 
-        public UICollectionView CollectionView { get; } = new UICollectionView ();
+        public UICollectionView CollectionView { get; } = new UICollectionView (new CGRect (0, 0, 320, 480), new UICollectionViewFlowLayout ());
 
         readonly Lazy<UITraitCollection> traitCollection = new Lazy<UITraitCollection> (() => new UITraitCollection ());
         public UITraitCollection TraitCollection => traitCollection.Value;
@@ -312,15 +328,17 @@ namespace UIKit
         }
     }
 
-    public class UICollectionViewCell : UIView
+    public class UICollectionViewCell : NSCollectionViewItem
     {
-        public UIView ContentView { get; } = new UIView ();
+	    public NSView ContentView => this.View;
 
         public UICollectionViewCell (IntPtr handle)
             : base (handle)
         {
-            ContentView.Frame = Bounds;
-            AddSubview (ContentView);
+        }
+
+        public UICollectionViewCell ()
+        {
         }
     }
 
@@ -330,6 +348,33 @@ namespace UIKit
 
     public class UICollectionViewFlowLayout : NSCollectionViewFlowLayout
     {
+    }
+
+    public abstract class UICollectionViewDataSource : NSCollectionViewDataSource
+    {
+	    public override nint GetNumberofItems (NSCollectionView collectionView, nint section)
+	    {
+		    if (collectionView is UICollectionView cv)
+		    {
+			    return GetItemsCount (cv, section);
+		    }
+
+		    return 0;
+	    }
+
+	    public override NSCollectionViewItem GetItem (NSCollectionView collectionView, NSIndexPath indexPath)
+	    {
+		    if (collectionView is UICollectionView cv)
+		    {
+			    return GetCell (cv, indexPath);
+		    }
+
+		    return new NSCollectionViewItem();
+	    }
+
+	    public abstract nint GetItemsCount (UICollectionView collectionView, nint section);
+
+	    public abstract UICollectionViewCell GetCell (UICollectionView collectionView, NSIndexPath indexPath);
     }
 
     public class UIDevice : NSObject
@@ -1325,6 +1370,14 @@ namespace UIKit
         No
     }
 
+    public enum UITextBorderStyle : long
+    {
+	    None,
+	    Line,
+	    Bezel,
+	    RoundedRect,
+    }
+
     public class UITextField : NSTextField
     {
         public event EventHandler EditingDidBegin;
@@ -1340,6 +1393,35 @@ namespace UIKit
         public Func<object, bool> ShouldReturn { get; set; }
         public UITextAutocorrectionType AutocorrectionType { get; set; }
         public UITextAutocapitalizationType AutocapitalizationType { get; set; }
+
+        public UITextBorderStyle BorderStyle
+        {
+	        get
+	        {
+		        switch (BezelStyle)
+		        {
+			        case NSTextFieldBezelStyle.Square:
+				        return UITextBorderStyle.Bezel;
+			        default:
+			        case NSTextFieldBezelStyle.Rounded:
+				        return UITextBorderStyle.RoundedRect;
+		        }
+	        }
+	        set
+	        {
+		        switch (value)
+		        {
+			        default:
+			        case UITextBorderStyle.RoundedRect:
+				        BezelStyle = NSTextFieldBezelStyle.Rounded;
+				        break;
+			        case UITextBorderStyle.Bezel:
+				        BezelStyle = NSTextFieldBezelStyle.Square;
+				        break;
+		        }
+	        }
+        }
+
         public UITextField ()
         {
             base.EditingBegan += (s, e) => EditingDidBegin?.Invoke (s, e);

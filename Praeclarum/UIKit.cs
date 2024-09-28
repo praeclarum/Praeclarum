@@ -252,9 +252,9 @@ namespace UIKit
 	        return new UICollectionViewCell();
         }
 
-        public void RegisterClassForCell (Type type, string v)
+        public void RegisterClassForCell (Type type, string identifier)
         {
-            throw new NotImplementedException ();
+            base.RegisterClassForItem (type, identifier);
         }
     }
 
@@ -1012,6 +1012,10 @@ namespace UIKit
         {
 	        get => base.AlphaValue;
 	        set => base.AlphaValue = value;
+        }
+        public new UIViewAutoresizing AutoresizingMask {
+	        get => this.GetAutoresizingMask ();
+	        set => this.SetAutoresizingMask (value);
         }
         public UILabel ()
         {

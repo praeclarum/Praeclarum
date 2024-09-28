@@ -226,26 +226,44 @@ namespace UIKit
         RoundedRect,
     }
 
-    public class UICollectionView : NSCollectionView
+    public class UICollectionView : NSScrollView
     {
-        public bool Bounces { get; set; } = false;
+	    private readonly NSClipView clipView = new ();
+	    private readonly NSCollectionView collectionView;
+
+	    public bool Bounces { get; set; } = false;
         public bool AlwaysBounceVertical { get; set; } = false;
 
-        public UICollectionView (CGRect frame, UICollectionViewLayout layout)
-			: base(frame)
+        public UICollectionViewDataSource DataSource
         {
-	        base.CollectionViewLayout = layout;
+	        get => collectionView.DataSource as UICollectionViewDataSource;
+	        set
+	        {
+		        if (collectionView.DataSource is UICollectionViewDataSource oldValue)
+		        {
+			        oldValue.CollectionView = null;
+		        }
+
+		        if (value is not null)
+		        {
+			        value.CollectionView = new WeakReference<UICollectionView> (this);
+		        }
+
+		        collectionView.DataSource = value;
+	        }
         }
 
         public UICollectionView (CGRect frame, UICollectionViewFlowLayout layout)
 			: base(frame)
         {
-	        base.CollectionViewLayout = layout;
+	        collectionView = new NSCollectionView (frame);
+	        collectionView.CollectionViewLayout = layout;
+	        base.ContentView.DocumentView = collectionView;
         }
 
         public UICollectionViewCell DequeueReusableCell (string identifier, NSIndexPath indexPath)
         {
-	        if (base.MakeItem (identifier, indexPath) is UICollectionViewCell c)
+	        if (collectionView.MakeItem (identifier, indexPath) is UICollectionViewCell c)
 	        {
 		        return c;
 	        }
@@ -254,8 +272,10 @@ namespace UIKit
 
         public void RegisterClassForCell (Type type, string identifier)
         {
-            base.RegisterClassForItem (type, identifier);
+	        collectionView.RegisterClassForItem (type, identifier);
         }
+
+        public void ReloadData () => collectionView.ReloadData ();
     }
 
     public class UICollectionViewController : NSViewController
@@ -275,11 +295,6 @@ namespace UIKit
         public UICollectionViewController ()
         {
             View = CollectionView;
-        }
-
-        public UICollectionViewController (NSCollectionViewLayout layout)
-        {
-            CollectionView.CollectionViewLayout = layout;
         }
 
         public void DismissViewController (bool animated, Action completionHandler)
@@ -352,9 +367,10 @@ namespace UIKit
 
     public abstract class UICollectionViewDataSource : NSCollectionViewDataSource
     {
+	    public WeakReference<UICollectionView> CollectionView;
 	    public override nint GetNumberofItems (NSCollectionView collectionView, nint section)
 	    {
-		    if (collectionView is UICollectionView cv)
+		    if (CollectionView is not null && CollectionView.TryGetTarget (out var cv))
 		    {
 			    return GetItemsCount (cv, section);
 		    }
@@ -364,7 +380,7 @@ namespace UIKit
 
 	    public override NSCollectionViewItem GetItem (NSCollectionView collectionView, NSIndexPath indexPath)
 	    {
-		    if (collectionView is UICollectionView cv)
+		    if (CollectionView is not null && CollectionView.TryGetTarget (out var cv))
 		    {
 			    return GetCell (cv, indexPath);
 		    }

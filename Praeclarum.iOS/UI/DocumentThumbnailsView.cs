@@ -120,7 +120,7 @@ namespace Praeclarum.UI
 		public event EventHandler SortChanged = delegate {};
 
 		bool editing = false;
-		public bool Editing { get { return editing; } set { SetEditing (value, false); } }
+		public new bool Editing { get { return editing; } set { SetEditing (value, false); } }
 
 
 

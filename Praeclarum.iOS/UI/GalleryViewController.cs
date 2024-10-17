@@ -46,12 +46,16 @@ namespace Praeclarum.UI
 
 			var config = new WKWebViewConfiguration ();
 			var vc = this;
-			webBrowser = new WKWebView (vc.View.Bounds, config) {
+			var vcv = vc.View;
+			if (vcv is null) {
+				return;
+			}
+			webBrowser = new WKWebView (vcv.Bounds, config) {
 				AutoresizingMask = UIViewAutoresizing.FlexibleDimensions
 			};
 			webBrowser.NavigationDelegate = this;
 			webBrowser.LoadRequest (new NSUrlRequest (new NSUrl (galleryUrl)));
-			vc.View.AddSubview (webBrowser);
+			vcv.AddSubview (webBrowser);
 		}
 
 		[Export ("webView:decidePolicyForNavigationAction:decisionHandler:")]

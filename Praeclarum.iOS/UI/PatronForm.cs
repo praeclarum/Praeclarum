@@ -218,21 +218,6 @@ namespace Praeclarum.UI
 			}
 			return hasCloud;
 		}
-		void ShowFormError (string title, Exception ex)
-		{
-			try {
-				var iex = ex;
-				while (iex.InnerException != null) {
-					iex = iex.InnerException;
-				}
-				var m = iex.Message;
-				var alert = UIAlertController.Create (title, m, UIAlertControllerStyle.Alert);
-				alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => {}));
-				PresentViewController (alert, true, null);
-			} catch (Exception ex2) {
-				Log.Error (ex2);
-			}
-		}
 #pragma warning disable 1998
 		public static async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
 		{

@@ -8,6 +8,8 @@ using Foundation;
 using UIKit;
 using System.Collections.Generic;
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
 namespace Praeclarum.UI
 {
 	public class TipJarForm : PForm
@@ -65,8 +67,6 @@ namespace Praeclarum.UI
 			base.ViewWillDisappear (animated);
 			visibleForm = null;
 		}
-
-		bool hasCloud = false;
 
 		public async Task<int> RestorePastPurchasesAsync ()
 		{
@@ -128,22 +128,6 @@ namespace Praeclarum.UI
 			return hasTipped ? 1 : 0;
 		}
 
-		void ShowFormError (string title, Exception ex)
-		{
-			try {
-				var iex = ex;
-				while (iex.InnerException != null) {
-					iex = iex.InnerException;
-				}
-				var m = iex.Message;
-				var alert = UIAlertController.Create (title, m, UIAlertControllerStyle.Alert);
-				alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
-				PresentViewController (alert, true, null);
-			}
-			catch (Exception ex2) {
-				Log.Error (ex2);
-			}
-		}
 		public static async Task HandlePurchaseFailAsync (StoreKit.SKPaymentTransaction t)
 		{
 			try {
@@ -184,6 +168,8 @@ namespace Praeclarum.UI
 			var p = prices.FirstOrDefault (x => x.Id == t.Payment.ProductIdentifier);
 			if (p == null)
 				return;
+			if (t.TransactionIdentifier is null || t.TransactionDate is null)
+				return;
 			await AddSubscriptionAsync (t.TransactionIdentifier, (DateTime)t.TransactionDate, p);
 		}
 
@@ -203,7 +189,7 @@ namespace Praeclarum.UI
 
 			public void SetPatronage ()
 			{
-				var form = (TipJarForm)Form;
+				var form = (TipJarForm?)Form;
 				var appName = DocumentAppDelegate.Shared.App.Name;
 				Title = "Hi, I'm Frank";
 				Hint = $"I am the author of " + appName + " and I want to thank you for your purchase. " +
@@ -211,7 +197,7 @@ namespace Praeclarum.UI
 					$"This form is here if you love {appName} and want to help fund its continued development. " +
 					"Tips like this help me to pay the bills and spend more time improving the app."
 					;
-				if (form.hasTipped) {
+				if (form is not null && form.hasTipped) {
 					Hint += $"\n\n⭐️⭐️⭐️ Thank you for your tip on {form.tipDate.ToShortDateString ()}. " +
 						"Your support is very much appreciated! ⭐️⭐️⭐️";
 				}
@@ -243,9 +229,9 @@ namespace Praeclarum.UI
 
 			public void SetPatronage ()
 			{
-				var form = (TipJarForm)Form;
+				var form = (TipJarForm?)Form;
 				var appName = DocumentAppDelegate.Shared.App.Name;
-				if (form.hasTipped) {
+				if (form is not null && form.hasTipped) {
 					Title = "Tip Again";
 				}
 				else {
@@ -281,7 +267,7 @@ namespace Praeclarum.UI
 
 			async Task BuyAsync (object item)
 			{
-				var form = (TipJarForm)Form;
+				var form = (TipJarForm?)Form;
 				try {
 					var price = (TipJarPrice)item;
 
@@ -290,7 +276,7 @@ namespace Praeclarum.UI
 							"The prices have not been loaded. Are you connected to the internet? If so, please wait for the prices to appear.";
 						var alert = UIAlertController.Create ("Unable to Proceed", m, UIAlertControllerStyle.Alert);
 						alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
-						Form.PresentViewController (alert, true, null);
+						Form?.PresentViewController (alert, true, null);
 						return;
 					}
 					else {
@@ -298,7 +284,7 @@ namespace Praeclarum.UI
 					}
 				}
 				catch (Exception ex) {
-					form.ShowFormError ("Purchase Failed", ex);
+					form?.ShowFormError ("Purchase Failed", ex);
 					Log.Error (ex);
 				}
 			}
@@ -319,7 +305,11 @@ namespace Praeclarum.UI
 
 			async void RestoreAsync ()
 			{
-				var form = (TipJarForm)Form;
+				var form = (TipJarForm?)Form;
+				if (form is null)
+				{
+					return;
+				}
 				try {
 					// We save receipts in iCloud
 
@@ -356,9 +346,11 @@ namespace Praeclarum.UI
 
 			async void DeleteAsync ()
 			{
-				var form = (TipJarForm)Form;
-				await form.DeletePastPurchasesAsync ();
-				await form.RefreshPatronDataAsync ();
+				if (Form is TipJarForm form)
+				{
+					await form.DeletePastPurchasesAsync ();
+					await form.RefreshPatronDataAsync ();
+				}
 			}
 		}
 	}
@@ -392,8 +384,8 @@ namespace Praeclarum.UI
 					f.DismissViewController (true, null);
 				}
 			});
-			if (this.Form.NavigationController != null) {
-				this.Form.NavigationController.PushViewController (f, true);
+			if (this.Form?.NavigationController is {} nav) {
+				nav.PushViewController (f, true);
 			}
 			return false;
 		}

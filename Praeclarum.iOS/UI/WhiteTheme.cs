@@ -23,11 +23,11 @@ namespace Praeclarum.UI
 		public static UIColor SystemGroupTableViewBackgroundColor => UIColor.GroupTableViewBackground;
 		public static UIColor SystemGroupedBackgroundColor => UIColor.SystemGroupedBackground;
 #else
-		public static UIColor SystemDarkTextColor => UIColor.DarkTextColor;
-		public static UIColor SystemLightTextColor => UIColor.LightTextColor;
-		public static UIColor SystemLabelColor => UIColor.LabelColor;
+		public static UIColor SystemDarkTextColor => UIColor.DarkText;
+		public static UIColor SystemLightTextColor => UIColor.LightText;
+		public static UIColor SystemLabelColor => UIColor.Label;
 		public static UIColor SystemGroupTableViewBackgroundColor => UIColor.GroupTableViewBackgroundColor;
-		public static UIColor SystemGroupedBackgroundColor => UIColor.SystemGroupedBackgroundColor;
+		public static UIColor SystemGroupedBackgroundColor => UIColor.SystemGroupedBackground;
 #endif
 
 		public static Theme Current;

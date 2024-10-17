@@ -317,7 +317,7 @@ namespace Praeclarum.UI
 			return shouldPerformAdditionalDelegateHandling;
 		}
 
-		static async Task HandlePurchaseRestoredAsync (NSError? error)
+		static async Task HandlePurchaseRestoredAsync (NSError error)
 		{
 			// await TipJarForm.HandlePurchaseRestoredAsync(error);
 			await ProService.Shared.HandlePurchaseRestoredAsync(error);

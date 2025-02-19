@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 
 using System;
 using System.Threading.Tasks;
@@ -63,7 +63,12 @@ namespace UIKit
 
     public class UIAlertController : UIViewController
     {
-        public string Message { get; set; }        
+        public string Message { get; set; }
+
+        private UIAlertController ()
+        {
+	        Message = String.Empty;
+        }
 
         public static UIAlertController Create (string title, string message, UIAlertControllerStyle style)
         {
@@ -138,7 +143,7 @@ namespace UIKit
 
         public CGRect Bounds => path.Bounds;
 
-        public static implicit operator NSBezierPath (UIBezierPath path) => path?.path;
+        public static implicit operator NSBezierPath (UIBezierPath path) => path.path;
 
         public static UIBezierPath FromOval (CGRect rect) => new UIBezierPath (NSBezierPath.FromOvalInRect (rect));
         public static UIBezierPath FromRect (CGRect rect) => new UIBezierPath (NSBezierPath.FromRect (rect));
@@ -179,7 +184,7 @@ namespace UIKit
 
     public class UIButton : NSButton
     {
-        NSActionDispatcher dispatcher;
+        NSActionDispatcher? dispatcher;
 
         public bool Selected
         {
@@ -187,10 +192,16 @@ namespace UIKit
 	        set => base.Highlighted = value;
         }
 
-        public UIColor TintColor
+        public UIColor? TintColor
         {
-	        get => UIColor.FromNSColor (base.ContentTintColor);
-	        set => base.ContentTintColor = value;
+	        get => base.ContentTintColor is {} c ? UIColor.FromNSColor (c) : null;
+	        set
+	        {
+		        if (value is { } v)
+		        {
+			        base.ContentTintColor = v;
+		        }
+	        }
         }
 
         public UIButton ()
@@ -234,7 +245,7 @@ namespace UIKit
 	    public bool Bounces { get; set; } = false;
         public bool AlwaysBounceVertical { get; set; } = false;
 
-        public UICollectionViewDataSource DataSource
+        public UICollectionViewDataSource? DataSource
         {
 	        get => collectionView.DataSource as UICollectionViewDataSource;
 	        set
@@ -305,7 +316,7 @@ namespace UIKit
 
         public Task DismissViewControllerAsync (bool animated)
         {
-            var tcs = new TaskCompletionSource<object> ();
+            var tcs = new TaskCompletionSource<object?> ();
             DismissViewController (animated, () => tcs.SetResult (null));
             return tcs.Task;
         }
@@ -367,7 +378,7 @@ namespace UIKit
 
     public abstract class UICollectionViewDataSource : NSCollectionViewDataSource
     {
-	    public WeakReference<UICollectionView> CollectionView;
+	    public WeakReference<UICollectionView>? CollectionView;
 	    public override nint GetNumberofItems (NSCollectionView collectionView, nint section)
 	    {
 		    if (CollectionView is not null && CollectionView.TryGetTarget (out var cv))
@@ -469,17 +480,12 @@ namespace UIKit
 
         public static UIColor FromNSColor (NSColor color)
         {
-	        if (color is null)
-	        {
-		        return null;
-	        }
-
 	        return new UIColor (color);
         }
 
         public override string ToString () => color?.ToString () ?? "";
 
-        public static implicit operator NSColor (UIColor color) => color?.color;
+        public static implicit operator NSColor (UIColor color) => color.color;
 
         public static UIColor FromRGB (byte r, byte g, byte b) => new UIColor (NSColor.FromRgb (r, g, b));
         public static UIColor FromRGB (int r, int g, int b) => new UIColor (NSColor.FromRgb (r, g, b));
@@ -521,7 +527,7 @@ namespace UIKit
         {
         }
 
-        public virtual NSDictionary GetFileAttributesToWrite (NSUrl forUrl, UIDocumentSaveOperation saveOperation, out NSError outError)
+        public virtual NSDictionary? GetFileAttributesToWrite (NSUrl forUrl, UIDocumentSaveOperation saveOperation, out NSError? outError)
         {
             outError = null;
             return null;
@@ -532,29 +538,29 @@ namespace UIKit
             return Task.FromResult<bool> (true);
         }
 
-        public virtual NSObject ContentsForType (string typeName, out NSError outError)
+        public virtual NSObject? ContentsForType (string typeName, out NSError? outError)
         {
-            outError = null;
+            outError = new NSError((NSString)"UIKit.UIDocument", 0);
             return null;
         }
 
-        public virtual bool LoadFromContents (NSObject contents, string typeName, out NSError outError)
+        public virtual bool LoadFromContents (NSObject contents, string typeName, out NSError? outError)
         {
             outError = null;
             return false;
         }
 
-        public override NSDictionary FileAttributesToWrite (NSUrl toUrl, string typeName, NSSaveOperationType saveOperation, NSUrl absoluteOriginalContentsUrl, out NSError outError)
+        public override NSDictionary FileAttributesToWrite (NSUrl toUrl, string typeName, NSSaveOperationType saveOperation, NSUrl? absoluteOriginalContentsUrl, out NSError? outError)
         {
-            return GetFileAttributesToWrite (toUrl, UIDocumentSaveOperation.Save, out outError);
+            return GetFileAttributesToWrite (toUrl, UIDocumentSaveOperation.Save, out outError) ?? new NSDictionary ();
         }
 
-        public override NSData GetAsData (string typeName, out NSError outError)
+        public override NSData GetAsData (string typeName, out NSError? outError)
         {
-            return (NSData)ContentsForType (typeName, out outError);
+            return ContentsForType (typeName, out outError) as NSData ?? new NSData ();
         }
 
-        public override bool ReadFromData (NSData data, string typeName, out NSError outError)
+        public override bool ReadFromData (NSData data, string typeName, out NSError? outError)
         {
             return LoadFromContents (data, typeName, out outError);
         }
@@ -616,16 +622,14 @@ namespace UIKit
                 //ParagraphStyle = pstyle,
             };
         }
-        public static implicit operator NSFont (UIFont font) => font?.font;
-        public static UIFont FromName (string fontName, nfloat size)
+        public static implicit operator NSFont (UIFont font) => font.font;
+        public static UIFont? FromName (string fontName, nfloat size)
         {
-            var r = new UIFont (NSFont.FromFontName (fontName, size));
-            return r;
+            return NSFont.FromFontName (fontName, size) is {} f ? new UIFont (f) : null;
         }
-        public static UIFont SystemFontOfSize (nfloat fontSize)
+        public static UIFont? SystemFontOfSize (nfloat fontSize)
         {
-            var r = new UIFont (NSFont.SystemFontOfSize (fontSize));
-            return r;
+            return NSFont.SystemFontOfSize (fontSize) is {} f ? new UIFont (f) : null;
         }
     }
 
@@ -652,9 +656,9 @@ namespace UIKit
 
     public static class UIGraphics
     {
-        static readonly ThreadLocal<CGBitmapContext> imageContext = new ThreadLocal<CGBitmapContext> ();
-        static readonly ThreadLocal<Stack<(NSGraphicsContext PrevContext, NSGraphicsContext Context)>> contextStack =
-            new ThreadLocal<Stack<(NSGraphicsContext PrevContext, NSGraphicsContext Context)>> ();
+        static readonly ThreadLocal<CGBitmapContext?> imageContext = new ThreadLocal<CGBitmapContext?> ();
+        static readonly ThreadLocal<Stack<(NSGraphicsContext? PrevContext, NSGraphicsContext Context)>> contextStack =
+            new ThreadLocal<Stack<(NSGraphicsContext? PrevContext, NSGraphicsContext Context)>> ();
 
         public static void BeginImageContext (CGSize imageSize)
         {
@@ -679,9 +683,9 @@ namespace UIKit
             imageContext.Value = context;
         }
 
-        public static CGContext GetCurrentContext ()
+        public static CGContext? GetCurrentContext ()
         {
-            return NSGraphicsContext.CurrentContext.CGContext;
+            return NSGraphicsContext.CurrentContext?.CGContext;
         }
 
         public static void RectFill (CGRect rect)
@@ -732,15 +736,17 @@ namespace UIKit
             return text.StringSize (font.CreateAttributes (UIColor.CurrentFill));
         }
 
-        public static UIImage GetImageFromCurrentImageContext ()
+        public static UIImage? GetImageFromCurrentImageContext ()
         {
             var context = imageContext.Value;
             if (context == null)
                 return null;
-            var cgimage = context.ToImage ();
-            var nsimage = new NSImage (cgimage, new CGSize (cgimage.Width, cgimage.Height));
-
-            return new UIImage (nsimage);
+            if (context.ToImage () is { } cgimage)
+            {
+	            var nsimage = new NSImage (cgimage, new CGSize (cgimage.Width, cgimage.Height));
+				return new UIImage (nsimage);
+            }
+			return null;
         }
 
         public static void EndImageContext ()
@@ -757,7 +763,7 @@ namespace UIKit
             var nsctx = NSGraphicsContext.FromCGContext (ctx, initialFlippedState: true);
             var stack = contextStack.Value;
             if (stack == null) {
-                stack = new Stack<(NSGraphicsContext PrevContext, NSGraphicsContext Context)> ();
+                stack = new Stack<(NSGraphicsContext? PrevContext, NSGraphicsContext Context)> ();
                 contextStack.Value = stack;
             }
             stack.Push ((NSGraphicsContext.CurrentContext, nsctx));
@@ -803,7 +809,7 @@ namespace UIKit
 
         public CGImage CGImage => image.CGImage;
 
-        public static implicit operator NSImage (UIImage image) => image?.image;
+        public static implicit operator NSImage? (UIImage image) => image?.image;
 
         public static UIImage FromFile (string path) => new UIImage (new NSImage (path));
 
@@ -881,7 +887,7 @@ namespace UIKit
 
     public class UIImageView : NSImageView
     {
-        public UIColor BackgroundColor { get; set; }
+        public UIColor? BackgroundColor { get; set; }
         public bool ClipsToBounds {
 	        get => Messaging.bool_objc_msgSend(Handle, UIView.s_clipsToBounds);
 	        set => Messaging.void_objc_msgSend_bool(Handle, UIView.s_setClipsToBounds, value);
@@ -1071,7 +1077,7 @@ namespace UIKit
                 base.DrawInteriorWithFrame (TitleRectForBounds (cellFrame), inView);
             }
 
-            public override void SelectWithFrame (CGRect aRect, NSView inView, NSText editor, NSObject delegateObject, nint selStart, nint selLength)
+            public override void SelectWithFrame (CGRect aRect, NSView? inView, NSText? editor, NSObject? delegateObject, nint selStart, nint selLength)
             {
                 base.SelectWithFrame (TitleRectForBounds (aRect), inView, editor, delegateObject, selStart, selLength);
             }
@@ -1122,9 +1128,9 @@ namespace UIKit
 
     public class UINavigationItem : NSObject
     {
-        public UIBarButtonItem[] LeftBarButtonItems { get; set; } = new UIBarButtonItem[0];
-        public UIBarButtonItem[] RightBarButtonItems { get; set; } = new UIBarButtonItem[0];
-        public UIBarButtonItem LeftBarButtonItem { get; set; }
+        public UIBarButtonItem[] LeftBarButtonItems { get; set; } = Array.Empty<UIBarButtonItem> ();
+        public UIBarButtonItem[] RightBarButtonItems { get; set; } = Array.Empty<UIBarButtonItem> ();
+        public UIBarButtonItem? LeftBarButtonItem { get; set; }
         public UINavigationItemLargeTitleDisplayMode LargeTitleDisplayMode { get; set; }
     }
 
@@ -1138,7 +1144,7 @@ namespace UIKit
         readonly NSPanGestureRecognizer recognizer;
         protected override NSGestureRecognizer NSRecognizer => recognizer;
         public static implicit operator NSPanGestureRecognizer (UIPanGestureRecognizer r) => r.recognizer;
-        public Func<UIGestureRecognizer, bool> ShouldBegin { get; set; }
+        public Func<UIGestureRecognizer, bool>? ShouldBegin { get; set; }
         public UIPanGestureRecognizer (NSPanGestureRecognizer recognizer)
         {
             this.recognizer = recognizer;
@@ -1177,7 +1183,7 @@ namespace UIKit
 
     public class UIPopoverPresentationController : NSObject
     {
-        public NSView SourceView { get; set; }
+        public NSView? SourceView { get; set; }
         public CGRect SourceRect { get; set; }
     }
 
@@ -1192,10 +1198,12 @@ namespace UIKit
         NSObject boundsNote;
 
         public new CGSize ContentSize {
-            get => ((NSView)DocumentView).Frame.Size;
+            get => DocumentView is NSView v ? v.Frame.Size : CGSize.Empty;
             set {
-                ((NSView)DocumentView).Frame = new CGRect (CGPoint.Empty, value);
-                //ScrollRectToVisible (new CGRect (0, 0, value.Width, Frame.Height));
+	            if (DocumentView is NSView v)
+	            {
+		            v.Frame = new CGRect (CGPoint.Empty, value);
+	            }
             }
         }
         public UIEdgeInsets ContentInset {
@@ -1203,8 +1211,8 @@ namespace UIKit
             set => base.ContentInsets = value;
         }
 
-        public UIScrollViewDelegate Delegate { get; set; }
-        public event EventHandler Scrolled;
+        public UIScrollViewDelegate? Delegate { get; set; }
+        public event EventHandler? Scrolled;
         public bool AlwaysBounceVertical { get; set; }
         public bool AlwaysBounceHorizontal { get; set; }
         public bool DirectionalLockEnabled { get; set; }
@@ -1252,7 +1260,7 @@ namespace UIKit
 
     public class UISegmentedControl : NSSegmentedControl
     {
-        public event EventHandler ValueChanged;
+        public event EventHandler? ValueChanged;
 
         public UISegmentedControl (params string[] strings)
         {
@@ -1281,7 +1289,7 @@ namespace UIKit
 
     public class UIStackView : NSStackView
     {
-        public UIColor BackgroundColor { get; set; }
+        public UIColor? BackgroundColor { get; set; }
         public UILayoutConstraintAxis Axis {
             get => Orientation == NSUserInterfaceLayoutOrientation.Horizontal ? UILayoutConstraintAxis.Horizontal : UILayoutConstraintAxis.Vertical;
             set => Orientation = (value == UILayoutConstraintAxis.Horizontal) ? NSUserInterfaceLayoutOrientation.Horizontal : NSUserInterfaceLayoutOrientation.Vertical;
@@ -1400,17 +1408,17 @@ namespace UIKit
 
     public class UITextField : NSTextField
     {
-        public event EventHandler EditingDidBegin;
-        public event EventHandler EditingChanged;
-        public event EventHandler EditingDidEnd;
-        public event EventHandler ValueChanged;
+        public event EventHandler? EditingDidBegin;
+        public event EventHandler? EditingChanged;
+        public event EventHandler? EditingDidEnd;
+        public event EventHandler? ValueChanged;
         public string Text {
             get => StringValue;
             set => StringValue = value ?? "";
         }
         public string Placeholder { get => PlaceholderString; set => PlaceholderString = value; }
         public UITextFieldViewMode ClearButtonMode { get; set; }
-        public Func<object, bool> ShouldReturn { get; set; }
+        public Func<object, bool>? ShouldReturn { get; set; }
         public UITextAutocorrectionType AutocorrectionType { get; set; }
         public UITextAutocapitalizationType AutocapitalizationType { get; set; }
 
@@ -1481,7 +1489,7 @@ namespace UIKit
             get => new UIFont (textView.Font);
             set => textView.Font = value;
         }
-        public event EventHandler Changed;
+        public event EventHandler? Changed;
 
         public UITextView ()
         {
@@ -1634,7 +1642,7 @@ namespace UIKit
         {
         }
 
-        UITouch mouseTouch = null;
+        UITouch? mouseTouch = null;
 
         public override void MouseDown (NSEvent theEvent)
         {
@@ -1722,7 +1730,7 @@ namespace UIKit
     public class UIViewController : NSViewController
     {
         public UINavigationItem NavigationItem { get; } = new UINavigationItem ();
-        public UIPopoverPresentationController PopoverPresentationController { get; }
+        public UIPopoverPresentationController? PopoverPresentationController { get; }
 
         public virtual bool PrefersHomeIndicatorAutoHidden { get; set; }
 
@@ -1751,7 +1759,7 @@ namespace UIKit
 
         public Task PresentViewControllerAsync (NSViewController viewController, bool animated)
         {
-            var tcs = new TaskCompletionSource<object> ();
+            var tcs = new TaskCompletionSource<object?> ();
             PresentViewController (viewController, animated, () => tcs.SetResult (null));
             return tcs.Task;
         }
@@ -1764,7 +1772,7 @@ namespace UIKit
 
         public Task DismissViewControllerAsync (bool animated)
         {
-            var tcs = new TaskCompletionSource<object> ();
+            var tcs = new TaskCompletionSource<object?> ();
             DismissViewController (animated, () => tcs.SetResult (null));
             return tcs.Task;
         }
@@ -1849,7 +1857,7 @@ namespace UIKit
             ViewDidLayoutSubviews ();
         }
 
-        UITouch mouseTouch = null;
+        UITouch? mouseTouch = null;
 
         public override void MouseDown (NSEvent theEvent)
         {
@@ -1887,7 +1895,7 @@ namespace UIKit
     public class UIVisualEffectView : NSVisualEffectView
     {
         public NSView ContentView => this;
-        public UIVisualEffect Effect { get; set; }
+        public UIVisualEffect? Effect { get; set; }
         public new UIViewAutoresizing AutoresizingMask {
             get => this.GetAutoresizingMask ();
             set => this.SetAutoresizingMask (value);

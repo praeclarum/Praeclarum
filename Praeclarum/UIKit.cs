@@ -1612,11 +1612,12 @@ namespace UIKit
         }
         public virtual void Draw (CGRect rect)
         {
+	        backgroundColor.NSColor.SetFill ();
+	        var clipRect = CGRect.Intersect (Bounds, rect);
+	        NSGraphics.RectFill (clipRect);
         }
         public override void DrawRect (CGRect dirtyRect)
         {
-            backgroundColor.NSColor.SetFill ();
-            NSGraphics.RectFill (dirtyRect);
             Draw (dirtyRect);
         }
 

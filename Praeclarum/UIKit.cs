@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 #if __MACOS__
@@ -244,6 +245,18 @@ namespace UIKit
 
 	    public bool Bounces { get; set; } = false;
         public bool AlwaysBounceVertical { get; set; } = false;
+        
+        public bool AllowsSelection
+        {
+	        get => collectionView.Selectable;
+	        set => collectionView.Selectable = value;
+        }
+
+        public bool AllowsMultipleSelection
+        {
+	        get => collectionView.AllowsMultipleSelection;
+	        set => collectionView.AllowsMultipleSelection = value;
+        }
 
         public UICollectionViewDataSource? DataSource
         {
@@ -263,6 +276,23 @@ namespace UIKit
 		        collectionView.DataSource = value;
 	        }
         }
+        public UICollectionViewDelegate? Delegate
+        {
+	        get => collectionView.Delegate as UICollectionViewDelegate;
+	        set
+	        {
+		        if (collectionView.Delegate is UICollectionViewDataSource oldValue)
+		        {
+			        oldValue.CollectionView = null;
+		        }
+
+		        if (value is { } v)
+		        {
+			        v.CollectionView = new WeakReference<UICollectionView> (this);
+			        collectionView.Delegate = v;
+		        }
+	        }
+        }
 
         public UICollectionView (CGRect frame, UICollectionViewFlowLayout layout)
 			: base(frame)
@@ -270,6 +300,9 @@ namespace UIKit
 	        collectionView = new NSCollectionView (frame);
 	        collectionView.CollectionViewLayout = layout;
 	        base.ContentView.DocumentView = collectionView;
+	        collectionView.Selectable = true;
+	        collectionView.AllowsMultipleSelection = false;
+	        collectionView.AllowsEmptySelection = true;
         }
 
         public UICollectionViewCell DequeueReusableCell (string identifier, NSIndexPath indexPath)
@@ -286,7 +319,12 @@ namespace UIKit
 	        collectionView.RegisterClassForItem (type, identifier);
         }
 
-        public void ReloadData () => collectionView.ReloadData ();
+        public virtual void ReloadData () => collectionView.ReloadData ();
+
+        public virtual UICollectionViewCell? CellForItem (NSIndexPath indexPath)
+        {
+	        return collectionView.GetItem (indexPath) is UICollectionViewCell cell ? cell : null;
+        }
     }
 
     public class UICollectionViewController : NSViewController
@@ -374,6 +412,28 @@ namespace UIKit
 
     public class UICollectionViewFlowLayout : NSCollectionViewFlowLayout
     {
+    }
+
+    public abstract class UICollectionViewDelegate : NSCollectionViewDelegate
+    {
+	    public WeakReference<UICollectionView>? CollectionView;
+	    public virtual void ItemSelected (UICollectionView collectionView, NSIndexPath indexPath)
+	    {   
+	    }
+
+	    public override NSSet ShouldSelectItems (NSCollectionView collectionView, NSSet indexPaths)
+	    {
+		    return indexPaths;
+	    }
+
+	    public override void ItemsSelected (NSCollectionView collectionView, NSSet indexPaths)
+	    {
+		    if (indexPaths.ToArray<NSIndexPath> ().FirstOrDefault () is {} indexPath &&
+		        CollectionView is not null && CollectionView.TryGetTarget (out var cv))
+		    {
+			    ItemSelected (cv, indexPath);
+		    }
+	    }
     }
 
     public abstract class UICollectionViewDataSource : NSCollectionViewDataSource
@@ -1646,30 +1706,35 @@ namespace UIKit
 
         public override void MouseDown (NSEvent theEvent)
         {
+	        base.MouseDown (theEvent);
             //Console.WriteLine ("DOWN");
+            if (mouseTouch is { } t)
+            {
+	            mouseTouch = null;
+	            TouchesCancelled (new NSSet (new NSObject[] { t }), new UIEvent (theEvent));
+            }
             mouseTouch = new UITouch (theEvent);
             TouchesBegan (new NSSet (new NSObject[] { mouseTouch }), new UIEvent (theEvent));
-            //base.MouseDown (theEvent);
         }
 
         public override void MouseDragged (NSEvent theEvent)
         {
+	        base.MouseDragged (theEvent);
             //Console.WriteLine ("DRAG");
             if (mouseTouch == null)
                 return;
             mouseTouch.Move (theEvent);
             TouchesMoved (new NSSet (new NSObject[] { mouseTouch }), new UIEvent (theEvent));
-            //base.MouseDragged (theEvent);
         }
 
         public override void MouseUp (NSEvent theEvent)
         {
+	        base.MouseUp (theEvent);
             //Console.WriteLine ("UP");
             if (mouseTouch == null)
                 return;
             TouchesEnded (new NSSet (new NSObject[] { mouseTouch }), new UIEvent (theEvent));
             mouseTouch = null;
-            //base.MouseUp (theEvent);
         }
 
         public static void BeginAnimations (string name)

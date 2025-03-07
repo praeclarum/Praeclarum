@@ -12,6 +12,7 @@ using CoreGraphics;
 using System.Collections.ObjectModel;
 using Praeclarum.Graphics;
 using System.Threading;
+using ObjCRuntime;
 
 namespace Praeclarum.UI
 {
@@ -513,12 +514,21 @@ namespace Praeclarum.UI
 		}
 		public DocumentThumbnailsView Controller;
 
+#if NET8_0_OR_GREATER
+		[Preserve]
+		public SortThumbnailCell (NativeHandle handle)
+			: base (handle)
+		{
+			Initialize ();
+		}
+#else
 		[Preserve]
 		public SortThumbnailCell (IntPtr handle)
 			: base (handle)
 		{
 			Initialize ();
 		}
+#endif
 
 		[Preserve]
 		public SortThumbnailCell ()
@@ -1477,20 +1487,20 @@ namespace Praeclarum.UI
 			try {
 				
 				if (indexPath.Section == 0) {
-					return GetSortCell (collectionView, indexPath);
+					return DequeueSortCell (collectionView, indexPath);
 				}
 				
 				if (controller.IsSyncing) {
-					return GetNotReadyCell (collectionView, indexPath);
+					return DequeueNotReadyCell (collectionView, indexPath);
 				}
 				
 				var row = indexPath.Row;
 				if (row == 0) {
-					return GetAddCell (collectionView, indexPath);
+					return DequeueAddCell (collectionView, indexPath);
 				}
 
 				if (row > controller.Items.Count) {
-					return GetPatronCell (collectionView, indexPath);
+					return DequeuePatronCell (collectionView, indexPath);
 				}
 				
 				row--;
@@ -1510,15 +1520,13 @@ namespace Praeclarum.UI
 			try {
 				c.RenameRequested = controller.HandleRenameRequested;
 				
-				if (isDir) {
-					var dirCell = ((DirectoryThumbnailCell)c);
+				if (c is DirectoryThumbnailCell dirCell && d?.File is {}) {
 					dirCell.ThumbnailSize = controller.ThumbnailSize;
 					dirCell.Item = item;
 					dirCell.Editing = controller.Editing;
 					dirCell.Selecting = controller.Selecting;
 					dirCell.SetDocumentSelected (controller.SelectedDocuments.Contains (d.File.Path), false);
-				} else {
-					var docCell = ((DocumentThumbnailCell)c);
+				} else if (c is DocumentThumbnailCell docCell && d?.File is {}) {
 					docCell.ThumbnailSize = controller.ThumbnailSize;
 					docCell.Document = d;
 					docCell.Editing = controller.Editing;
@@ -1532,7 +1540,7 @@ namespace Praeclarum.UI
 			return c;
 		}
 
-		UICollectionViewCell GetPatronCell (UICollectionView collectionView, NSIndexPath indexPath)
+		UICollectionViewCell DequeuePatronCell (UICollectionView collectionView, NSIndexPath indexPath)
 		{
 			var controller = (DocumentThumbnailsView)collectionView;
 
@@ -1541,35 +1549,47 @@ namespace Praeclarum.UI
 			return c;
 		}
 
-		UICollectionViewCell GetSortCell (UICollectionView collectionView, NSIndexPath indexPath)
+		UICollectionViewCell DequeueSortCell (UICollectionView collectionView, NSIndexPath indexPath)
 		{
 			var controller = (DocumentThumbnailsView)collectionView;
 
 			var c = (SortThumbnailCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.SortId, indexPath);
-			c.FillContentView ();
-			c.Controller = controller;
-			c.Sort = controller.Sort;
+			try {
+				c.FillContentView ();
+				c.Controller = controller;
+				c.Sort = controller.Sort;
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 			return c;
 		}
 
-		UICollectionViewCell GetAddCell (UICollectionView collectionView, NSIndexPath indexPath)
+		UICollectionViewCell DequeueAddCell (UICollectionView collectionView, NSIndexPath indexPath)
 		{
 			var controller = (DocumentThumbnailsView)collectionView;
 
 			var c = (AddDocumentCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.AddId, indexPath);
-			c.FillContentView ();
-			c.ThumbnailSize = controller.ThumbnailSize;
-			c.Editing = controller.Editing;
-			c.Selecting = controller.Selecting;
-			c.SetThumbnail ();
+			try {
+				c.FillContentView ();
+				c.ThumbnailSize = controller.ThumbnailSize;
+				c.Editing = controller.Editing;
+				c.Selecting = controller.Selecting;
+				c.SetThumbnail ();
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 
 			return c;
 		}
 
-		UICollectionViewCell GetNotReadyCell (UICollectionView collectionView, NSIndexPath indexPath)
+		UICollectionViewCell DequeueNotReadyCell (UICollectionView collectionView, NSIndexPath indexPath)
 		{
 			var c = (NotReadyThumbnailCell)collectionView.DequeueReusableCell (DocumentThumbnailsView.NotReadyId, indexPath);
-			c.FillContentView ();
+			try {
+				c.FillContentView ();
+			} catch (Exception ex) {
+				Log.Error (ex);				
+			}
 			return c;
 		}
 	}

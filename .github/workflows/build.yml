@@ -20,7 +20,7 @@ jobs:
       run: |
         VERSION=$VERSION_PREFIX.$VERSION_SUFFIX
         sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum/Praeclarum.csproj
-        sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.iOS/Praeclarum.Android.csproj
+        sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Android/Praeclarum.Android.csproj
         sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.iOS/Praeclarum.iOS.csproj
         sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Mac/Praeclarum.Mac.csproj
         sed -i.bak "s:<Version>1.0.0</Version>:<Version>$VERSION</Version>:g" Praeclarum.Utilities/Praeclarum.Utilities.csproj

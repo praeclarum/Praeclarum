@@ -598,7 +598,12 @@ namespace Praeclarum.UI
 			Initialize ();
 		}
 
+		[Preserve]
+#if NET8_0_OR_GREATER
+		public PatronCell (NativeHandle handle)
+#else
 		public PatronCell (IntPtr handle)
+#endif
 			: base (handle)
 		{
 			Initialize ();
@@ -788,7 +793,12 @@ namespace Praeclarum.UI
 			frameView.Frame = ThumbnailFrame;
 		}
 
+		[Preserve]
+#if NET8_0_OR_GREATER
+		public AddDocumentCell (NativeHandle handle)
+#else
 		public AddDocumentCell (IntPtr handle)
+#endif
 			: base (handle)
 		{
 			frameView = new AddFrameView ();
@@ -1111,7 +1121,12 @@ namespace Praeclarum.UI
 			}
 		}
 
+		[Preserve]
+#if NET8_0_OR_GREATER
+		public DocumentThumbnailCell (NativeHandle handle)
+#else
 		public DocumentThumbnailCell (IntPtr handle)
+#endif
 			: base (handle)
 		{
 			frameView = new ThumbnailFrameView ();
@@ -1308,7 +1323,12 @@ namespace Praeclarum.UI
 			return thumbImage;
 		}
 
+		[Preserve]
+#if NET8_0_OR_GREATER
+		public DirectoryThumbnailCell (NativeHandle handle)
+#else
 		public DirectoryThumbnailCell (IntPtr handle)
+#endif
 			: base (handle)
 		{
 			bg = new DirectoryBackgroundView {
@@ -1387,7 +1407,12 @@ namespace Praeclarum.UI
 
 		static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 
+		[Preserve]
+#if NET8_0_OR_GREATER
+		public NotReadyThumbnailCell (NativeHandle handle)
+#else
 		public NotReadyThumbnailCell (IntPtr handle)
+#endif
 			: base (handle)
 		{
 			var theme = DocumentAppDelegate.Shared.Theme;

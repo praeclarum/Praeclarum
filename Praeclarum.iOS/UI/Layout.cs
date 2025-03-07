@@ -153,7 +153,7 @@ namespace Praeclarum.UI
 			}
 
 			if (IsConstant (r)) {
-				add = (nfloat)Convert.ToDouble (Eval (r));
+				add = ConstantValue (r);
 			} else if (r.NodeType == ExpressionType.MemberAccess || r.NodeType == ExpressionType.Call) {
 				var t = GetViewAndAttribute (r);
 				view = t.Item1;
@@ -190,9 +190,24 @@ namespace Praeclarum.UI
 			return false;
 		}
 
-		static float ConstantValue (Expression expr)
+		static nfloat ConstantValue (Expression expr)
 		{
-			return Convert.ToSingle (Eval (expr));
+			var evalConst = Eval (expr);
+			if (evalConst is nfloat nf) {
+				return nf;
+			}
+			else if (evalConst is nint ni) {
+				return (nfloat)ni;
+			}
+			else {
+				try {
+					return (nfloat)Convert.ToDouble (evalConst);
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+					return 0;
+				}
+			}
 		}
 
 		static Tuple<UIView, NSLayoutAttribute> GetViewAndAttribute (Expression expr)

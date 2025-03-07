@@ -5,6 +5,7 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <DefineConstants>NO_DROPBOX</DefineConstants>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">

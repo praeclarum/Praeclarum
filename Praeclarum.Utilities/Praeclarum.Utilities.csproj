@@ -41,10 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Teronis.MSBuild.Packaging.ProjectBuildInPackage">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NGraphics" />
   </ItemGroup>
 
 </Project>

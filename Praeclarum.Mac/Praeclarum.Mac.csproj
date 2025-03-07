@@ -5,6 +5,7 @@
     <ImplicitUsings>false</ImplicitUsings>
     <Version>1.0.0</Version>
     <SupportedOSPlatformVersion>10.15</SupportedOSPlatformVersion>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

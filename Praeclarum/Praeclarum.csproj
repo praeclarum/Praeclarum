@@ -4,6 +4,7 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <Version>1.0.0</Version>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
     <SupportedOSPlatformVersion>9.0</SupportedOSPlatformVersion>

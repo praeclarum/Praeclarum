@@ -405,26 +405,33 @@ namespace UIKit
 
     public class UICollectionViewCell : NSCollectionViewItem
     {
-	    public NSView ContentView => this.View;
+	    readonly ContentNSView _contentView = new ContentNSView ();
+	    public NSView ContentView => _contentView;
 
-	    private UIColor _backgroundColor = UIColor.SystemBackground;
+	    public UIColor BackgroundColor { get; set; } = UIColor.SystemBackground;
 
-	    public UIColor BackgroundColor
-	    {
-		    get => _backgroundColor;
-		    set
-		    {
-			    _backgroundColor = value;
-		    }
-	    }
-
-        public UICollectionViewCell (IntPtr handle)
+	    protected UICollectionViewCell (IntPtr handle)
             : base (handle)
         {
+	        Initialize ();
         }
 
         public UICollectionViewCell ()
         {
+			Initialize ();
+        }
+
+        void Initialize ()
+        {
+	        var v = this.View;
+	        _contentView.Frame = v.Bounds;
+	        _contentView.AutoresizingMask = NSViewResizingMask.WidthSizable | NSViewResizingMask.HeightSizable;
+	        v.AddSubview (_contentView);
+        }
+
+        class ContentNSView : NSView
+        {
+	        public override bool IsFlipped => true;
         }
     }
 

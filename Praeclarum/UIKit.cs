@@ -293,6 +293,17 @@ namespace UIKit
 		        }
 	        }
         }
+        
+        public new UIColor? BackgroundColor
+		{
+	        get => base.BackgroundColor is { } v ? UIColor.FromNSColor (v) : null;
+	        set
+	        {
+		        var c = value?.NSColor ?? NSColor.Clear;
+		        base.BackgroundColor = c;
+		        collectionView.BackgroundColors = new[] { c };
+	        }
+		}
 
         public UICollectionView (CGRect frame, UICollectionViewFlowLayout layout)
 			: base(frame)

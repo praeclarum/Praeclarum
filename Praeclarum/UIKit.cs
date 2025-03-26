@@ -396,6 +396,17 @@ namespace UIKit
     {
 	    public NSView ContentView => this.View;
 
+	    private UIColor _backgroundColor = UIColor.SystemBackground;
+
+	    public UIColor BackgroundColor
+	    {
+		    get => _backgroundColor;
+		    set
+		    {
+			    _backgroundColor = value;
+		    }
+	    }
+
         public UICollectionViewCell (IntPtr handle)
             : base (handle)
         {

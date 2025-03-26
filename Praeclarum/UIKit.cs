@@ -1000,6 +1000,23 @@ namespace UIKit
     {
         Light
     }
+    
+    public enum UIKeyboardType : long
+    {
+	    Default = 0,
+	    ASCIICapable = 1,
+	    AsciiCapable = 1,
+	    NumbersAndPunctuation = 2,
+	    Url = 3,
+	    NumberPad = 4,
+	    PhonePad = 5,
+	    NamePhonePad = 6,
+	    EmailAddress = 7,
+	    DecimalPad = 8,
+	    Twitter = 9,
+	    WebSearch = 10, // 0x000000000000000A
+	    [Introduced(PlatformName.iOS, 10, 0, PlatformArchitecture.All, null)] AsciiCapableNumberPad = 11, // 0x000000000000000B
+    }
 
     [Flags]
     public enum UIKeyModifierFlags : long
@@ -1275,6 +1292,22 @@ namespace UIKit
         public NSView? SourceView { get; set; }
         public CGRect SourceRect { get; set; }
     }
+    
+    public enum UIReturnKeyType : long
+    {
+	    Default,
+	    Go,
+	    Google,
+	    Join,
+	    Next,
+	    Route,
+	    Search,
+	    Send,
+	    Yahoo,
+	    Done,
+	    EmergencyCall,
+	    Continue,
+    }
 
     public class UIScreen : NSObject
     {
@@ -1507,9 +1540,11 @@ namespace UIKit
         }
         public string Placeholder { get => PlaceholderString; set => PlaceholderString = value; }
         public UITextFieldViewMode ClearButtonMode { get; set; }
-        public Func<object, bool>? ShouldReturn { get; set; }
         public UITextAutocorrectionType AutocorrectionType { get; set; }
         public UITextAutocapitalizationType AutocapitalizationType { get; set; }
+        public UIReturnKeyType ReturnKeyType { get; set; } = UIReturnKeyType.Default;
+        public UITextFieldCondition? ShouldReturn { get; set; }
+        public virtual UIKeyboardType KeyboardType { get; set; } = UIKeyboardType.Default;
 
         public UITextBorderStyle BorderStyle
         {
@@ -1550,9 +1585,12 @@ namespace UIKit
         }
     }
 
-    public enum UITextFieldViewMode
+    public enum UITextFieldViewMode : long
     {
-        Always
+	    Never,
+	    WhileEditing,
+	    UnlessEditing,
+	    Always,
     }
 
     public class UITextView : NSScrollView
@@ -1601,6 +1639,8 @@ namespace UIKit
             textView.TextDidChange += (s, e) => Changed?.Invoke (s, e);
         }
     }
+    
+    public delegate bool UITextFieldCondition(UITextField textField);
 
     public class UITouch : NSObject
     {

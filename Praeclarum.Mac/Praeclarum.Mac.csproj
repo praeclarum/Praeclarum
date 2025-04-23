@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0-macos</TargetFramework>
+    <TargetFramework>net9.0-macos</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <Version>1.0.0</Version>
-    <SupportedOSPlatformVersion>10.15</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>12.0</SupportedOSPlatformVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 

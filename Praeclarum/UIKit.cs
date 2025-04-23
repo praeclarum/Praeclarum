@@ -1015,7 +1015,7 @@ namespace UIKit
 	    DecimalPad = 8,
 	    Twitter = 9,
 	    WebSearch = 10, // 0x000000000000000A
-	    [Introduced(PlatformName.iOS, 10, 0, PlatformArchitecture.All, null)] AsciiCapableNumberPad = 11, // 0x000000000000000B
+	    AsciiCapableNumberPad = 11, // 0x000000000000000B
     }
 
     [Flags]

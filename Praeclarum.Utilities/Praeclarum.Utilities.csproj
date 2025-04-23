@@ -14,16 +14,16 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
-    <SupportedOSPlatformVersion>9.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-tvos'))">
     <SupportedOSPlatformVersion>10.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-maccatalyst'))">
-    <SupportedOSPlatformVersion>13.1</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-macos'))">
-    <SupportedOSPlatformVersion>10.15</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>12.0</SupportedOSPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-android'))">
     <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>

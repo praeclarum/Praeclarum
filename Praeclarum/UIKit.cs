@@ -304,6 +304,8 @@ namespace UIKit
 		        collectionView.BackgroundColors = new[] { c };
 	        }
 		}
+        
+        public NSCollectionViewLayout? CollectionViewLayout => collectionView.CollectionViewLayout;
 
         public UICollectionView (CGRect frame, UICollectionViewFlowLayout layout)
 			: base(frame)
@@ -352,8 +354,6 @@ namespace UIKit
         readonly Lazy<UITraitCollection> traitCollection = new Lazy<UITraitCollection> (() => new UITraitCollection ());
         public UITraitCollection TraitCollection => traitCollection.Value;
 
-        public UICollectionViewFlowLayout CollectionViewLayout { get; private set; }
-
         public UICollectionViewController () : this (new UICollectionViewFlowLayout ())
         {
         }
@@ -361,7 +361,6 @@ namespace UIKit
         public UICollectionViewController (UICollectionViewFlowLayout layout)
         {
 	        CollectionView = new UICollectionView (new CGRect (0, 0, 320, 480), layout);
-	        CollectionViewLayout = layout;
             base.View = CollectionView;
         }
 

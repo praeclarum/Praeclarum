@@ -103,7 +103,7 @@ namespace Praeclarum.UI
 
 		public DocumentsViewItem GetItemAtPoint (Praeclarum.Graphics.PointF p)
 		{
-			var index = IndexPathForRowAtPoint (Praeclarum.Graphics.RectangleEx.ToPointF (p));
+			var index = IndexPathForRowAtPoint (Praeclarum.Graphics.CoreGraphicsRectangleEx.ToPointF (p));
 			if (index == null)
 				return null;
 

@@ -613,7 +613,7 @@ namespace Praeclarum.UI
 
 				var p = gestureRecognizer.LocationInView ((UIView)docsView);
 
-				var item = docsView.GetItemAtPoint (Praeclarum.Graphics.RectangleEx.ToPointF (p));
+				var item = docsView.GetItemAtPoint (Praeclarum.Graphics.CoreGraphicsRectangleEx.ToPointF (p));
 
 				if (item == null)
 					return;

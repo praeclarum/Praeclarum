@@ -226,7 +226,7 @@ namespace Praeclarum.UI
 
 		public DocumentsViewItem GetItemAtPoint (Praeclarum.Graphics.PointF p)
 		{
-			var index = IndexPathForItemAtPoint (Praeclarum.Graphics.RectangleEx.ToPointF (p));
+			var index = IndexPathForItemAtPoint (Praeclarum.Graphics.CoreGraphicsRectangleEx.ToPointF (p));
 			if (index == null || index.Section == 0)
 				return null;
 

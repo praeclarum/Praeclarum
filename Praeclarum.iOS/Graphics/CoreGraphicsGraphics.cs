@@ -635,7 +635,7 @@ namespace Praeclarum.Graphics
 		}
 	}
 
-	public static partial class RectangleEx
+	public static class CoreGraphicsRectangleEx
 	{
 		public static NativeRect ToRectangleF (this Praeclarum.Graphics.RectangleF rect)
 		{

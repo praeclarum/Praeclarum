@@ -347,14 +347,22 @@ namespace UIKit
 
         public UINavigationItem NavigationItem { get; } = new UINavigationItem ();
 
-        public UICollectionView CollectionView { get; } = new UICollectionView (new CGRect (0, 0, 320, 480), new UICollectionViewFlowLayout ());
+        public UICollectionView CollectionView { get; private set; }
 
         readonly Lazy<UITraitCollection> traitCollection = new Lazy<UITraitCollection> (() => new UITraitCollection ());
         public UITraitCollection TraitCollection => traitCollection.Value;
 
-        public UICollectionViewController ()
+        public UICollectionViewFlowLayout CollectionViewLayout { get; private set; }
+
+        public UICollectionViewController () : this (new UICollectionViewFlowLayout ())
         {
-            View = CollectionView;
+        }
+
+        public UICollectionViewController (UICollectionViewFlowLayout layout)
+        {
+	        CollectionView = new UICollectionView (new CGRect (0, 0, 320, 480), layout);
+	        CollectionViewLayout = layout;
+            base.View = CollectionView;
         }
 
         public void DismissViewController (bool animated, Action completionHandler)

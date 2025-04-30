@@ -1,6 +1,6 @@
 using System;
 
-#if __UNIFIED__
+#if __MACOS__ || __IOS__ || __MACCATALYST__
 using NativeSize = CoreGraphics.CGSize;
 using NativePoint = CoreGraphics.CGPoint;
 using NativeRect = CoreGraphics.CGRect;

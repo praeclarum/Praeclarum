@@ -6,6 +6,11 @@ using StoreKit;
 
 namespace Praeclarum.App
 {
+	public interface IHasReviewNagging
+	{
+		ReviewNagging ReviewNagging { get; }
+	}
+
 	public class ReviewNagging
 	{
 		// https://developer.apple.com/documentation/storekit/skstorereviewcontroller/requesting_app_store_reviews

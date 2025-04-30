@@ -1,5 +1,6 @@
+#nullable enable
 //
-// Copyright (c) 2013-2015 Frank A. Krueger
+// Copyright (c) 2013-2025 Frank A. Krueger
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,12 +27,29 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using Foundation;
 using UIKit;
 
 namespace Praeclarum.UI
 {
 	public static class Layout
 	{
+		/// <summary>
+		/// <para>Constrains the layout of subviews according to equations and
+		/// inequalities specified in <paramref name="constraints"/> and adds
+		/// those constraints to the <paramref name="view"/>. Issue
+		/// multiple constraints per call using the &amp;&amp; operator.</para>
+		/// <para>e.g. button.Frame.Left &gt;= text.Frame.Right + 22 &amp;&amp;
+		/// button.Frame.Width == View.Frame.Width * 0.42f</para>
+		/// </summary>
+		/// <param name="view">The superview laying out the referenced subviews.</param>
+		/// <param name="constraints">Constraint equations and inequalities.</param>
+		public static void AddLayoutConstraints (this UIView view, Expression<Func<bool>> constraints)
+        {
+            var cs = ConstrainLayout (view, constraints, UILayoutPriority.Required);
+            view.AddConstraints (cs);
+        }
+
 		/// <summary>
 		/// <para>Constrains the layout of subviews according to equations and
 		/// inequalities specified in <paramref name="constraints"/>.  Issue
@@ -78,39 +96,37 @@ namespace Praeclarum.UI
 		static NSLayoutConstraint CompileConstraint (BinaryExpression expr, UIView constrainedView)
 		{
 			var rel = NSLayoutRelation.Equal;
-			switch (expr.NodeType) {
-			case ExpressionType.Equal:
-				rel = NSLayoutRelation.Equal;
-				break;
-			case ExpressionType.LessThanOrEqual:
-				rel = NSLayoutRelation.LessThanOrEqual;
-				break;
-			case ExpressionType.GreaterThanOrEqual:
-				rel = NSLayoutRelation.GreaterThanOrEqual;
-				break;
-			default:
-				throw new NotSupportedException ("Not a valid relationship for a constrain.");
-			}
+			rel = expr.NodeType switch
+			{
+				ExpressionType.Equal => NSLayoutRelation.Equal,
+				ExpressionType.LessThanOrEqual => NSLayoutRelation.LessThanOrEqual,
+				ExpressionType.GreaterThanOrEqual => NSLayoutRelation.GreaterThanOrEqual,
+				_ => throw new NotSupportedException ("Not a valid relationship for a constrain."),
+			};
+
+			if (rel == NSLayoutRelation.Equal && IsAnchor (expr.Left) && IsAnchor (expr.Right)) {
+                return GetAnchorConstraint (expr);
+            }
 
 			var left = GetViewAndAttribute (expr.Left);
-			if (left.Item1 != constrainedView) {
-				left.Item1.TranslatesAutoresizingMaskIntoConstraints = false;
-			}
+			if (left.View != constrainedView && left.View is UIView lview) {
+                lview.TranslatesAutoresizingMaskIntoConstraints = false;
+            }
 
 			var right = GetRight (expr.Right);
 
 			return NSLayoutConstraint.Create (
-				left.Item1, left.Item2,
+				left.View, left.Attribute,
 				rel,
-				right.Item1, right.Item2,
+				right.View, right.Attribute,
 				right.Item3, right.Item4);
 		}
 
-		static Tuple<UIView, NSLayoutAttribute, nfloat, nfloat> GetRight (Expression expr)
+		static (NSObject? View, NSLayoutAttribute Attribute, nfloat, nfloat) GetRight (Expression expr)
 		{
 			var r = expr;
 
-			UIView view = null;
+			NSObject? view = null;
 			NSLayoutAttribute attr = NSLayoutAttribute.NoAttribute;
 			nfloat mul = 1;
 			nfloat add = 0;
@@ -156,8 +172,8 @@ namespace Praeclarum.UI
 				add = ConstantValue (r);
 			} else if (r.NodeType == ExpressionType.MemberAccess || r.NodeType == ExpressionType.Call) {
 				var t = GetViewAndAttribute (r);
-				view = t.Item1;
-				attr = t.Item2;
+				view = t.View;
+				attr = t.Attribute;
 			} else {
 				throw new NotSupportedException ("Unsupported layout expression node type " + r.NodeType);
 			}
@@ -165,7 +181,7 @@ namespace Praeclarum.UI
 			if (!pos)
 				mul = -mul;
 
-			return Tuple.Create (view, attr, mul, add);
+			return (view, attr, mul, add);
 		}
 
 		static bool IsConstant (Expression expr)
@@ -210,10 +226,10 @@ namespace Praeclarum.UI
 			}
 		}
 
-		static Tuple<UIView, NSLayoutAttribute> GetViewAndAttribute (Expression expr)
+		static (NSObject View, NSLayoutAttribute Attribute) GetViewAndAttribute (Expression expr)
 		{
 			var attr = NSLayoutAttribute.NoAttribute;
-			MemberExpression frameExpr = null;
+			MemberExpression? frameExpr = null;
 
 			var fExpr = expr as MethodCallExpression;
 			if (fExpr != null) {
@@ -238,32 +254,34 @@ namespace Praeclarum.UI
 
 			if (attr == NSLayoutAttribute.NoAttribute) {
 				var memExpr = expr as MemberExpression;
-				if (memExpr == null)
-					throw new NotSupportedException ("Left hand side of a relation must be a member expression, instead it is " + expr);
+                if (memExpr == null && expr.NodeType == ExpressionType.Convert && expr is UnaryExpression convert)
+                    memExpr = convert.Operand as MemberExpression;
+                if (memExpr == null)
+                    throw new NotSupportedException ("Left hand side of a relation must be a member expression, instead it is " + expr);
 
 				switch (memExpr.Member.Name) {
 					case "Width":
-					attr = NSLayoutAttribute.Width;
-					break;
+						attr = NSLayoutAttribute.Width;
+						break;
 					case "Height":
-					attr = NSLayoutAttribute.Height;
-					break;
+						attr = NSLayoutAttribute.Height;
+						break;
 					case "Left":
 					case "X":
-					attr = NSLayoutAttribute.Left;
-					break;
+						attr = NSLayoutAttribute.Left;
+						break;
 					case "Top":
 					case "Y":
-					attr = NSLayoutAttribute.Top;
-					break;
+						attr = NSLayoutAttribute.Top;
+						break;
 					case "Right":
-					attr = NSLayoutAttribute.Right;
-					break;
+						attr = NSLayoutAttribute.Right;
+						break;
 					case "Bottom":
-					attr = NSLayoutAttribute.Bottom;
-					break;
+						attr = NSLayoutAttribute.Bottom;
+						break;
 					default:
-					throw new NotSupportedException ("Property " + memExpr.Member.Name + " is not recognized.");
+						throw new NotSupportedException ("Property " + memExpr.Member.Name + " is not recognized.");
 				}
 
 				frameExpr = memExpr.Expression as MemberExpression;
@@ -273,17 +291,21 @@ namespace Praeclarum.UI
 				throw new NotSupportedException ("Constraints should use the Frame or Bounds property of views.");
 			var viewExpr = frameExpr.Expression;
 
-			var view = Eval (viewExpr) as UIView;
-			if (view == null)
-				throw new NotSupportedException ("Constraints only apply to views.");
+			if (viewExpr is null || !(Eval (viewExpr) is UIView view))
+                throw new NotSupportedException ("Constraints only apply to views.");
 
-			return Tuple.Create (view, attr);
+			if (frameExpr.Member.Name == "SafeAreaLayoutGuide") {
+                return (view.SafeAreaLayoutGuide, attr);
+            }
+            else {
+                return (view, attr);
+            }
 		}
 
-		static object Eval (Expression expr)
+		static object? Eval (Expression expr)
 		{
-			if (expr.NodeType == ExpressionType.Constant) {
-				return ((ConstantExpression)expr).Value;
+			if (expr.NodeType == ExpressionType.Constant && expr is ConstantExpression constExpr) {
+				return constExpr.Value;
 			}
 			
 			if (expr.NodeType == ExpressionType.MemberAccess) {
@@ -296,13 +318,12 @@ namespace Praeclarum.UI
 				}
 			}
 
-			if (expr.NodeType == ExpressionType.Convert) {
-				var cexpr = (UnaryExpression)expr;
-				var op = Eval (cexpr.Operand);
-				if (cexpr.Method != null) {
-					return cexpr.Method.Invoke (null, new[]{ op });
+			if (expr.NodeType == ExpressionType.Convert && expr is UnaryExpression convExpr) {
+				var op = Eval (convExpr.Operand);
+				if (convExpr.Method != null) {
+					return convExpr.Method.Invoke (null, new[]{ op });
 				} else {
-					return Convert.ChangeType (op, cexpr.Type);
+					return Convert.ChangeType (op, convExpr.Type);
 				}
 			}
 
@@ -322,6 +343,29 @@ namespace Praeclarum.UI
 				constraintExprs.Add (b);
 			}
 		}
+
+		static bool IsAnchor (Expression expr)
+        {
+            return expr is MemberExpression m && m.Member.Name.EndsWith ("Anchor", StringComparison.Ordinal);
+        }
+
+        static NSObject? GetAnchor (Expression expr)
+        {
+            return Eval (expr) as NSObject;
+        }
+
+        static NSLayoutConstraint GetAnchorConstraint (BinaryExpression binary)
+        {
+            var left = GetAnchor (binary.Left);
+            var right = GetAnchor (binary.Right);
+            if (left != null && right != null) {
+                var t = left.GetType ();
+                var m = t.GetMethods ().FirstOrDefault (x => x.Name == "ConstraintEqualTo" && x.GetParameters ().Length == 1);
+                if (m?.Invoke (left, new object[] { right }) is NSLayoutConstraint r)
+					return r;
+            }
+            throw new Exception ("Failed to get the left and right anchors from " + binary);
+        }
 
 		/// <summary>
 		/// The baseline of the view whose frame is viewFrame. Use only when defining constraints.

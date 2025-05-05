@@ -571,7 +571,7 @@ namespace UIKit
 
         public UIColor (NSColor color)
         {
-            this.color = color;
+	        this.color = color ?? throw new ArgumentNullException (nameof (color));
         }
 
         public static UIColor FromNSColor (NSColor color)

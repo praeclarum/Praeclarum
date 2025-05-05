@@ -378,8 +378,10 @@ namespace Praeclarum
                 TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
                 Converters = {
 	                #if __MACOS__ || __IOS__ || __MACCATALYST__
-                    new SceneKitConverter ()
+                    new SceneKitConverter (),
+	                new UIKitConverter (),
                     #endif
+	                new OldMatrixConverter ()
                 },
                 SerializationBinder = new AssemblylessTypeBinder (assembly),
             };
@@ -407,7 +409,7 @@ namespace Praeclarum
                 {
 	                t = Type.GetType (typeName);
                 }
-                if (t == null || t.IsAbstract) {
+                if (t is null || t.IsAbstract) {
                     t = typeof (Praeclarum.Entity);
                 }
                 return t;

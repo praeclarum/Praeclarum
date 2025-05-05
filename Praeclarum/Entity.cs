@@ -422,13 +422,13 @@ namespace Praeclarum
             public override void WriteJson (JsonWriter writer, object? value, JsonSerializer serializer)
             {
                 if (value is SCNMatrix4 m) {
-                    serializer.Serialize (writer, new[] { m.Row0, m.Row1, m.Row2, m.Row3 });
+                    serializer.Serialize (writer, new [] { m.Row0, m.Row1, m.Row2, m.Row3 });
                 }
                 else if (value is SCNVector4 v4) {
-                    serializer.Serialize (writer, new[] { v4.X, v4.Y, v4.Z, v4.W });
+                    serializer.Serialize (writer, new [] { (float)v4.X, (float)v4.Y, (float)v4.Z, (float)v4.W });
                 }
                 else if (value is SCNVector3 v3) {
-                    serializer.Serialize (writer, new[] { v3.X, v3.Y, v3.Z });
+                    serializer.Serialize (writer, new [] { (float)v3.X, (float)v3.Y, (float)v3.Z });
                 }
                 else {
                     throw new NotSupportedException (String.Format ("Cannot serialize {0} ({1})", value, value?.GetType ()));

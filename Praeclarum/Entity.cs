@@ -12,7 +12,7 @@ using System.Threading;
 
 using Newtonsoft.Json;
 
-#if __IOS__ || __MACOS__
+#if __IOS__ || __MACOS__ || __MACCATALYST__
 using SceneKit;
 using UIKit;
 #endif
@@ -377,7 +377,7 @@ namespace Praeclarum
                 TypeNameHandling = TypeNameHandling.Auto,
                 TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
                 Converters = {
-	                #if __MACOS__ || __IOS__
+	                #if __MACOS__ || __IOS__ || __MACCATALYST__
                     new SceneKitConverter ()
                     #endif
                 },
@@ -414,7 +414,7 @@ namespace Praeclarum
             }
         }
 
-		#if __MACOS__ || __IOS__
+		#if __MACOS__ || __IOS__ || __MACCATALYST__
         class SceneKitConverter : JsonConverter
         {
             public override void WriteJson (JsonWriter writer, object? value, JsonSerializer serializer)
@@ -427,18 +427,6 @@ namespace Praeclarum
                 }
                 else if (value is SCNVector3 v3) {
                     serializer.Serialize (writer, new[] { v3.X, v3.Y, v3.Z });
-                }
-                else if (value is UIColor c) {
-                    var comps = c.CGColor.Components;
-                    if (comps.Length == 2) {
-                        serializer.Serialize (writer, new[] { (float)comps[0], (float)comps[0], (float)comps[0], (float)comps[1] });
-                    }
-                    else if (comps.Length == 4) {
-                        serializer.Serialize (writer, new[] { (float)comps[0], (float)comps[1], (float)comps[2], (float)comps[3] });
-                    }
-                    else {
-                        serializer.Serialize (writer, new[] { 0.0f, 0.0f, 0.0f, 1.0f });
-                    }
                 }
                 else {
                     throw new NotSupportedException (String.Format ("Cannot serialize {0} ({1})", value, value?.GetType ()));
@@ -465,7 +453,41 @@ namespace Praeclarum
                         return null;
                     return new SCNVector3 (components[0], components[1], components[2]);
                 }
-                else if (objectType == typeof (UIColor)) {
+                throw new NotSupportedException (String.Format ("Cannot serialize type {0}", objectType));
+            }
+
+            public override bool CanConvert (Type objectType)
+            {
+                return objectType == typeof (SCNMatrix4)
+                    || objectType == typeof (SCNVector4)
+                    || objectType == typeof (SCNVector3);
+            }
+        }
+
+        class UIKitConverter : JsonConverter
+        {
+            public override void WriteJson (JsonWriter writer, object? value, JsonSerializer serializer)
+            {
+                if (value is UIColor c) {
+                    var comps = c.CGColor.Components;
+                    if (comps.Length == 2) {
+                        serializer.Serialize (writer, new[] { (float)comps[0], (float)comps[0], (float)comps[0], (float)comps[1] });
+                    }
+                    else if (comps.Length == 4) {
+                        serializer.Serialize (writer, new[] { (float)comps[0], (float)comps[1], (float)comps[2], (float)comps[3] });
+                    }
+                    else {
+                        serializer.Serialize (writer, new[] { 0.0f, 0.0f, 0.0f, 1.0f });
+                    }
+                }
+                else {
+                    throw new NotSupportedException (String.Format ("Cannot serialize {0} ({1})", value, value?.GetType ()));
+                }
+            }
+
+            public override object? ReadJson (JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+            {
+                if (objectType == typeof (UIColor)) {
                     var components = serializer.Deserialize<float[]> (reader);
                     if (components == null)
                         return null;
@@ -477,11 +499,58 @@ namespace Praeclarum
 
             public override bool CanConvert (Type objectType)
             {
-                return objectType == typeof (SCNMatrix4)
-                    || objectType == typeof (SCNVector4) || objectType == typeof (SCNVector3)
-                    || objectType == typeof (UIColor);
+                return objectType == typeof (UIColor);
             }
         }
         #endif
+
+        class OldMatrixConverter : JsonConverter
+        {
+            public override void WriteJson (JsonWriter writer, object? value, JsonSerializer serializer)
+            {
+                if (value is OldMatrix4 m) {
+                    serializer.Serialize (writer, new[] { m.Row0, m.Row1, m.Row2, m.Row3 });
+                }
+                else if (value is OldVector4 v4) {
+                    serializer.Serialize (writer, new[] { v4.X, v4.Y, v4.Z, v4.W });
+                }
+                else if (value is OldVector3 v3) {
+                    serializer.Serialize (writer, new[] { v3.X, v3.Y, v3.Z });
+                }
+                else {
+                    throw new NotSupportedException (String.Format ("Cannot serialize {0} ({1})", value, value?.GetType ()));
+                }
+            }
+
+            public override object? ReadJson (JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+            {
+                if (objectType == typeof (OldMatrix4)) {
+                    var rows = serializer.Deserialize<OldVector4[]> (reader);
+                    if (rows == null)
+                        return null;
+                    return new OldMatrix4 (rows[0], rows[1], rows[2], rows[3]);
+                }
+                else if (objectType == typeof (OldVector4)) {
+                    var components = serializer.Deserialize<float[]> (reader);
+                    if (components == null)
+                        return null;
+                    return new OldVector4 (components[0], components[1], components[2], components[3]);
+                }
+                else if (objectType == typeof (OldVector3)) {
+                    var components = serializer.Deserialize<float[]> (reader);
+                    if (components == null)
+                        return null;
+                    return new OldVector3 (components[0], components[1], components[2]);
+                }
+                throw new NotSupportedException (String.Format ("Cannot serialize type {0}", objectType));
+            }
+
+            public override bool CanConvert (Type objectType)
+            {
+                return objectType == typeof (OldMatrix4)
+                    || objectType == typeof (OldVector4)
+                    || objectType == typeof (OldVector3);
+            }
+        }
     }
 }

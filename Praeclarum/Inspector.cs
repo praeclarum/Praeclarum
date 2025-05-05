@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Linq;
 
 using NGraphics;
-using static Praeclarum.MathEx;
 
 #if __IOS__
 using SceneKit;
@@ -300,16 +299,39 @@ namespace Praeclarum.Inspector
         }
         #endif
 
+#if __IOS__ || __MACOS__ || __MACCATALYST__
+        static Color GetNColor (UIKit.UIColor color)
+        {
+            if (color.CGColor is {} cgc) {
+                return GetNColor (cgc);
+            }
+            return Colors.Black;
+        }
+        static Color GetNColor (CoreGraphics.CGColor color)
+        {
+            var comps = color.Components;
+            if (color.ColorSpace?.Components >= 3) {
+                var a = comps.Length > 3 ? comps[3] : (nfloat)1.0;
+                return new Color (comps[0], comps[1], comps[2], a);
+            }
+            else {
+                var a = comps.Length > 1 ? comps[1] : (nfloat)1.0;
+                var w = comps[0];
+                return new Color (w, w, w, a);
+            }
+        }
+#endif
+
         public Color ColorValue {
             get {
                 try {
                     return Value switch
                     {
                         Color ngc => ngc,
-                        #if __IOS__ || __MACOS__
-                        SCNVector3 v3 => v3.GetNGraphicsColor (),
-                        SCNVector4 v4 => v4.GetNGraphicsColor (),
-                        UIColor uic => uic.GetNGraphicsColor (),
+                        #if __IOS__ || __MACOS__ || __MACCATALYST__
+                        System.Numerics.Vector3 v3 => new Color(v3.X, v3.Y, v3.Z),
+                        System.Numerics.Vector4 v4 => new Color(v4.X, v4.Y, v4.Z, v4.W),
+                        UIColor uic => GetNColor (uic),
                         #endif
                         _ => Colors.Black,
                     };
@@ -324,18 +346,18 @@ namespace Praeclarum.Inspector
                         case Color ngc:
                             Value = value;
                             break;
-                        #if __IOS__ || __MACOS__
+                        #if __IOS__ || __MACOS__ || __MACCATALYST__
                         case null when ValueType == typeof (UIColor):
-	                        Value = Rgbaf (value.Red, value.Green, value.Blue, value.Alpha);
+	                        Value = UIColor.FromRGBA ((float)value.Red, (float)value.Green, (float)value.Blue, (float)value.Alpha);
 	                        break;
-                        case SCNVector3 v3:
-                            Value = Xyz (value.Red, value.Green, value.Blue);
+                        case System.Numerics.Vector3 v3:
+                            Value = new System.Numerics.Vector3 ((float)value.Red, (float)value.Green, (float)value.Blue);
                             break;
-                        case SCNVector4 v4:
-                            Value = Xyzw (value.Red, value.Green, value.Blue, value.Alpha);
+                        case System.Numerics.Vector4 v4:
+                            Value = new System.Numerics.Vector4 ((float)value.Red, (float)value.Green, (float)value.Blue, (float)value.Alpha);
                             break;
                         case UIColor uic:
-                            Value = Rgbaf (value.Red, value.Green, value.Blue, value.Alpha);
+                            Value = UIColor.FromRGBA ((float)value.Red, (float)value.Green, (float)value.Blue, (float)value.Alpha);
                             break;
                         #endif
                     }

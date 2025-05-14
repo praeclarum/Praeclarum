@@ -5,6 +5,7 @@
     <ImplicitUsings>false</ImplicitUsings>
     <Version>1.0.0</Version>
     <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
     <SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>

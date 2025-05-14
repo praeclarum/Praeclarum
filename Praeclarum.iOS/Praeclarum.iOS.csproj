@@ -6,6 +6,7 @@
     <ImplicitUsings>false</ImplicitUsings>
     <DefineConstants>NO_DROPBOX</DefineConstants>
     <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">

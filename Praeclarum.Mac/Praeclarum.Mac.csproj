@@ -6,6 +6,7 @@
     <Version>1.0.0</Version>
     <SupportedOSPlatformVersion>12.0</SupportedOSPlatformVersion>
     <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -21,6 +22,9 @@
       <None Remove="App\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Praeclarum.iOS\GlobalSuppressions.cs">
+      <Link>GlobalSuppressions.cs</Link>
+    </Compile>
     <Compile Include="..\Praeclarum.iOS\Graphics\CoreGraphicsGraphics.cs">
       <Link>CoreGraphicsGraphics.cs</Link>
     </Compile>

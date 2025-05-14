@@ -216,7 +216,7 @@ namespace Praeclarum
         /// Event handler for when a referenced entity registers an undo action.
         /// The default implementation forwards the event using <see cref="RegisteredUndo"/>.
         /// </summary>
-        void OnReferenceRegisteredUndo (object sender, UndoEventArgs e)
+        void OnReferenceRegisteredUndo (object? sender, UndoEventArgs e)
         {
             // Relay undo events
             var lastId = Interlocked.Exchange (ref lastTriggeredUndoEventId, e.EventId);
@@ -228,7 +228,7 @@ namespace Praeclarum
         /// Event handler for when a referenced entity's property has changed.
         /// The default implementation does nothing.
         /// </summary>
-        protected virtual void OnReferencePropertyChanged (object sender, PropertyChangedEventArgs e)
+        protected virtual void OnReferencePropertyChanged (object? sender, PropertyChangedEventArgs e)
         {
         }
 
@@ -236,7 +236,7 @@ namespace Praeclarum
         /// Event handler for when the structure of a list property changes.
         /// This includes adding, removing, and updating (change the reference, not mutating) items.
         /// </summary>
-        protected virtual void OnReferenceListChanged (object sender, NotifyCollectionChangedEventArgs e, bool undoable)
+        protected virtual void OnReferenceListChanged (object? sender, NotifyCollectionChangedEventArgs e, bool undoable)
         {
             //
             // Unbind the old and bind the new items
@@ -314,12 +314,12 @@ namespace Praeclarum
             }
         }
         
-        void OnUndoableReferenceListChanged (object sender, NotifyCollectionChangedEventArgs e)
+        void OnUndoableReferenceListChanged (object? sender, NotifyCollectionChangedEventArgs e)
         {
             OnReferenceListChanged (sender, e, true);
         }
 
-        void OnBoringReferenceListChanged (object sender, NotifyCollectionChangedEventArgs e)
+        void OnBoringReferenceListChanged (object? sender, NotifyCollectionChangedEventArgs e)
         {
             OnReferenceListChanged (sender, e, false);
         }
@@ -399,7 +399,7 @@ namespace Praeclarum
 	        public void BindToName (Type serializedType, out string? assemblyName, out string typeName)
             {
                 assemblyName = null;
-                typeName = serializedType.FullName;
+                typeName = serializedType.FullName ?? "UnnamedType";
             }
 
             public Type BindToType (string? assemblyName, string typeName)

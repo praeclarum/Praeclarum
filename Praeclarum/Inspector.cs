@@ -527,7 +527,7 @@ namespace Praeclarum.Inspector
                 }
             }
             if (newType == typeof (bool) && vt == typeof (string)) {
-                var input = value.ToString ().Trim ().ToLowerInvariant ();
+                var input = value.ToString ()?.Trim ().ToLowerInvariant ();
                 result = (input == "true" || input == "yes");
                 return true;
             }
@@ -591,9 +591,9 @@ namespace Praeclarum.Inspector
                 m.Name.StartsWith ("ShouldSerialize", StringComparison.Ordinal))
                 yield break;
 
-            var shouldProp = (target != null ? target.GetType () : m.DeclaringType).GetMethod ("ShouldInspect" + m.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+            var shouldProp = (target != null ? target.GetType () : m.DeclaringType)?.GetMethod ("ShouldInspect" + m.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
             //Console.WriteLine ($"? {m.Name} {shouldProp}");
-            if (shouldProp != null && (bool)shouldProp.Invoke (target, new object[0]) == false)
+            if (shouldProp is not null && (bool)(shouldProp.Invoke (target, new object[0]) ?? false) == false)
                 yield break;
 
             var ignore = m.GetCustomAttribute<InspectorIgnoreAttribute> ();
@@ -623,7 +623,7 @@ namespace Praeclarum.Inspector
 
                 var depth = 0;
                 var baseMethodType = target?.GetType () ?? baseMethod.DeclaringType;
-                while (baseMethodType != baseMethod.DeclaringType && baseMethodType != typeof (object)) {
+                while (baseMethodType is not null && baseMethodType != baseMethod.DeclaringType && baseMethodType != typeof (object)) {
                     depth++;
                     baseMethodType = baseMethodType.BaseType;
                 }
@@ -665,7 +665,7 @@ namespace Praeclarum.Inspector
 
                 var depth = 0;
                 var baseMethodType = target?.GetType () ?? baseMethod.DeclaringType;
-                while (baseMethodType != baseMethod.DeclaringType && baseMethodType != typeof (object)) {
+                while (baseMethodType is not null && baseMethodType != baseMethod.DeclaringType && baseMethodType != typeof (object)) {
                     depth++;
                     baseMethodType = baseMethodType.BaseType;
                 }
@@ -730,9 +730,9 @@ namespace Praeclarum.Inspector
                                 try {
                                     var ptype = setter.GetParameters ()[0].ParameterType;
                                     var arg = Convert.ChangeType (x, ptype);
-                                    setter.Invoke (target, new object[] { arg });
+                                    setter.Invoke (target, new object?[] { arg });
                                     if (firstTime) {
-                                        Log.Analytics ("Set Property", ("Type", (target?.GetType () ?? setter.DeclaringType).Name), ("Property", property.Name));
+                                        Log.Analytics ("Set Property", ("Type", (target?.GetType () ?? setter.DeclaringType)?.Name), ("Property", property.Name));
                                     }
                                 }
                                 catch (Exception ex) {

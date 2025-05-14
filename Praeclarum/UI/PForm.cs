@@ -134,7 +134,7 @@ namespace Praeclarum.UI
 			if (c != null)
 				return c.Name;
 
-			return item.ToString ();
+			return item.ToString () ?? "";
 		}
 
 		public virtual bool GetItemNavigates (object item)

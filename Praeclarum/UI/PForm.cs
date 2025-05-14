@@ -15,7 +15,7 @@ namespace Praeclarum.UI
 		readonly ObservableCollection<PFormSection> sections;
 		public IList<PFormSection> Sections { get { return sections; } }
 
-		void HandleSectionsChanged (object sender, NotifyCollectionChangedEventArgs e)
+		void HandleSectionsChanged (object? sender, NotifyCollectionChangedEventArgs e)
 		{
 			if (e.OldItems != null)
 				foreach (PFormSection o in e.OldItems)

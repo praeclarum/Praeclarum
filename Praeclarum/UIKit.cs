@@ -50,10 +50,10 @@ namespace UIKit
             }
             return Bottom == other.Bottom;
         }
-        public override bool Equals (object obj)
+        public override bool Equals (object? obj)
         {
-            if (obj is NSDirectionalEdgeInsets) {
-                return Equals ((NSDirectionalEdgeInsets)obj);
+            if (obj is NSDirectionalEdgeInsets dei) {
+                return Equals (dei);
             }
             return false;
         }
@@ -563,8 +563,8 @@ namespace UIKit
         public static readonly UIColor SystemBackground = new UIColor (NSColor.TextBackground);
         public static readonly UIColor Label = new UIColor (NSColor.Label);
 
-        public static readonly ThreadLocal<UIColor> currentFill = new ThreadLocal<UIColor> ();
-        public static UIColor CurrentFill => currentFill.Value;
+        static readonly ThreadLocal<UIColor> currentFill = new ThreadLocal<UIColor> ();
+        public static UIColor CurrentFill => currentFill.Value ?? UIColor.Black;
 
         public CGColor CGColor => color.CGColor;
         public NSColor NSColor => color;
@@ -984,10 +984,6 @@ namespace UIKit
     public class UIImageView : NSImageView
     {
         public UIColor? BackgroundColor { get; set; }
-        public bool ClipsToBounds {
-	        get => Messaging.bool_objc_msgSend(Handle, UIView.s_clipsToBounds);
-	        set => Messaging.void_objc_msgSend_bool(Handle, UIView.s_setClipsToBounds, value);
-        }
     }
 
     public class UIImpactFeedbackGenerator : NSObject
@@ -1045,7 +1041,7 @@ namespace UIKit
 
         public new UIColor TextColor
         {
-	        get => new UIColor (base.TextColor);
+	        get => new UIColor (base.TextColor ?? NSColor.Black);
 	        set => base.TextColor = value;
         }
         public UITextAlignment TextAlignment {
@@ -1345,10 +1341,6 @@ namespace UIKit
         public bool AlwaysBounceVertical { get; set; }
         public bool AlwaysBounceHorizontal { get; set; }
         public bool DirectionalLockEnabled { get; set; }
-        public bool ClipsToBounds {
-	        get => Messaging.bool_objc_msgSend(Handle, UIView.s_clipsToBounds);
-	        set => Messaging.void_objc_msgSend_bool(Handle, UIView.s_setClipsToBounds, value);
-        }
 
         public UIScrollView (CGRect frameRect) : base (frameRect)
         {
@@ -1400,7 +1392,7 @@ namespace UIKit
             base.Activated += HandleActivated;
         }
 
-        void HandleActivated (object sender, EventArgs e)
+        void HandleActivated (object? sender, EventArgs e)
         {
             ValueChanged?.Invoke (this, e);
         }
@@ -1545,7 +1537,7 @@ namespace UIKit
             get => StringValue;
             set => StringValue = value ?? "";
         }
-        public string Placeholder { get => PlaceholderString; set => PlaceholderString = value; }
+        public string? Placeholder { get => PlaceholderString; set => PlaceholderString = value; }
         public UITextFieldViewMode ClearButtonMode { get; set; }
         public UITextAutocorrectionType AutocorrectionType { get; set; }
         public UITextAutocapitalizationType AutocapitalizationType { get; set; }
@@ -1627,7 +1619,7 @@ namespace UIKit
 
         public UITextView ()
         {
-            textView.TextContainer.ContainerSize = new CGSize (nfloat.MaxValue, nfloat.MaxValue);
+            textView.TextContainer.Size = new CGSize (-1.0, -1.0);
             textView.TextContainer.WidthTracksTextView = true;
             textView.TextContainer.LineBreakMode = NSLineBreakMode.Clipping;
 
@@ -1720,12 +1712,6 @@ namespace UIKit
         public new UIViewAutoresizing AutoresizingMask {
             get => this.GetAutoresizingMask ();
             set => this.SetAutoresizingMask (value);
-        }
-        public static readonly IntPtr s_clipsToBounds = Selector.GetHandle("clipsToBounds");
-        public static readonly IntPtr s_setClipsToBounds = Selector.GetHandle("setClipsToBounds:");
-        public bool ClipsToBounds {
-	        get => Messaging.bool_objc_msgSend(Handle, s_clipsToBounds);
-	        set => Messaging.void_objc_msgSend_bool(Handle, s_setClipsToBounds, value);
         }
         public UIView ()
         {
@@ -1889,8 +1875,8 @@ namespace UIKit
 
         public void PresentViewController (NSViewController viewController, bool animated, Action completionHandler)
         {
-            if (viewController is UIAlertController alert) {
-                alert.PresentAlert (this.View.Window);
+            if (viewController is UIAlertController alert && this.View.Window is {} win) {
+                alert.PresentAlert (win);
             }
             else {
                 this.PresentViewControllerAsModalWindow (viewController);

@@ -165,20 +165,20 @@ namespace Praeclarum
 				message += "\n\n" + ((ex.GetType () == typeof (Exception)) ? "" : ex.GetType ().Name);
 				message += " " + ex.StackTrace;
 #endif
-				if (obj != null) {
-					obj.BeginInvokeOnMainThread (() => {
-						try {
-							var alert = new UIKit.UIAlertView (
-								title,
-								message,
-								(UIKit.IUIAlertViewDelegate)null,
-								"OK");
-							alert.Show ();
-						} catch (Exception ex3) {
-							Error (ex3);
-						}
-					});
-				}
+				obj?.BeginInvokeOnMainThread (() => {
+					try {
+#pragma warning disable CA1422
+						var alert = new UIKit.UIAlertView (
+							title,
+							message,
+							null!,
+							"OK");
+						alert.Show ();
+#pragma warning restore CA1422
+					} catch (Exception ex3) {
+						Error (ex3);
+					}
+				});
 			} catch (Exception ex2) {
 				Error (ex2);
 			}

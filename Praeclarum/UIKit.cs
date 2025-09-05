@@ -957,21 +957,21 @@ namespace UIKit
             return new UIImage (nsimage);
         }
 
-        public NSData AsJPEG ()
+        public NSData? AsJPEG ()
         {
             var cgimage = image.CGImage;
             using var rep = new NSBitmapImageRep (cgimage);
             rep.Size = image.Size;
-            var data = rep.RepresentationUsingTypeProperties (NSBitmapImageFileType.Jpeg, null);
+            var data = rep.RepresentationUsingTypeProperties (NSBitmapImageFileType.Jpeg, new NSDictionary());
             return data;
         }
 
-        public NSData AsPNG ()
+        public NSData? AsPNG ()
         {
             var cgimage = image.CGImage;
             using var rep = new NSBitmapImageRep (cgimage);
             rep.Size = image.Size;
-            var data = rep.RepresentationUsingTypeProperties (NSBitmapImageFileType.Png, null);
+            var data = rep.RepresentationUsingTypeProperties (NSBitmapImageFileType.Png, new NSDictionary());
             return data;
         }
     }

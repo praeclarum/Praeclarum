@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: macos-26
 
     steps:
     - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
       with:
         global-json-file: global.json
     - name: Install workloads
-      run: dotnet workload install ios maccatalyst macos android
+      run: dotnet workload restore Praeclarum.Utilities.sln
     - name: Restore dependencies
       run: dotnet restore Praeclarum.Utilities.sln
     - name: Build

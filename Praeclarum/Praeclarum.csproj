@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0;net9.0-macos;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net9.0;net9.0-macos26.0;net9.0-ios26.0;net9.0-maccatalyst26.0</TargetFrameworks>
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <Version>1.0.0</Version>
     <IsPackable>false</IsPackable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
     <SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>

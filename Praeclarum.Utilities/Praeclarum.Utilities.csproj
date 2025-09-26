@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net9.0;net9.0-android;net9.0-ios;net9.0-maccatalyst;net9.0-macos</TargetFrameworks>
+    <TargetFrameworks>net9.0;net9.0-android;net9.0-ios26.0;net9.0-maccatalyst26.0;net9.0-macos26.0</TargetFrameworks>
 
     <PackageId>Praeclarum.Utilities</PackageId>
     <Version>1.0.0</Version>

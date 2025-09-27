@@ -26,7 +26,7 @@ namespace Praeclarum.IO
 		}
 
 		public string Name { get { return "iCloud"; } }
-		public string IconUrl => null;
+		public string IconUrl => "systemimage://icloud.fill";
 
 		public IEnumerable<IFileSystem> GetFileSystems ()
 		{
@@ -141,6 +141,7 @@ namespace Praeclarum.IO
 				return "iCloud";
 			}
 		}
+		public string IconUrl => "systemimage://icloud.fill";
 
 		public string Description { get { return "iCloud"; } }
 		public string ShortDescription { get { return Description; } }

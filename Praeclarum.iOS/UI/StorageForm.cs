@@ -176,11 +176,13 @@ namespace Praeclarum.UI
 
 			public override string GetItemImage (object item)
 			{
-				var f = item as IFileSystem;
-				if (f != null)
+				if (item is IFileSystem f)
+				{
+					if (f.IconUrl is { } url)
+						return url;
 					return f.GetType ().Name;
-
-				return null;
+				}
+				return base.GetItemImage (item);
 			}
 
 			public override bool GetItemNavigates (object item)

@@ -10,7 +10,7 @@ namespace Praeclarum.IO
 	{
 		string Name { get;  }
 
-		string IconUrl { get;  }
+		string IconUrl { get; }
 
 		bool CanAddFileSystem {
 			get;
@@ -24,6 +24,8 @@ namespace Praeclarum.IO
 	public interface IFileSystem
 	{
 		string Id { get; }
+
+		string IconUrl { get; }
 
 		Task Initialize ();
 

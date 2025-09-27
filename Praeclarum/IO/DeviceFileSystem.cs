@@ -11,7 +11,7 @@ namespace Praeclarum.IO
 	public class DeviceFileSystemProvider : IFileSystemProvider
 	{
 		public string Name { get; private set; }
-		public string IconUrl => null;
+		public string IconUrl => DeviceFileSystem.GetIcon ();
 		public bool CanAddFileSystem { get { return false; } }
 		public Task ShowAddUI (object parent)
 		{
@@ -56,6 +56,21 @@ namespace Praeclarum.IO
 				return "Device";
 			}
 		}
+
+		public static string GetIcon ()
+		{
+#if __IOS__
+			if (UIKit.UIDevice.CurrentDevice.CheckSystemVersion (14, 0))
+			{
+				if (UIKit.UIDevice.CurrentDevice.UserInterfaceIdiom == UIKit.UIUserInterfaceIdiom.Pad)
+					return "systemimage://ipad";
+				return "systemimage://iphone";
+			}
+#endif
+			return null;
+		}
+
+		public string IconUrl => GetIcon ();
 
 		public int MaxDirectoryDepth { get { return short.MaxValue; } }
 

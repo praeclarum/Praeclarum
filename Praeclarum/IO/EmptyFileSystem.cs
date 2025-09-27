@@ -29,6 +29,7 @@ namespace Praeclarum.IO
 				return "Empty";
 			}
 		}
+		public string IconUrl => null;
 		public string ShortDescription { get { return Description; } }
 
 		public int MaxDirectoryDepth { get { return 0; } }

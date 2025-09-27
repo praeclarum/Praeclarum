@@ -117,6 +117,8 @@ public class NSUrlFileSystem : IFileSystem
 	/// </summary>
 	public string Key { get; }
 
+	public string IconUrl => "systemimage://folder.fill";
+
 	// ReSharper disable once ConvertToPrimaryConstructor
 	public NSUrlFileSystem (string key)
 	{

@@ -39,6 +39,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 	public string IconUrl => "systemimage://folder.fill";
 	public bool CanAddFileSystem => ios14;
 
+#if __IOS__ || __MACCATALYST__
 	// ReSharper disable once NotAccessedField.Local
 	private UIDocumentPickerViewController? _currentPicker; // Keep a reference to avoid GC
 
@@ -75,6 +76,13 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 		}
 		return Task.CompletedTask;
 	}
+#elif __MACOS__
+	public Task ShowAddUI (object parent)
+	{
+		Log.Error ("NSUrlFileSystemProvider.ShowAddUI not implemented on macOS");
+		return Task.CompletedTask;
+	}
+#endif
 
 	private void AddFileSystemAtUrl (NSUrl url, string name)
 	{

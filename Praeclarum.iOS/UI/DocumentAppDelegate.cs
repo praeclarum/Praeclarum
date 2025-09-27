@@ -876,6 +876,8 @@ namespace Praeclarum.UI
 
 			fsman.Add (new DeviceFileSystemProvider ());
 
+			fsman.Add (new NSUrlFileSystemProvider ());
+
 #if !NO_DROPBOX
 			try {
 				fsman.Add (new DropboxFileSystemProvider (DropboxSyncKey, DropboxSyncSecret, DropboxAppFolder));

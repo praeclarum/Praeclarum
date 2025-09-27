@@ -462,6 +462,17 @@ public class NSUrlFile : IFile
 	public DateTime ModifiedTime {
 		get
 		{
+			try
+			{
+				if (Url.Path is { } path && NSFileManager.DefaultManager.GetAttributes (path) is { ModificationDate: { } modDate })
+				{
+					return (DateTime)modDate;
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error ("Error getting modified time for file", ex);
+			}
 			return DateTime.MinValue;
 		}
 	}

@@ -197,23 +197,33 @@ namespace Praeclarum.IO
 
 			var f = new CloudFile (path, documentsUrl);
 
-			if (contents != null) {
-				var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
-				NSError coordErr;
-				c.CoordinateWrite (f.LocalUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl => {
-					using (var d = NSData.FromArray (contents)) {
-						NSError error;
-						if (d.Save (newUrl, false, out error)) {
-							tcs.SetResult (f);
+			if (contents != null)
+			{
+				Task.Run (() =>
+				{
+					var c = new NSFileCoordinator (filePresenterOrNil: (INSFilePresenter)null);
+					NSError coordErr;
+					c.CoordinateWrite (f.LocalUrl, NSFileCoordinatorWritingOptions.ForReplacing, out coordErr, newUrl =>
+					{
+						using (var d = NSData.FromArray (contents))
+						{
+							NSError error;
+							if (d.Save (newUrl, false, out error))
+							{
+								tcs.SetResult (f);
+							}
+							else
+							{
+								tcs.SetException (new CloudException ("Failed to create new file", error));
+							}
 						}
-						else {
-							tcs.SetException (new CloudException ("Failed to create new file", error));
-						}
+					});
+					if (coordErr != null)
+					{
+						tcs.TrySetException (new CloudException ("Could not coordinate iCloud write for CreateFile",
+							coordErr));
 					}
 				});
-				if (coordErr != null) {
-					tcs.TrySetException (new CloudException ("Could not coordinate iCloud write for CreateFile", coordErr));
-				}
 			} else {
 				tcs.SetResult (f);
 			}

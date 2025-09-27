@@ -54,9 +54,8 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 				var url = e.Urls.FirstOrDefault ();
 				if (url is not null)
 				{
-					var resourceValues = url.GetResourceValues ([NSUrl.IsDirectoryKey], out var error);
 					var name = url.LastPathComponent ?? "Folder";
-					if (resourceValues?.TryGetValue (NSUrl.IsDirectoryKey, out var nsv) is true && nsv is NSNumber number && number.BoolValue)
+					if (url.IsDirectory ())
 					{
 						AddFileSystemAtUrl (url, name: name);
 					}
@@ -81,6 +80,11 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 		var key = Guid.NewGuid ().ToString ("N") + "-" + name;
 		var fs = new NSUrlFileSystem (key);
 		var defaults = NSUserDefaults.StandardUserDefaults;
+		var gotPermission = url.StartAccessingSecurityScopedResource ();
+		if (!gotPermission)
+		{
+			Log.Error ("Failed to get security scoped resource for new file system URL");
+		}
 		var bookmarkData = url.CreateBookmarkData (
 			NSUrlBookmarkCreationOptions.SuitableForBookmarkFile | NSUrlBookmarkCreationOptions.WithSecurityScope,
 			resourceValues: null,
@@ -174,10 +178,54 @@ public class NSUrlFileSystem : IFileSystem
 #pragma warning disable CS0067
 	public event EventHandler? FilesChanged;
 #pragma warning restore CS0067
+
+	readonly Dictionary<string, NSUrlFile> _filesByPath = new ();
+
+	NSUrlFile GetFileWithUrl (NSUrl url)
+	{
+		var root = GetRootUrl();
+		var urlAbsPath = url.Path ?? "";
+		var rootAbsPath = root.Path ?? "";
+		var path = urlAbsPath;
+		if (urlAbsPath.StartsWith (rootAbsPath, StringComparison.Ordinal))
+		{
+			path = urlAbsPath.Substring (rootAbsPath.Length).TrimStart ('/');
+		}
+
+		lock (_filesByPath)
+		{
+			if (_filesByPath.TryGetValue (path, out var existing))
+				return existing;
+		}
+		var isDir = url.IsDirectory ();
+		var newFile = new NSUrlFile (this, path, url, isDir);
+		lock (_filesByPath)
+		{
+			_filesByPath[path] = newFile;
+		}
+		return newFile;
+	}
+
 	public Task<List<IFile>> ListFiles (string directory)
 	{
-		Console.WriteLine ("ListFiles: " + directory);
-		return Task.FromResult (new List<IFile>());
+		return Task.Run (() =>
+		{
+			var dirUrl = GetUrlForPath (directory, isDirectory: true);
+			Console.WriteLine ("ListFiles: " + dirUrl);
+			var contents = _fileManager.GetDirectoryContent (dirUrl, properties: null, options: 0, out var error);
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+			if (error is not null)
+			{
+				Log.Error ($"Failed to list files in directory '{directory}'", new NSErrorException (error));
+				return [];
+			}
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+			if (contents is null) {
+				Log.Error ($"Failed to list files in directory '{directory}'");
+				return [];
+			}
+			return contents.Select (GetFileWithUrl).Cast<IFile> ().ToList ();
+		});
 	}
 
 	public bool ListFilesIsFast => true;
@@ -251,6 +299,11 @@ public class NSUrlFileSystem : IFileSystem
 		{
 			throw new InvalidOperationException ($"Cannot get root URL for files: invalid bookmark data");
 		}
+		var gotPermission = bookmarkedUrl.StartAccessingSecurityScopedResource ();
+		if (!gotPermission)
+		{
+			Log.Error ("Failed to get security scoped resource");
+		}
 
 		if (isStale)
 		{
@@ -282,6 +335,56 @@ public class NSUrlFileSystem : IFileSystem
 	NSUrl GetUrlForPath (string path, bool isDirectory)
 	{
 		var root = GetRootUrl();
+		if (string.IsNullOrEmpty (path))
+			return root;
 		return root.Append (path, isDirectory: isDirectory);
 	}
 }
+
+// ReSharper disable once InconsistentNaming
+public static class NSUrlExtensions
+{
+	public static bool IsDirectory (this NSUrl url)
+	{
+		var resourceValues = url.GetResourceValues ([NSUrl.IsDirectoryKey], out var error);
+		return resourceValues?.TryGetValue (NSUrl.IsDirectoryKey, out var nsv) is true
+		       && nsv is NSNumber { BoolValue: true };
+	}
+}
+
+public class NSUrlFile : IFile
+{
+	public NSUrlFileSystem FileSystem { get; }
+	public string Path { get; }
+	public NSUrl Url { get; }
+	public bool IsDirectory { get; }
+	public DateTime ModifiedTime {
+		get;
+	}
+
+	// ReSharper disable once ConvertToPrimaryConstructor
+	public NSUrlFile (NSUrlFileSystem fs, string path, NSUrl url, bool isDirectory)
+	{
+		FileSystem = fs;
+		Path = path;
+		Url = url;
+		IsDirectory = isDirectory;
+		ModifiedTime = DateTime.MinValue;
+	}
+
+	public Task<LocalFileAccess> BeginLocalAccess ()
+	{
+		return Task.FromResult<LocalFileAccess> (new NSUrlLocalFileAccess(this));
+	}
+
+	public bool IsDownloaded => true;
+	public double DownloadProgress => 1;
+	
+	public Task<bool> Move (string newPath)
+	{
+		return FileSystem.Move (Path, toPath: newPath);
+	}
+}
+
+// ReSharper disable once InconsistentNaming
+public class NSUrlLocalFileAccess (NSUrlFile file) : LocalFileAccess (file.Url.Path ?? "");

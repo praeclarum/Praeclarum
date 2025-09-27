@@ -22,10 +22,11 @@ namespace Praeclarum.IO
 
 		public Task ShowAddUI (object parent)
 		{
-			return Task.FromResult<object> (null);
+			return Task.CompletedTask;
 		}
 
 		public string Name { get { return "iCloud"; } }
+		public string IconUrl => null;
 
 		public IEnumerable<IFileSystem> GetFileSystems ()
 		{

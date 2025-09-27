@@ -29,6 +29,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 	}
 
 	public string Name => "Folder in the Files App";
+	public string IconUrl => "systemimage://folder.fill";
 	public bool CanAddFileSystem => true;
 
 	public Task ShowAddUI (object parent)

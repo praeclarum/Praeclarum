@@ -44,11 +44,14 @@ namespace Praeclarum.UI
 			{
 				var f = item as IFileSystemProvider;
 				if (f != null) {
+					var iconImage = f.IconUrl;
+					if (iconImage is not null)
+						return iconImage;
 					var tname = f.GetType ().Name;
 					return tname.Replace ("Provider", "");
 				}
 
-				return base.GetItemTitle (item);
+				return base.GetItemImage (item);
 			}
 
 			public override string GetItemTitle (object item)

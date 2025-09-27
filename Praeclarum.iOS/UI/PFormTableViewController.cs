@@ -232,6 +232,7 @@ namespace Praeclarum.UI
 
 		public class PFormCell : UITableViewCell, IThemeAware
 		{
+			static readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
 			static readonly bool ios15 = UIDevice.CurrentDevice.CheckSystemVersion(15, 0);
 
 			static readonly Dictionary<string, UIImage> imageCache =
@@ -304,6 +305,9 @@ namespace Praeclarum.UI
 				var imageUrl = section.GetItemImage (item);
 				if (string.IsNullOrEmpty (imageUrl)) {
 					cell.ImageView.Image = null;
+				}
+				else if (ios13 && imageUrl.StartsWith ("systemimage://")) {
+					cell.ImageView.Image = UIImage.GetSystemImage (imageUrl.Substring ("systemimage://".Length));
 				}
 				else {
 					UIImage image;

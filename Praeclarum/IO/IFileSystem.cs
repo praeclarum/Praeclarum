@@ -10,6 +10,8 @@ namespace Praeclarum.IO
 	{
 		string Name { get;  }
 
+		string IconUrl { get;  }
+
 		bool CanAddFileSystem {
 			get;
 		}
@@ -84,7 +86,7 @@ namespace Praeclarum.IO
 
 		public virtual Task End ()
 		{
-			return Task.FromResult<object> (null);
+			return Task.CompletedTask;
 		}
 	}
 

@@ -11,10 +11,11 @@ namespace Praeclarum.IO
 	public class DeviceFileSystemProvider : IFileSystemProvider
 	{
 		public string Name { get; private set; }
+		public string IconUrl => null;
 		public bool CanAddFileSystem { get { return false; } }
 		public Task ShowAddUI (object parent)
 		{
-			return Task.FromResult<object> (null);
+			return Task.CompletedTask;
 		}
 		public IEnumerable<IFileSystem> GetFileSystems ()
 		{
@@ -120,7 +121,7 @@ namespace Praeclarum.IO
 
 		public Task Initialize ()
 		{
-			return Task.FromResult<object> (null);
+			return Task.CompletedTask;
 //			Console.WriteLine ("DELAYING INITIALIZE");
 //			await Task.Delay (TimeSpan.FromSeconds (5));
 		}

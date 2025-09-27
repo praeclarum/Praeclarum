@@ -224,29 +224,96 @@ public class NSUrlFileSystem : IFileSystem
 				Log.Error ($"Failed to list files in directory '{directory}'");
 				return [];
 			}
-			return contents.Select (GetFileWithUrl).Cast<IFile> ().ToList ();
+
+			var goodContents = new List<NSUrl> ();
+			var extensions = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			if (FileExtensions.Count > 0)
+			{
+				foreach (var ext in FileExtensions)
+				{
+					var e = ext;
+					if (!e.StartsWith ("."))
+						e = "." + e;
+					extensions.Add (e);
+				}
+			}
+			foreach (var content in contents)
+			{
+				var name = content.LastPathComponent ?? "";
+				if (string.IsNullOrEmpty (name) || name.StartsWith ("."))
+					continue;
+				if (content.IsDirectory () || extensions.Contains (System.IO.Path.GetExtension (name)))
+				{
+					goodContents.Add (content);
+				}
+			}
+			return goodContents.Select (GetFileWithUrl).Cast<IFile> ().ToList ();
 		});
 	}
 
 	public bool ListFilesIsFast => true;
 	public Task<IFile> GetFile (string path)
 	{
-		throw new NotImplementedException();
+		return Task.Run (IFile () => GetFileWithUrl (GetUrlForPath (path, isDirectory: false)));
 	}
 
 	public Task<IFile> CreateFile (string path, byte[] contents)
 	{
-		throw new NotImplementedException();
+		return Task.Run (IFile () =>
+		{
+			var url = GetUrlForPath (path, isDirectory: false);
+			try
+			{
+				var created = _fileManager.CreateFile (url.Path ?? "", NSData.FromArray (contents), attributes: null);
+				if (!created)
+				{
+					throw new Exception ($"Failed to create file at path '{path}'");
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error ($"Error creating file at path '{path}'", ex);
+			}
+
+			return GetFileWithUrl (url);
+		});
 	}
 
 	public Task<bool> CreateDirectory (string path)
 	{
-		throw new NotImplementedException();
+		return Task.Run (() =>
+		{
+			try
+			{
+				var url = GetUrlForPath (path, isDirectory: true);
+				var created =
+					_fileManager.CreateDirectory (url, createIntermediates: true, attributes: null, out var error);
+				return created;
+			}
+			catch (Exception ex)
+			{
+				Log.Error ($"Error creating directory at path '{path}'", ex);
+				return false;
+			}
+		});
 	}
 
 	public Task<bool> FileExists (string path)
 	{
-		throw new NotImplementedException();
+		return Task.Run (() =>
+		{
+			try
+			{
+				var url = GetUrlForPath (path, isDirectory: false);
+				var exists = _fileManager.FileExists (url.Path ?? "");
+				return exists;
+			}
+			catch (Exception ex)
+			{
+				Log.Error ($"Error checking for file existence at path '{path}'", ex);
+				return false;
+			}
+		});
 	}
 
 	public Task<bool> DeleteFile (string path)
@@ -335,6 +402,8 @@ public class NSUrlFileSystem : IFileSystem
 	NSUrl GetUrlForPath (string path, bool isDirectory)
 	{
 		var root = GetRootUrl();
+		if (path.StartsWith ("/"))
+			path = path.Substring (1);
 		if (string.IsNullOrEmpty (path))
 			return root;
 		return root.Append (path, isDirectory: isDirectory);

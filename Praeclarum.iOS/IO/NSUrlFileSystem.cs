@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 using Foundation;
@@ -12,10 +11,11 @@ using UIKit;
 
 using UniformTypeIdentifiers;
 
+// ReSharper disable InconsistentNaming
+
 // ReSharper disable once CheckNamespace
 namespace Praeclarum.IO;
 
-// ReSharper disable once InconsistentNaming
 public class NSUrlFileSystemProvider : IFileSystemProvider
 {
 	private static readonly bool ios14 = UIDevice.CurrentDevice.CheckSystemVersion (14, 0);
@@ -39,6 +39,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 	public string IconUrl => "systemimage://folder.fill";
 	public bool CanAddFileSystem => ios14;
 
+	// ReSharper disable once NotAccessedField.Local
 	private UIDocumentPickerViewController? _currentPicker; // Keep a reference to avoid GC
 
 	public Task ShowAddUI (object parent)
@@ -49,7 +50,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 			_currentPicker = picker; // Keep a reference to avoid GC
 			picker.AllowsMultipleSelection = false;
 			picker.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
-			picker.DidPickDocumentAtUrls += (s, e) =>
+			picker.DidPickDocumentAtUrls += (_, e) =>
 			{
 				var url = e.Urls.FirstOrDefault ();
 				if (url is not null)
@@ -109,16 +110,12 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 	}
 }
 
-// ReSharper disable once InconsistentNaming
 public class NSUrlFileSystem : IFileSystem
 {
 	private readonly NSFileManager _fileManager;
 
 	private NSUrl? _cachedRootUrl;
 
-	/// <summary>
-	/// _key example: "3103de6e532745cda45fdac55b1278c8-LastPathComponent"
-	/// </summary>
 	public string Key { get; }
 
 	public string IconUrl => "systemimage://folder.fill";
@@ -130,7 +127,7 @@ public class NSUrlFileSystem : IFileSystem
 		_fileManager = NSFileManager.DefaultManager;
 	}
 
-	public string LastPathComponent
+	string LastPathComponent
 	{
 		get
 		{
@@ -287,7 +284,7 @@ public class NSUrlFileSystem : IFileSystem
 			{
 				var url = GetUrlForPath (path, isDirectory: true);
 				var created =
-					_fileManager.CreateDirectory (url, createIntermediates: true, attributes: null, out var error);
+					_fileManager.CreateDirectory (url, createIntermediates: true, attributes: null, out var _);
 				return created;
 			}
 			catch (Exception ex)
@@ -350,7 +347,7 @@ public class NSUrlFileSystem : IFileSystem
 				var fromUrl = GetUrlForPath (fromPath, isDirectory: false);
 				var fromFile = GetFileWithUrl (fromUrl);
 				var toUrl = GetUrlForPath (toPath, isDirectory: false);
-				var moved = _fileManager.Move (fromUrl, toUrl, out var error);
+				var moved = _fileManager.Move (fromUrl, toUrl, out var _);
 				if (moved)
 				{
 					fromFile.Reset (toPath, toUrl);
@@ -445,12 +442,12 @@ public class NSUrlFileSystem : IFileSystem
 	}
 }
 
-// ReSharper disable once InconsistentNaming
 public static class NSUrlExtensions
 {
 	public static bool IsDirectory (this NSUrl url)
 	{
-		var resourceValues = url.GetResourceValues ([NSUrl.IsDirectoryKey], out var error);
+		var resourceValues = url.GetResourceValues ([NSUrl.IsDirectoryKey], out var _);
+		// ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
 		return resourceValues?.TryGetValue (NSUrl.IsDirectoryKey, out var nsv) is true
 		       && nsv is NSNumber { BoolValue: true };
 	}
@@ -458,7 +455,7 @@ public static class NSUrlExtensions
 
 public class NSUrlFile : IFile
 {
-	public NSUrlFileSystem FileSystem { get; }
+	NSUrlFileSystem FileSystem { get; }
 	public string Path { get; private set; }
 	public NSUrl Url { get; private set; }
 	public bool IsDirectory { get; }
@@ -500,5 +497,4 @@ public class NSUrlFile : IFile
 	}
 }
 
-// ReSharper disable once InconsistentNaming
 public class NSUrlLocalFileAccess (NSUrlFile file) : LocalFileAccess (file.Url.Path ?? "");

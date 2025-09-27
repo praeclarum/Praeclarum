@@ -3,9 +3,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 using Foundation;
+
+using UIKit;
+
+using UniformTypeIdentifiers;
 
 // ReSharper disable once CheckNamespace
 namespace Praeclarum.IO;
@@ -13,6 +18,8 @@ namespace Praeclarum.IO;
 // ReSharper disable once InconsistentNaming
 public class NSUrlFileSystemProvider : IFileSystemProvider
 {
+	private static readonly bool ios14 = UIDevice.CurrentDevice.CheckSystemVersion (14, 0);
+
 	private readonly List<NSUrlFileSystem> _fss = new ();
 
 	public NSUrlFileSystemProvider ()
@@ -30,11 +37,66 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 
 	public string Name => "Folder in the Files App";
 	public string IconUrl => "systemimage://folder.fill";
-	public bool CanAddFileSystem => true;
+	public bool CanAddFileSystem => ios14;
+
+	private UIDocumentPickerViewController? _currentPicker; // Keep a reference to avoid GC
 
 	public Task ShowAddUI (object parent)
 	{
-		throw new NotImplementedException ();
+		if (ios14 && ((parent as UIViewController) ?? UIApplication.SharedApplication.KeyWindow?.RootViewController) is {} pvc) {
+			var tcs = new TaskCompletionSource<object?> ();
+			var picker = new UIDocumentPickerViewController (contentTypes: [UTTypes.Folder], asCopy: false);
+			_currentPicker = picker; // Keep a reference to avoid GC
+			picker.AllowsMultipleSelection = false;
+			picker.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
+			picker.DidPickDocumentAtUrls += (s, e) =>
+			{
+				var url = e.Urls.FirstOrDefault ();
+				if (url is not null)
+				{
+					var resourceValues = url.GetResourceValues ([NSUrl.IsDirectoryKey], out var error);
+					var name = url.LastPathComponent ?? "Folder";
+					if (resourceValues?.TryGetValue (NSUrl.IsDirectoryKey, out var nsv) is true && nsv is NSNumber number && number.BoolValue)
+					{
+						AddFileSystemAtUrl (url, name: name);
+					}
+					else
+					{
+						var message = $"\"{name}\" is not a folder.\n\nPlease select a folder using the \"Open\" button when browsing.";
+						var alert = UIAlertController.Create ("Not a Folder", message, UIAlertControllerStyle.Alert);
+						alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, null));
+						pvc.PresentViewController (alert, true, null);
+					}
+				}
+				tcs.TrySetResult (null);
+			};
+			pvc.PresentViewController (picker, true, null);
+			return tcs.Task;
+		}
+		return Task.CompletedTask;
+	}
+
+	private void AddFileSystemAtUrl (NSUrl url, string name)
+	{
+		var key = Guid.NewGuid ().ToString ("N") + "-" + name;
+		var fs = new NSUrlFileSystem (key);
+		var defaults = NSUserDefaults.StandardUserDefaults;
+		var bookmarkData = url.CreateBookmarkData (
+			NSUrlBookmarkCreationOptions.SuitableForBookmarkFile | NSUrlBookmarkCreationOptions.WithSecurityScope,
+			resourceValues: null,
+			relativeUrl: null,
+			error: out var error);
+		// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+		if (error is not null || bookmarkData is null)
+			// ReSharper restore ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+			return;
+		
+		defaults.SetValueForKey (bookmarkData, (NSString)fs.DefaultsUrlKey);
+		
+		_fss.Add (fs);
+		var keys = string.Join ("/", _fss.Select (x => x.Key));
+		defaults.SetString (keys, "NSUrlFileSystemKeys");
+		defaults.Synchronize ();
 	}
 
 	public IEnumerable<IFileSystem> GetFileSystems ()
@@ -46,18 +108,19 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 // ReSharper disable once InconsistentNaming
 public class NSUrlFileSystem : IFileSystem
 {
-	/// <summary>
-	/// _key example: "3103de6e532745cda45fdac55b1278c8-LastPathComponent"
-	/// </summary>
-	private readonly string _key;
 	private readonly NSFileManager _fileManager;
 
 	private NSUrl? _cachedRootUrl;
 
+	/// <summary>
+	/// _key example: "3103de6e532745cda45fdac55b1278c8-LastPathComponent"
+	/// </summary>
+	public string Key { get; }
+
 	// ReSharper disable once ConvertToPrimaryConstructor
 	public NSUrlFileSystem (string key)
 	{
-		_key = key;
+		Key = key;
 		_fileManager = NSFileManager.DefaultManager;
 	}
 
@@ -65,22 +128,22 @@ public class NSUrlFileSystem : IFileSystem
 	{
 		get
 		{
-			var parts = _key.Split ('-');
+			var parts = Key.Split ('-');
 			if (parts.Length < 2)
 				return "Files";
 			return string.Join ('-', parts.Skip (1));
 		}
 	}
 
-	public string Id => $"NSUrlFileSystem-{_key}";
-	private string DefaultsUrlKey => Id;
+	public string Id => $"NSUrlFileSystem-{Key}";
+	public string DefaultsUrlKey => Id;
 
 	public Task Initialize ()
 	{
 		return Task.CompletedTask;
 	}
 
-	public string Description => $"Files in \"{LastPathComponent}\"";
+	public string Description => $"\"{LastPathComponent}\" Files";
 	public string ShortDescription => Description;
 
 	public bool IsAvailable
@@ -111,7 +174,8 @@ public class NSUrlFileSystem : IFileSystem
 #pragma warning restore CS0067
 	public Task<List<IFile>> ListFiles (string directory)
 	{
-		throw new NotImplementedException();
+		Console.WriteLine ("ListFiles: " + directory);
+		return Task.FromResult (new List<IFile>());
 	}
 
 	public bool ListFilesIsFast => true;

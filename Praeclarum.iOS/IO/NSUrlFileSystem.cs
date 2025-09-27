@@ -339,7 +339,36 @@ public class NSUrlFileSystem : IFileSystem
 
 	public Task<bool> Move (string fromPath, string toPath)
 	{
-		throw new NotImplementedException();
+		return Task.Run (() =>
+		{
+			try
+			{
+				fromPath = CleanPath (fromPath);
+				toPath = CleanPath (toPath);
+				if (fromPath == toPath)
+					return true;
+				var fromUrl = GetUrlForPath (fromPath, isDirectory: false);
+				var fromFile = GetFileWithUrl (fromUrl);
+				var toUrl = GetUrlForPath (toPath, isDirectory: false);
+				var moved = _fileManager.Move (fromUrl, toUrl, out var error);
+				if (moved)
+				{
+					fromFile.Reset (toPath, toUrl);
+					lock (_filesByPath)
+					{
+						_filesByPath.Remove (fromPath);
+						_filesByPath[toPath] = fromFile;
+					}
+				}
+
+				return moved;
+			}
+			catch (Exception ex)
+			{
+				Log.Error ($"Error moving file from '{fromPath}' to '{toPath}'", ex);
+				return false;
+			}
+		});
 	}
 
 	NSUrl GetRootUrl ()
@@ -402,11 +431,17 @@ public class NSUrlFileSystem : IFileSystem
 	NSUrl GetUrlForPath (string path, bool isDirectory)
 	{
 		var root = GetRootUrl();
-		if (path.StartsWith ("/"))
-			path = path.Substring (1);
+		path = CleanPath(path);
 		if (string.IsNullOrEmpty (path))
 			return root;
 		return root.Append (path, isDirectory: isDirectory);
+	}
+
+	private static string CleanPath(string path)
+	{
+		if (path.StartsWith ("/"))
+			path = path.Substring (1);
+		return path;
 	}
 }
 
@@ -424,11 +459,14 @@ public static class NSUrlExtensions
 public class NSUrlFile : IFile
 {
 	public NSUrlFileSystem FileSystem { get; }
-	public string Path { get; }
-	public NSUrl Url { get; }
+	public string Path { get; private set; }
+	public NSUrl Url { get; private set; }
 	public bool IsDirectory { get; }
 	public DateTime ModifiedTime {
-		get;
+		get
+		{
+			return DateTime.MinValue;
+		}
 	}
 
 	// ReSharper disable once ConvertToPrimaryConstructor
@@ -438,7 +476,14 @@ public class NSUrlFile : IFile
 		Path = path;
 		Url = url;
 		IsDirectory = isDirectory;
-		ModifiedTime = DateTime.MinValue;
+	}
+	
+	override public string ToString () => $"NSUrlFile: {Path}";
+
+	public void Reset (string path, NSUrl url)
+	{
+		Path = path;
+		Url = url;
 	}
 
 	public Task<LocalFileAccess> BeginLocalAccess ()

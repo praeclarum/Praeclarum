@@ -42,7 +42,9 @@ public class NSUrlFileSystem : IFileSystem
 	public bool IsWritable => true;
 	public int MaxDirectoryDepth => short.MaxValue;
 	public ICollection<string> FileExtensions { get; } = new List<string> ();
+#pragma warning disable CS0067
 	public event EventHandler? FilesChanged;
+#pragma warning restore CS0067
 	public Task<List<IFile>> ListFiles (string directory)
 	{
 		throw new NotImplementedException();

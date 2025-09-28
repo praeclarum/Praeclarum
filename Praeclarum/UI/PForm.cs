@@ -1,19 +1,17 @@
 #nullable enable
 
 using System;
-using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Praeclarum.UI
 {
 	public partial class PForm
 	{
-		readonly ObservableCollection<PFormSection> sections;
-		public IList<PFormSection> Sections { get { return sections; } }
+		readonly ObservableCollection<PFormSection> _sections;
+		public IList<PFormSection> Sections { get { return _sections; } }
 
 		void HandleSectionsChanged (object? sender, NotifyCollectionChangedEventArgs e)
 		{
@@ -87,14 +85,12 @@ namespace Praeclarum.UI
 
 		public virtual void SetNeedsReload ()
 		{
-			if (Form != null)
-				Form.ReloadSection (this);
+			Form?.ReloadSection (this);
 		}
 
 		public virtual void SetNeedsReloadAll ()
 		{
-			if (Form != null)
-				Form.ReloadAll ();
+			Form?.ReloadAll ();
 		}
 
 		public virtual void SetNeedsFormat ()
@@ -130,8 +126,7 @@ namespace Praeclarum.UI
 
 		public virtual string GetItemTitle (object item)
 		{
-			var c = item as Command;
-			if (c != null)
+			if (item is Command c)
 				return c.Name;
 
 			return item.ToString () ?? "";
@@ -142,21 +137,26 @@ namespace Praeclarum.UI
 			return false;
 		}
 
+		/// <summary>
+		/// Execute when an item is selected. Return true to keep the item selected, false to deselect it.
+		/// If the item is a Command, it will be executed automatically.
+		/// </summary>
+		/// <param name="item">The item that was selected</param>
+		/// <returns>Whether to keep the item selected</returns>
 		public virtual bool SelectItem (object item)
 		{
-			var c = item as Command;
-			if (c != null) {
-				c.ExecuteAsync ().ContinueWith (t => {
-
-					if (t.IsFaulted) {
-						Log.Error ("Execute command async failed", t.Exception);
-					}
-
-				}, TaskScheduler.FromCurrentSynchronizationContext ());
-				return false;
+			if (item is not Command c)
+			{
+				return true;
 			}
 
-			return true;
+			c.ExecuteAsync ().ContinueWith (t => {
+				if (t.IsFaulted) {
+					Log.Error ("Execute command async failed", t.Exception);
+				}
+			}, TaskScheduler.FromCurrentSynchronizationContext ());
+			return false;
+
 		}
 
 		public virtual bool GetItemDisplayActivity (object item)

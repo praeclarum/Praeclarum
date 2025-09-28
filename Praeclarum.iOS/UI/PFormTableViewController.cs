@@ -29,8 +29,8 @@ namespace Praeclarum.UI
 		{
 			Title = (title ?? "").Localize ();
 
-			sections = new ObservableCollection<PFormSection> ();
-			sections.CollectionChanged += HandleSectionsChanged;
+			_sections = new ObservableCollection<PFormSection> ();
+			_sections.CollectionChanged += HandleSectionsChanged;
 
 			AutoCancelButton = false;
 			AutoDoneButton = true;
@@ -112,12 +112,12 @@ namespace Praeclarum.UI
 
 		public virtual async Task DismissAsync (bool done)
 		{
-			foreach (var s in sections) {
+			foreach (var s in _sections) {
 				s.Dismiss ();
 			}
 
 			TableView.Source = null;
-			sections.CollectionChanged -= HandleSectionsChanged;
+			_sections.CollectionChanged -= HandleSectionsChanged;
 			NavigationItem.RightBarButtonItem = null;
 
 			if (NavigationController != null) {
@@ -157,7 +157,7 @@ namespace Praeclarum.UI
 			if (!IsViewLoaded)
 				return;
 
-			var si = sections.IndexOf (section);
+			var si = _sections.IndexOf (section);
 			if (si < 0)
 				return;
 
@@ -176,7 +176,7 @@ namespace Praeclarum.UI
 			if (!IsViewLoaded)
 				return;
 
-			var si = sections.IndexOf (section);
+			var si = _sections.IndexOf (section);
 			if (si < 0)
 				return;
 

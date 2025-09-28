@@ -1,21 +1,19 @@
-using System;
-using System.Collections.Generic;
+#nullable enable
+
 using System.Linq;
-using Praeclarum.UI;
 using Praeclarum.IO;
-using UIKit;
 using Foundation;
 using System.Collections.Specialized;
-using Praeclarum;
 using System.Threading.Tasks;
 
+// ReSharper disable once CheckNamespace
 namespace Praeclarum.UI
 {
 	public class StorageForm : PForm
 	{
 		public StorageForm ()
 		{
-			Title = "Choose Storage";
+			base.Title = "Choose Storage";
 
 			Sections.Add (new FileSystemsSection ());
 		}
@@ -42,13 +40,12 @@ namespace Praeclarum.UI
 
 			public override string GetItemImage (object item)
 			{
-				var f = item as IFileSystemProvider;
-				if (f != null) {
+				if (item is IFileSystemProvider f) {
 					var iconImage = f.IconUrl;
 					if (iconImage is not null)
 						return iconImage;
-					var tname = f.GetType ().Name;
-					return tname.Replace ("Provider", "");
+					var typeName = f.GetType ().Name;
+					return typeName.Replace ("Provider", "");
 				}
 
 				return base.GetItemImage (item);
@@ -56,66 +53,64 @@ namespace Praeclarum.UI
 
 			public override string GetItemTitle (object item)
 			{
-				var f = item as IFileSystemProvider;
-				if (f != null)
-					return f.Name;
-
-				return base.GetItemTitle (item);
+				return item is IFileSystemProvider f ? f.Name : base.GetItemTitle (item);
 			}
 
 			public override bool SelectItem (object item)
 			{
-				var f = item as IFileSystemProvider;
-				if (f != null) {
-
-					AddFileSystemAsync (f).ContinueWith (t => {
-						if (t.IsFaulted)
-							Log.Error (t.Exception);
-					});
-
+				if (item is not IFileSystemProvider f)
+				{
 					return false;
 				}
 
+				AddFileSystemAsync (f).ContinueWith (t => {
+					if (t.IsFaulted)
+						Log.Error (t.Exception);
+				});
+
 				return false;
+
 			}
 
-			async Task AddFileSystemAsync (IFileSystemProvider f)
+			async Task AddFileSystemAsync (IFileSystemProvider fileSystemProvider)
 			{
-				await f.ShowAddUI (Form);
-				await Form.DismissAsync (true);
+				if (Form is not {} form)
+					return;
+				await fileSystemProvider.ShowAddUI (form);
+				await form.DismissAsync (true);
 			}
 		}
 
 		class FileSystemsSection : PFormSection
 		{
-			object addStorage = "Add Storage";
+			readonly object _addStorage = "Add Storage";
 
-			NotifyCollectionChangedEventHandler h;
-			NSTimer timer;
+			NotifyCollectionChangedEventHandler? _h;
+			NSTimer? _timer;
 
 			public FileSystemsSection ()
 			{
 				Refresh ();
 
-				h = HandleFileSystemsChanged;
+				_h = HandleFileSystemsChanged;
 
-				FileSystemManager.Shared.FileSystems.CollectionChanged += h;
+				FileSystemManager.Shared.FileSystems.CollectionChanged += _h;
 
-				timer = NSTimer.CreateRepeatingScheduledTimer (1, FormatTick);
+				_timer = NSTimer.CreateRepeatingScheduledTimer (1, FormatTick);
 			}
 
 			public override void Dismiss ()
 			{
 				base.Dismiss ();
 
-				if (timer != null) {
-					timer.Invalidate ();
-					timer = null;
+				if (_timer != null) {
+					_timer.Invalidate ();
+					_timer = null;
 				}
 
-				if (h != null) {
-					FileSystemManager.Shared.FileSystems.CollectionChanged -= h;
-					h = null;
+				if (_h != null) {
+					FileSystemManager.Shared.FileSystems.CollectionChanged -= _h;
+					_h = null;
 				}
 			}
 
@@ -124,7 +119,7 @@ namespace Praeclarum.UI
 				SetNeedsFormat ();
 			}
 
-			void HandleFileSystemsChanged (object sender, NotifyCollectionChangedEventArgs e)
+			void HandleFileSystemsChanged (object? sender, NotifyCollectionChangedEventArgs e)
 			{
 				Refresh ();
 				SetNeedsReload ();
@@ -141,13 +136,12 @@ namespace Praeclarum.UI
 				}
 
 				if (fman.Providers.Any (x => x.CanAddFileSystem))
-					Items.Add (addStorage);
+					Items.Add (_addStorage);
 			}
 
 			public override bool GetItemEnabled (object item)
 			{
-				var f = item as IFileSystem;
-				if (f != null)
+				if (item is IFileSystem f)
 					return f.IsAvailable;
 
 				return base.GetItemEnabled (item);
@@ -160,8 +154,7 @@ namespace Praeclarum.UI
 
 			public override string GetItemTitle (object item)
 			{
-				var f = item as IFileSystem;
-				if (f != null) {
+				if (item is IFileSystem f) {
 					var desc = f.Description;
 					if (!f.IsAvailable) {
 						desc += " (" + f.AvailabilityReason + ")";
@@ -187,17 +180,17 @@ namespace Praeclarum.UI
 
 			public override bool GetItemNavigates (object item)
 			{
-				return item == addStorage;
+				return item == _addStorage;
 			}
 
 			public override bool SelectItem (object item)
 			{
-				if (item == addStorage) {
+				if (item == _addStorage) {
 
 					var chooseProviderForm = new PForm ("Add Storage");
 					chooseProviderForm.Sections.Add (new FileSystemProvidersSection ());
 
-					Form.NavigationController.PushViewController (chooseProviderForm, true);
+					Form?.NavigationController?.PushViewController (chooseProviderForm, true);
 
 					return true;
 				}
@@ -215,16 +208,6 @@ namespace Praeclarum.UI
 				});
 
 				return true;
-			}
-
-			static IEnumerable<object> GetAddOptions ()
-			{
-				var fman = FileSystemManager.Shared;
-				var fs = 
-					from p in fman.Providers
-					where p.CanAddFileSystem
-					select (object)p;
-				return fs;
 			}
 		}
 	}

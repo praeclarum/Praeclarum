@@ -239,7 +239,6 @@ public class NSUrlFileSystem : IFileSystem
 		return Task.Run (() =>
 		{
 			var dirUrl = GetUrlForPath (directory, isDirectory: true);
-			Console.WriteLine ("ListFiles: " + dirUrl);
 			var contents = _fileManager.GetDirectoryContent (dirUrl, properties: null, options: 0, out var error);
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 			if (error is not null)

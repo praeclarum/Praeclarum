@@ -131,13 +131,7 @@ namespace Praeclarum.IO
 
 		Dictionary<string, IFile> fileIndex = new Dictionary<string, IFile> ();
 
-		public ICollection<string> FileExtensions { get; private set; }
-
-		public CloudFileSystem ()
-		{
-			FileExtensions = new Collection<string> ();
-			IsSyncing = true;
-		}
+		public ICollection<string> FileExtensions { get; private set; } = new Collection<string> ();
 
 		public string Id {
 			get {
@@ -188,7 +182,7 @@ namespace Praeclarum.IO
 		public bool IsAvailable { get { return CloudFileSystemProvider.CloudAvailable; } }
 		public string AvailabilityReason { get { return "Not signed in"; } }
 
-		public bool IsSyncing { get; private set; }
+		public bool IsSyncing { get; private set; } = false;
 		public string SyncStatus { get { return "Syncing"; } }
 
 		public string GetLocalPath (string path)

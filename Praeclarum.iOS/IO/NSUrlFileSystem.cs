@@ -43,23 +43,24 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 	// ReSharper disable once NotAccessedField.Local
 	private UIDocumentPickerViewController? _currentPicker; // Keep a reference to avoid GC
 
-	public Task ShowAddUI (object parent)
+	public Task<IFileSystem?> ShowAddUI (object parent)
 	{
 		if (ios14 && ((parent as UIViewController) ?? UIApplication.SharedApplication.KeyWindow?.RootViewController) is {} pvc) {
-			var tcs = new TaskCompletionSource<object?> ();
+			var tcs = new TaskCompletionSource<IFileSystem?> ();
 			var picker = new UIDocumentPickerViewController (contentTypes: [UTTypes.Folder], asCopy: false);
 			_currentPicker = picker; // Keep a reference to avoid GC
 			picker.AllowsMultipleSelection = false;
 			picker.ModalPresentationStyle = UIModalPresentationStyle.FormSheet;
 			picker.DidPickDocumentAtUrls += (_, e) =>
 			{
+				NSUrlFileSystem? newFS = null;
 				var url = e.Urls.FirstOrDefault ();
 				if (url is not null)
 				{
 					var name = url.LastPathComponent ?? "Folder";
 					if (url.IsDirectory ())
 					{
-						AddFileSystemAtUrl (url, name: name);
+						newFS = AddFileSystemAtUrl (url, name: name);
 					}
 					else
 					{
@@ -69,22 +70,22 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 						pvc.PresentViewController (alert, true, null);
 					}
 				}
-				tcs.TrySetResult (null);
+				tcs.TrySetResult (newFS);
 			};
 			pvc.PresentViewController (picker, true, null);
 			return tcs.Task;
 		}
-		return Task.CompletedTask;
+		return Task.FromResult<IFileSystem?> (null);
 	}
 #elif __MACOS__
 	public Task ShowAddUI (object parent)
 	{
 		Log.Error ("NSUrlFileSystemProvider.ShowAddUI not implemented on macOS");
-		return Task.CompletedTask;
+		return Task.FromResult<IFileSystem?> (null);
 	}
 #endif
 
-	private void AddFileSystemAtUrl (NSUrl url, string name)
+	private NSUrlFileSystem? AddFileSystemAtUrl (NSUrl url, string name)
 	{
 		var key = Guid.NewGuid ().ToString ("N") + "-" + name;
 		var fs = new NSUrlFileSystem (key);
@@ -102,7 +103,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 		// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 		if (error is not null || bookmarkData is null)
 			// ReSharper restore ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-			return;
+			return null;
 		
 		defaults.SetValueForKey (bookmarkData, (NSString)fs.DefaultsUrlKey);
 		
@@ -110,6 +111,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 		var keys = string.Join ("/", _fss.Select (x => x.Key));
 		defaults.SetString (keys, "NSUrlFileSystemKeys");
 		defaults.Synchronize ();
+		return fs;
 	}
 
 	public IEnumerable<IFileSystem> GetFileSystems ()

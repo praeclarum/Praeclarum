@@ -120,7 +120,7 @@ namespace Praeclarum.UI
 			_sections.CollectionChanged -= HandleSectionsChanged;
 			NavigationItem.RightBarButtonItem = null;
 
-			if (NavigationController != null) {
+			if (NavigationController is not null) {
 				if (NavigationController.ViewControllers.Length == 1) {
 					await NavigationController.DismissViewControllerAsync (true);
 				} else {

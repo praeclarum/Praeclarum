@@ -31,9 +31,7 @@ namespace Praeclarum.UI
 			{
 				Items.Clear ();
 
-				var fman = FileSystemManager.Shared;
-
-				foreach (var f in fman.Providers.Where (x => x.CanAddFileSystem)) {
+				foreach (var f in FileSystemManager.Shared.Providers.Where (x => x.CanAddFileSystem)) {
 					Items.Add (f);
 				}
 			}
@@ -69,14 +67,21 @@ namespace Praeclarum.UI
 				});
 
 				return false;
-
 			}
 
 			async Task AddFileSystemAsync (IFileSystemProvider fileSystemProvider)
 			{
 				if (Form is not {} form)
 					return;
-				await fileSystemProvider.ShowAddUI (form);
+				if (await fileSystemProvider.ShowAddUI (form) is {} newFileSystem)
+				{
+					FileSystemManager.Shared.Add (newFileSystem);
+					FileSystemManager.Shared.ActiveFileSystem = newFileSystem;
+					if (DocumentAppDelegate.Shared is { } appDelegate)
+					{
+						await appDelegate.SetFileSystemAsync (newFileSystem, true);
+					}
+				}
 				await form.DismissAsync (true);
 			}
 		}
@@ -129,13 +134,13 @@ namespace Praeclarum.UI
 			{
 				Items.Clear ();
 
-				var fman = FileSystemManager.Shared;
+				var fileSystemManager = FileSystemManager.Shared;
 
-				foreach (var f in fman.FileSystems) {
+				foreach (var f in fileSystemManager.FileSystems) {
 					Items.Add (f);
 				}
 
-				if (fman.Providers.Any (x => x.CanAddFileSystem))
+				if (fileSystemManager.Providers.Any (x => x.CanAddFileSystem))
 					Items.Add (_addStorage);
 			}
 

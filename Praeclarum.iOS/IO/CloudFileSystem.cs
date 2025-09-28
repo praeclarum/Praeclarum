@@ -20,9 +20,9 @@ namespace Praeclarum.IO
 	{
 		public bool CanAddFileSystem { get { return false; } }
 
-		public Task ShowAddUI (object parent)
+		public Task<IFileSystem> ShowAddUI (object parent)
 		{
-			return Task.CompletedTask;
+			return Task.FromResult<IFileSystem> (null);
 		}
 
 		public string Name { get { return "iCloud"; } }

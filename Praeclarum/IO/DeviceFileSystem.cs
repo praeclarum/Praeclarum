@@ -13,9 +13,9 @@ namespace Praeclarum.IO
 		public string Name { get; private set; }
 		public string IconUrl => DeviceFileSystem.GetIcon ();
 		public bool CanAddFileSystem { get { return false; } }
-		public Task ShowAddUI (object parent)
+		public Task<IFileSystem> ShowAddUI (object parent)
 		{
-			return Task.CompletedTask;
+			return Task.FromResult<IFileSystem> (null);
 		}
 		public IEnumerable<IFileSystem> GetFileSystems ()
 		{

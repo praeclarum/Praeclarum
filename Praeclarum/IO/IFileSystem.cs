@@ -16,7 +16,7 @@ namespace Praeclarum.IO
 			get;
 		}
 
-		Task ShowAddUI (object parent);
+		Task<IFileSystem> ShowAddUI (object parent);
 
 		IEnumerable<IFileSystem> GetFileSystems ();
 	}

@@ -33,8 +33,8 @@ namespace Praeclarum.UI
 		{
 			Title = (title ?? "").Localize ();
 
-			sections = new ObservableCollection<PFormSection> ();
-			sections.CollectionChanged += HandleSectionsChanged;
+			_sections = new ObservableCollection<PFormSection> ();
+			_sections.CollectionChanged += HandleSectionsChanged;
 		}
 
 		public override void LoadView ()
@@ -91,7 +91,7 @@ namespace Praeclarum.UI
 		public void ReloadAll ()
 		{
 			var visibleSectionViews = new List<PFormSectionView> (sectionsStack.ArrangedSubviews.OfType<PFormSectionView> ());
-			visibleSectionViews.MergeInto(sections,
+			visibleSectionViews.MergeInto(_sections,
 				(s, d) => s.Section.Equals(d),
 				(s =>
 				{

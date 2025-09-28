@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Linq;
 using Praeclarum.IO;
 using Foundation;
@@ -213,6 +214,17 @@ namespace Praeclarum.UI
 				});
 
 				return true;
+			}
+
+			public override EditAction GetItemEditActions (object item)
+			{
+				return EditAction.Delete;
+			}
+
+			public override void DeleteItem (object item)
+			{
+				base.DeleteItem (item);
+				Console.WriteLine ("Delete " + item);
 			}
 		}
 	}

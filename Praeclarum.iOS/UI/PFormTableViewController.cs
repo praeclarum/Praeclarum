@@ -45,7 +45,7 @@ namespace Praeclarum.UI
 
 			try {
 
-				TableView.Source = new FormSource (this);
+				TableView.Source = CreateSource ();
 
 				if (AutoCancelButton && (NavigationController == null || NavigationController.ViewControllers.Length == 1)) {
 					NavigationItem.LeftBarButtonItem = new UIBarButtonItem (
@@ -457,6 +457,61 @@ namespace Praeclarum.UI
 
 				} catch (Exception ex) {
 					Debug.WriteLine (ex);
+				}
+			}
+
+			public override bool CanEditRow (UITableView tableView, NSIndexPath indexPath)
+			{
+				try
+				{
+					var sectionIndex = indexPath.Section;
+					if (sectionIndex < 0 || sectionIndex >= controller.Sections.Count)
+						return false;
+					var section = controller.Sections[sectionIndex];
+					var itemIndex = indexPath.Row;
+					if (itemIndex < 0 || itemIndex >= section.Items.Count)
+						return false;
+					var actions = section.GetItemEditActions (section.Items[itemIndex]);
+					return actions != 0;
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex);
+					return false;
+				}
+			}
+
+			public override UISwipeActionsConfiguration GetTrailingSwipeActionsConfiguration (UITableView tableView, NSIndexPath indexPath)
+			{
+				try
+				{
+					var sectionIndex = indexPath.Section;
+					if (sectionIndex < 0 || sectionIndex >= controller.Sections.Count)
+						return null;
+					var section = controller.Sections[sectionIndex];
+					var itemIndex = indexPath.Row;
+					if (itemIndex < 0 || itemIndex >= section.Items.Count)
+						return null;
+					var item = section.Items[itemIndex];
+					var actions = section.GetItemEditActions (item);
+					if (actions.HasFlag (PFormSection.EditAction.Delete))
+					{
+						return UISwipeActionsConfiguration.FromActions ([
+							UIContextualAction.FromContextualActionStyle (UIContextualActionStyle.Destructive, "Delete",
+								(action, view, handler) =>
+								{
+									section.DeleteItem (item);
+									tableView.DeleteRows ([indexPath], UITableViewRowAnimation.Automatic);
+								})
+						]);
+					}
+
+					return null;
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex);
+					return null;
 				}
 			}
 		}

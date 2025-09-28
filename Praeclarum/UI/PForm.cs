@@ -137,6 +137,23 @@ namespace Praeclarum.UI
 			return false;
 		}
 
+		[Flags]
+		public enum EditAction
+		{
+			None = 0x00,
+			Delete = 0x01,
+		}
+
+		public virtual EditAction GetItemEditActions (object item)
+		{
+			return EditAction.None;
+		}
+
+		public virtual void DeleteItem (object item)
+		{
+			Items.Remove (item);
+		}
+
 		/// <summary>
 		/// Execute when an item is selected. Return true to keep the item selected, false to deselect it.
 		/// If the item is a Command, it will be executed automatically.

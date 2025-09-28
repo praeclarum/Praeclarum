@@ -94,6 +94,8 @@ namespace Praeclarum.UI
 			NotifyCollectionChangedEventHandler? _h;
 			NSTimer? _timer;
 
+			private bool ignoreChanges;
+
 			public FileSystemsSection ()
 			{
 				Refresh ();
@@ -127,6 +129,8 @@ namespace Praeclarum.UI
 
 			void HandleFileSystemsChanged (object? sender, NotifyCollectionChangedEventArgs e)
 			{
+				if (ignoreChanges)
+					return;
 				Refresh ();
 				SetNeedsReload ();
 			}
@@ -218,13 +222,35 @@ namespace Praeclarum.UI
 
 			public override EditAction GetItemEditActions (object item)
 			{
-				return EditAction.Delete;
+				return item is IFileSystem { CanRemoveFileSystem: true } ? EditAction.Delete : EditAction.None;
 			}
 
 			public override void DeleteItem (object item)
 			{
 				base.DeleteItem (item);
-				Console.WriteLine ("Delete " + item);
+				if (item is not IFileSystem fs)
+					return;
+				var fileSystemManager = FileSystemManager.Shared;
+				try
+				{
+					ignoreChanges = true;
+					fileSystemManager.FileSystems.Remove (fs);
+				}
+				finally
+				{
+					ignoreChanges = false;
+				}
+				fs.RemoveFileSystem ();
+				// If we deleted the active file system, switch to another available one
+				if (ReferenceEquals(fs, fileSystemManager.ActiveFileSystem)
+				    && fileSystemManager.FileSystems.FirstOrDefault (x => x.IsAvailable) is {} newFileSystem)
+				{
+					DocumentAppDelegate.Shared.SetFileSystemAsync (newFileSystem, false).ContinueWith (t =>
+					{
+						if (t.IsFaulted)
+							Log.Error (t.Exception);
+					});
+				}
 			}
 		}
 	}

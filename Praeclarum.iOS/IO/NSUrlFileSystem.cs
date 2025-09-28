@@ -31,7 +31,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 		{
 			if (string.IsNullOrWhiteSpace (key))
 				continue;
-			_fss.Add (new NSUrlFileSystem (key));
+			_fss.Add (new NSUrlFileSystem (this, key));
 		}
 	}
 
@@ -88,7 +88,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 	private NSUrlFileSystem? AddFileSystemAtUrl (NSUrl url, string name)
 	{
 		var key = Guid.NewGuid ().ToString ("N") + "-" + name;
-		var fs = new NSUrlFileSystem (key);
+		var fs = new NSUrlFileSystem (this, key);
 		var defaults = NSUserDefaults.StandardUserDefaults;
 		var gotPermission = url.StartAccessingSecurityScopedResource ();
 		if (!gotPermission)
@@ -108,20 +108,33 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 		defaults.SetValueForKey (bookmarkData, (NSString)fs.DefaultsUrlKey);
 		
 		_fss.Add (fs);
+		SaveFileSystems();
+		return fs;
+	}
+
+	private void SaveFileSystems()
+	{
+		NSUserDefaults defaults = NSUserDefaults.StandardUserDefaults;
 		var keys = string.Join ("/", _fss.Select (x => x.Key));
 		defaults.SetString (keys, "NSUrlFileSystemKeys");
 		defaults.Synchronize ();
-		return fs;
 	}
 
 	public IEnumerable<IFileSystem> GetFileSystems ()
 	{
 		return _fss.AsReadOnly ();
 	}
+
+	public void RemoveFileSystem (NSUrlFileSystem nsUrlFileSystem)
+	{
+		_fss.Remove (nsUrlFileSystem);
+		SaveFileSystems();
+	}
 }
 
 public class NSUrlFileSystem : IFileSystem
 {
+	private readonly NSUrlFileSystemProvider _provider;
 	private readonly NSFileManager _fileManager;
 
 	private NSUrl? _cachedRootUrl;
@@ -129,10 +142,13 @@ public class NSUrlFileSystem : IFileSystem
 	public string Key { get; }
 
 	public string IconUrl => "systemimage://folder.fill";
+	
+	public bool CanRemoveFileSystem => true;
 
 	// ReSharper disable once ConvertToPrimaryConstructor
-	public NSUrlFileSystem (string key)
+	public NSUrlFileSystem (NSUrlFileSystemProvider provider, string key)
 	{
+		_provider = provider;
 		Key = key;
 		_fileManager = NSFileManager.DefaultManager;
 	}
@@ -158,6 +174,11 @@ public class NSUrlFileSystem : IFileSystem
 
 	public string Description => $"\"{LastPathComponent}\" Files";
 	public string ShortDescription => Description;
+
+	public void RemoveFileSystem ()
+	{
+		_provider.RemoveFileSystem (this);
+	}
 
 	public bool IsAvailable
 	{

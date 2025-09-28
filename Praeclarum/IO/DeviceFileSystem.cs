@@ -56,6 +56,9 @@ namespace Praeclarum.IO
 				return "Device";
 			}
 		}
+		
+		public bool CanRemoveFileSystem => false;
+		public void RemoveFileSystem () { }
 
 		public static string GetIcon ()
 		{

@@ -91,6 +91,9 @@ namespace Praeclarum.IO
 		NSUrl documentsUrl;
 
 		NSMetadataQuery query;
+		
+		public bool CanRemoveFileSystem => false;
+		public void RemoveFileSystem () { }
 
 		public int MaxDirectoryDepth { get { return short.MaxValue; } }
 

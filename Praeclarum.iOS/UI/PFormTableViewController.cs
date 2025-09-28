@@ -500,8 +500,17 @@ namespace Praeclarum.UI
 							UIContextualAction.FromContextualActionStyle (UIContextualActionStyle.Destructive, "Delete",
 								(action, view, handler) =>
 								{
-									section.DeleteItem (item);
-									tableView.DeleteRows ([indexPath], UITableViewRowAnimation.Automatic);
+									try
+									{
+										section.DeleteItem (item);
+										tableView.DeleteRows ([indexPath], UITableViewRowAnimation.Automatic);
+									}
+									catch (Exception ex)
+									{
+										Log.Error(ex);
+									}
+
+									handler (true);
 								})
 						]);
 					}

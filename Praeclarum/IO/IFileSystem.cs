@@ -31,6 +31,9 @@ namespace Praeclarum.IO
 
 		string Description { get; }
 		string ShortDescription { get; }
+		
+		bool CanRemoveFileSystem { get; }
+		void RemoveFileSystem ();
 
 		bool IsAvailable { get; }
 		string AvailabilityReason { get; }

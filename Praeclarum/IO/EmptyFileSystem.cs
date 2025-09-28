@@ -31,6 +31,9 @@ namespace Praeclarum.IO
 		}
 		public string IconUrl => null;
 		public string ShortDescription { get { return Description; } }
+		
+		public bool CanRemoveFileSystem => false;
+		public void RemoveFileSystem () { }
 
 		public int MaxDirectoryDepth { get { return 0; } }
 

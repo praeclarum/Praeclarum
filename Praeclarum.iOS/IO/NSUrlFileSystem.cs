@@ -78,7 +78,7 @@ public class NSUrlFileSystemProvider : IFileSystemProvider
 		return Task.FromResult<IFileSystem?> (null);
 	}
 #elif __MACOS__
-	public Task ShowAddUI (object parent)
+	public Task<IFileSystem?> ShowAddUI (object parent)
 	{
 		Log.Error ("NSUrlFileSystemProvider.ShowAddUI not implemented on macOS");
 		return Task.FromResult<IFileSystem?> (null);

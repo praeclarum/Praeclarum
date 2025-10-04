@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using Foundation;
 using UIKit;
 using CoreGraphics;
+
+using CrossIntelligence;
+
 using ObjCRuntime;
 
 // ReSharper disable once CheckNamespace
@@ -18,11 +21,17 @@ namespace Praeclarum.UI;
 public class AIChatView : UIView
 {
 	static readonly NFloat maxInputBoxHeight = 168;
-	static readonly NFloat inputBoxVPadding = 7;
+	static readonly NFloat inputBoxVPadding = 11;
 	static readonly NFloat inputBoxHPadding = 11;
 	
+#if __MACOS__
+	static readonly bool ios13 = true;
+#else
+	static readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
+#endif
+	
 	readonly UITableView _tableView;
-	readonly UIView _inputBox = new() { BackgroundColor = UIColor.Red, };
+	readonly UIView _inputBox = new() { BackgroundColor = ios13 ? UIColor.SecondarySystemBackground : UIColor.Gray, };
 	readonly UITextView _inputField = new ();
 	readonly ChatSource _chatSource;
 	readonly UIFont _inputFieldFont = UIFont.SystemFontOfSize (UIFont.SystemFontSize);
@@ -31,10 +40,12 @@ public class AIChatView : UIView
 	
 	bool _isSubmitting = false;
 
+	private IntelligenceSession? _session = null;
+
     public AIChatView (CGRect frame)
         : base (frame)
     {
-	    _chatSource = new ChatSource();
+	    _chatSource = new ChatSource (this);
 	    _tableView = new UITableView (frame, UITableViewStyle.Plain);
 	    Initialize ();
     }
@@ -42,7 +53,7 @@ public class AIChatView : UIView
     public AIChatView (NativeHandle handle)
         : base (handle)
     {
-	    _chatSource = new ChatSource();
+	    _chatSource = new ChatSource (this);
 	    _tableView = new UITableView (base.Frame, UITableViewStyle.Plain);
 	    Initialize ();
     }
@@ -51,9 +62,9 @@ public class AIChatView : UIView
     {
 	    var bounds = base.Bounds;
 	    
-	    BackgroundColor = UIColor.Yellow;
+	    BackgroundColor = UIColor.Clear;
 
-	    _tableView.BackgroundView = new UIView (bounds) { BackgroundColor = UIColor.Blue, };
+	    _tableView.BackgroundView = new UIView (bounds) { BackgroundColor = UIColor.Clear, };
 	    _tableView.TranslatesAutoresizingMaskIntoConstraints = false;
 	    _tableView.Source = _chatSource;
 	    
@@ -63,7 +74,7 @@ public class AIChatView : UIView
 
 	    var fframe = new CGRect (inputBoxHPadding, inputBoxVPadding, iframe.Width - 2*inputBoxHPadding, iframe.Height - 2*inputBoxVPadding);
 	    _inputField.Frame = fframe;
-	    _inputField.BackgroundColor = UIColor.Green;
+	    _inputField.BackgroundColor = UIColor.SystemBackground;
 	    _inputField.AutoresizingMask = UIViewAutoresizing.FlexibleDimensions;
 	    _inputField.TranslatesAutoresizingMaskIntoConstraints = true;
 	    _inputField.Font = _inputFieldFont;
@@ -77,6 +88,11 @@ public class AIChatView : UIView
 	    AddSubview (_inputBox);
 	    AdjustInputBoxHeight (animated: false);
     }
+
+    public void SetFocus ()
+    {
+	    _inputField.BecomeFirstResponder ();
+    } 
 
     private bool ShouldChangeText (UITextView textView, NSRange range, string text)
     {
@@ -143,7 +159,7 @@ public class AIChatView : UIView
 			    await Task.Delay (1);
 			    _inputField.Text = "";
 			    AdjustInputBoxHeight (animated: true);
-			    await _chatSource.AddPromptAsync (prompt, tableView: _tableView);
+			    await _chatSource.AddPromptAsync (GetSession (), prompt, tableView: _tableView);
 		    }
 	    }
 	    finally
@@ -152,11 +168,26 @@ public class AIChatView : UIView
 	    }
     }
 
+    IntelligenceSession GetSession ()
+    {
+	    if (_session is { } s)
+		    return s;
+	    var ns = new IntelligenceSession (IntelligenceModel.AppleIntelligence);
+	    _session = ns;
+	    return ns;
+    }
+
 	class ChatSource : UITableViewSource
 	{
+		private WeakReference<AIChatView> _chatView;
 		List<Chat> Chats { get; } = [new ()];
 		private int ActiveChatIndex { get; } = 0;
 		Chat ActiveChat => Chats[ActiveChatIndex];
+
+		public ChatSource (AIChatView chatView)
+		{
+			_chatView = new WeakReference<AIChatView> (chatView);
+		}
 
 		public override IntPtr NumberOfSections (UITableView tableView)
 		{
@@ -171,21 +202,21 @@ public class AIChatView : UIView
 
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
-			var cell = tableView.DequeueReusableCell ("C") as ChatCell ?? new ChatCell ("C");
+			var cell = tableView.DequeueReusableCell ("M") as MessageCell ?? new MessageCell ("M");
 			var chat = ActiveChat;
 #if __MACOS__
 			var message = chat.Messages[(int)indexPath.Item];
 #else
 			var message = chat.Messages[indexPath.Row];
 #endif
-			cell.MessageText = message.Text;
+			cell.Message = message;
 			return cell;
 		}
 
-		public async Task AddPromptAsync (string prompt, UITableView tableView)
+		async Task AddMessageAsync (Message message, UITableView tableView)
 		{
 			var chat = ActiveChat;
-			chat.Messages.Add (new Message { Text = prompt, Type = MessageType.User });
+			chat.Messages.Add (message);
 #if __MACOS__
 			var indexPath = NSIndexPath.FromItemSection ((IntPtr)(chat.Messages.Count - 1), IntPtr.Zero);
 #else
@@ -196,18 +227,65 @@ public class AIChatView : UIView
 			tableView.ScrollToRow (indexPath, UITableViewScrollPosition.Bottom, true);
 			await Task.Delay (1);
 		}
+
+		public async Task AddPromptAsync (IntelligenceSession session, string prompt, UITableView tableView)
+		{
+			await AddMessageAsync (new Message { Text = prompt, Type = MessageType.User }, tableView);
+			try
+			{
+				var response = await session.RespondAsync (prompt);
+				await AddMessageAsync (new Message { Text = response, Type = MessageType.Assistant }, tableView);
+			}
+			catch (Exception ex)
+			{
+				await AddMessageAsync (new Message { Text = ex.Message, Type = MessageType.Error }, tableView);
+			}
+		}
 	}
 	
-	class ChatCell : UITableViewCell
+	class MessageCell : UITableViewCell
 	{
-		public string MessageText
+		private Message? _message;
+		public Message? Message
 		{
-			get => TextLabel.Text ?? "";
-			set => TextLabel.Text = value;
+			get => _message;
+			set
+			{
+				_message = value;
+				if (value is { } msg)
+				{
+					base.TextLabel.Text = msg.Text;
+					if (msg.IsUser)
+					{
+						base.TextLabel.TextAlignment = UITextAlignment.Right;
+						base.TextLabel.TextColor = UIColor.SystemBlue;
+					}
+					else if (msg.IsAssistant)
+					{
+						base.TextLabel.TextAlignment = UITextAlignment.Left;
+						base.TextLabel.TextColor = UIColor.Label;
+					}
+					else if (msg.IsError)
+					{
+						base.TextLabel.TextAlignment = UITextAlignment.Left;
+						base.TextLabel.TextColor = UIColor.SystemRed;
+					}
+					else
+					{
+						base.TextLabel.TextAlignment = UITextAlignment.Left;
+						base.TextLabel.TextColor = UIColor.Gray;
+					}
+				}
+				else
+				{
+					base.TextLabel.Text = "";
+				}
+			}
 		}
-		public ChatCell (string reuseIdentifier) : base (UITableViewCellStyle.Default, reuseIdentifier)
+		public MessageCell (string reuseIdentifier) : base (UITableViewCellStyle.Default, reuseIdentifier)
 		{
 			base.TextLabel.LineBreakMode = UILineBreakMode.WordWrap;
+			base.TextLabel.Lines = 1000000;
 		}
 	}
 	

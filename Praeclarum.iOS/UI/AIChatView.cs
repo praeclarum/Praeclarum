@@ -41,6 +41,19 @@ public class AIChatView : UIView
 	bool _isSubmitting = false;
 
 	private IntelligenceSession? _session = null;
+	
+	public string Instructions { get; set; } = "";
+	public IIntelligenceTool[] Tools { get; set; } = [];
+
+	public string Prompt
+	{
+		get => _inputField.Text ?? "";
+		set
+		{
+			_inputField.Text = value;
+			AdjustInputBoxHeight (animated: false);
+		}
+	}
 
     public AIChatView (CGRect frame)
         : base (frame)
@@ -138,7 +151,7 @@ public class AIChatView : UIView
 	    var minTextHeight = lines * lineSize.Height;
 	    var newTextHeight = minTextHeight * 1.15 + 2 * inputBoxVPadding + 16;
 	    var newInputBoxHeight = (NFloat)Math.Min (maxInputBoxHeight, newTextHeight);
-		Console.WriteLine ($"Adjust Text ({text.Length}) size {lineSize}: {lines} * {lineSize.Height} = {minTextHeight} => {newInputBoxHeight}");
+		// Console.WriteLine ($"Adjust Text ({text.Length}) size {lineSize}: {lines} * {lineSize.Height} = {minTextHeight} => {newInputBoxHeight}");
 	    if (Math.Abs (newInputBoxHeight - _inputBoxHeight) > 1.0f)
 	    {
 		    _inputBoxHeight = newInputBoxHeight;
@@ -172,7 +185,7 @@ public class AIChatView : UIView
     {
 	    if (_session is { } s)
 		    return s;
-	    var ns = new IntelligenceSession (IntelligenceModel.AppleIntelligence);
+	    var ns = new IntelligenceSession (IntelligenceModel.AppleIntelligence, tools: Tools, instructions: Instructions);
 	    _session = ns;
 	    return ns;
     }

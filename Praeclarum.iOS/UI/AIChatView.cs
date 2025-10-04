@@ -17,7 +17,6 @@ namespace Praeclarum.UI;
 // ReSharper disable once InconsistentNaming
 public class AIChatView : UIView
 {
-	static readonly NFloat minInputBoxHeight = 56;
 	static readonly NFloat maxInputBoxHeight = 168;
 	static readonly NFloat inputBoxVPadding = 7;
 	static readonly NFloat inputBoxHPadding = 11;
@@ -28,7 +27,7 @@ public class AIChatView : UIView
 	readonly ChatSource _chatSource;
 	readonly UIFont _inputFieldFont = UIFont.SystemFontOfSize (UIFont.SystemFontSize);
 
-	NFloat _inputBoxHeight = minInputBoxHeight;
+	NFloat _inputBoxHeight = 22;
 	
 	bool _isSubmitting = false;
 
@@ -58,7 +57,7 @@ public class AIChatView : UIView
 	    _tableView.TranslatesAutoresizingMaskIntoConstraints = false;
 	    _tableView.Source = _chatSource;
 	    
-	    var iframe = new CGRect (0, bounds.Height - minInputBoxHeight, bounds.Width, minInputBoxHeight);
+	    var iframe = new CGRect (0, bounds.Height - _inputBoxHeight, bounds.Width, _inputBoxHeight);
 	    _inputBox.Frame = iframe;
 	    _inputBox.TranslatesAutoresizingMaskIntoConstraints = false;
 
@@ -76,7 +75,7 @@ public class AIChatView : UIView
 	    
 	    AddSubview (_tableView);
 	    AddSubview (_inputBox);
-	    base.SetNeedsLayout ();
+	    AdjustInputBoxHeight (animated: false);
     }
 
     private bool ShouldChangeText (UITextView textView, NSRange range, string text)
@@ -95,7 +94,7 @@ public class AIChatView : UIView
 
     private void InputFieldOnValueChanged (object? sender, EventArgs e)
     {
-	    AdjustInputBoxHeight ();
+	    AdjustInputBoxHeight (animated: true);
     }
 
     public override void LayoutSubviews ()
@@ -111,25 +110,25 @@ public class AIChatView : UIView
 	    _inputBox.Frame = iframe;
     }
 
-    void AdjustInputBoxHeight ()
+    void AdjustInputBoxHeight (bool animated)
     {
 	    if (_inputField.Text is not { } text)
 		    return;
-	    var newInputBoxHeight = minInputBoxHeight;
-	    if (!string.IsNullOrEmpty (text))
-	    {
-		    var width = _inputField.Frame.Width;
-		    var lineSize = text.StringSize (_inputFieldFont);
-		    var lines = (int)Math.Ceiling (lineSize.Width / width);
-		    var minTextHeight = lines * lineSize.Height;
-		    var newTextHeight = minTextHeight * 1.4 + 18 + 2 * inputBoxVPadding;
-		    newInputBoxHeight = (NFloat)Math.Min (maxInputBoxHeight, Math.Max (minInputBoxHeight, newTextHeight));
-			Console.WriteLine ($"Adjust Text ({text.Length}) size {lineSize}: {lines} * {lineSize.Height} = {minTextHeight} => {newInputBoxHeight}");
-	    }
+	    if (string.IsNullOrEmpty (text))
+		    text = "M";
+	    var width = _inputField.Frame.Width;
+	    var lineSize = text.StringSize (_inputFieldFont);
+	    var lines = Math.Max(1, (int)Math.Ceiling (lineSize.Width * 1.1 / width));
+	    var minTextHeight = lines * lineSize.Height;
+	    var newTextHeight = minTextHeight * 1.15 + 2 * inputBoxVPadding + 16;
+	    var newInputBoxHeight = (NFloat)Math.Min (maxInputBoxHeight, newTextHeight);
+		Console.WriteLine ($"Adjust Text ({text.Length}) size {lineSize}: {lines} * {lineSize.Height} = {minTextHeight} => {newInputBoxHeight}");
 	    if (Math.Abs (newInputBoxHeight - _inputBoxHeight) > 1.0f)
 	    {
 		    _inputBoxHeight = newInputBoxHeight;
 		    SetNeedsLayout ();
+			if (animated)
+		    	Animate (0.5, LayoutIfNeeded);
 	    }
 	}
     
@@ -143,7 +142,7 @@ public class AIChatView : UIView
 		    {
 			    await Task.Delay (1);
 			    _inputField.Text = "";
-			    AdjustInputBoxHeight ();
+			    AdjustInputBoxHeight (animated: true);
 			    await _chatSource.AddPromptAsync (prompt, tableView: _tableView);
 		    }
 	    }

@@ -1506,6 +1506,103 @@ namespace UIKit
             : base (frame)
         {
         }
+
+	    public void ScrollToRow (NSIndexPath indexPath, UITableViewScrollPosition bottom, bool b)
+	    {
+		    ScrollRowToVisible (indexPath.Item);
+	    }
+
+	    public virtual void InsertRows (NSIndexPath[] atIndexPaths, UITableViewRowAnimation withRowAnimation)
+	    {
+		    var items = atIndexPaths.Select (x => (int)x.Item).ToArray ();
+		    base.InsertRows (NSIndexSet.FromArray (items), NSTableViewAnimation.None);
+	    }
+
+	    public UITableViewCell? DequeueReusableCell (string reuseIdentifier)
+	    {
+		    return MakeView (reuseIdentifier, this) as UITableViewCell;
+	    }
+    }
+
+    public class UITableViewCell : NSTableCellView
+    {
+	    public UITableViewCellStyle Style { get; }
+	    
+	    public UILabel TextLabel => (UILabel)TextField;
+
+	    public UITableViewCell (UITableViewCellStyle style, string reuseIdentifier)
+	    {
+		    Style = style;
+		    base.Identifier = reuseIdentifier;
+		    base.TextField = new UILabel
+		    {
+			    Bordered = false,
+			    BackgroundColor = NSColor.Clear,
+			    Editable = false,
+			    Selectable = false,
+			    TranslatesAutoresizingMaskIntoConstraints = false,
+		    };
+		    base.AddSubview (base.TextField);
+		    base.TextField.LeadingAnchor.ConstraintEqualTo (base.LeadingAnchor, 8).Active = true;
+		    base.TextField.TrailingAnchor.ConstraintEqualTo (base.TrailingAnchor, -8).Active = true;
+		    base.TextField.CenterYAnchor.ConstraintEqualTo (base.CenterYAnchor).Active = true;
+	    }
+    }
+
+    public enum UITableViewCellStyle : long
+    {
+	    Default,
+	    Value1,
+	    Value2,
+	    Subtitle,
+    }
+
+    public enum UITableViewRowAnimation : long
+    {
+	    Fade = 0,
+	    Right = 1,
+	    Left = 2,
+	    Top = 3,
+	    Bottom = 4,
+	    None = 5,
+	    Middle = 6,
+	    Automatic = 100,
+    }
+
+    public enum UITableViewScrollPosition : long
+    {
+	    None,
+	    Top,
+	    Middle,
+	    Bottom,
+    }
+
+    public abstract class UITableViewSource : NSTableViewSource
+    {
+	    public virtual IntPtr NumberOfSections (UITableView tableView)
+	    {
+		    return 1;
+	    }
+
+	    public abstract IntPtr RowsInSection (UITableView tableView, IntPtr section);
+
+	    public override IntPtr GetRowCount (NSTableView tableView)
+	    {
+		    var numSections = NumberOfSections ((UITableView)tableView).ToInt32 ();
+		    var numRows = 0;
+		    for (var i = 0; i < numSections; i++)
+		    {
+			    numRows += RowsInSection ((UITableView)tableView, i).ToInt32 ();
+		    }
+		    return numRows;
+	    }
+
+	    public abstract UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath);
+
+	    public override NSView GetViewForItem (NSTableView tableView, NSTableColumn tableColumn, IntPtr row)
+	    {
+		    return GetCell ((UITableView)tableView, NSIndexPath.FromItemSection (row.ToInt32(), 0));
+	    }
     }
 
     public enum UITableViewStyle : long
@@ -1514,7 +1611,6 @@ namespace UIKit
         Grouped,
         InsetGrouped,
     }
-
 
     public class UITapGestureRecognizer : UIGestureRecognizer
     {

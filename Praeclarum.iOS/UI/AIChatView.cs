@@ -68,7 +68,9 @@ public class AIChatView : UIView
 	    _inputField.AutoresizingMask = UIViewAutoresizing.FlexibleDimensions;
 	    _inputField.TranslatesAutoresizingMaskIntoConstraints = true;
 	    _inputField.Font = _inputFieldFont;
+#if !__MACOS__
 	    _inputField.ShouldChangeText = ShouldChangeText;
+#endif
 	    _inputField.Changed += InputFieldOnValueChanged;
 	    _inputBox.AddSubview (_inputField);
 	    
@@ -172,7 +174,11 @@ public class AIChatView : UIView
 		{
 			var cell = tableView.DequeueReusableCell ("C") as ChatCell ?? new ChatCell ("C");
 			var chat = ActiveChat;
+#if __MACOS__
+			var message = chat.Messages[(int)indexPath.Item];
+#else
 			var message = chat.Messages[indexPath.Row];
+#endif
 			cell.MessageText = message.Text;
 			return cell;
 		}
@@ -181,7 +187,11 @@ public class AIChatView : UIView
 		{
 			var chat = ActiveChat;
 			chat.Messages.Add (new Message { Text = prompt, Type = MessageType.User });
+#if __MACOS__
+			var indexPath = NSIndexPath.FromItemSection ((IntPtr)(chat.Messages.Count - 1), IntPtr.Zero);
+#else
 			var indexPath = NSIndexPath.FromRowSection (chat.Messages.Count - 1, 0);
+#endif
 			tableView.InsertRows ([indexPath], UITableViewRowAnimation.Automatic);
 			await Task.Delay (1);
 			tableView.ScrollToRow (indexPath, UITableViewScrollPosition.Bottom, true);

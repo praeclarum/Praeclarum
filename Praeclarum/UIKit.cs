@@ -723,9 +723,9 @@ namespace UIKit
         {
             return NSFont.FromFontName (fontName, size) is {} f ? new UIFont (f) : null;
         }
-        public static UIFont? SystemFontOfSize (nfloat fontSize)
+        public static UIFont SystemFontOfSize (nfloat fontSize)
         {
-            return NSFont.SystemFontOfSize (fontSize) is {} f ? new UIFont (f) : null;
+            return NSFont.SystemFontOfSize (fontSize) is {} f ? new UIFont (f) : new UIFont (NSFont.LabelFontOfSize (fontSize)!);
         }
     }
 
@@ -1485,6 +1485,37 @@ namespace UIKit
     {
     }
 
+    public class UITableView : NSTableView
+    {
+	    private UIView? backgroundView;
+
+	    public UIView? BackgroundView
+	    {
+		    get => backgroundView;
+		    set
+		    {
+			    backgroundView = value;
+			    if (backgroundView != null)
+			    {
+				    base.BackgroundColor = backgroundView.BackgroundColor;
+			    }
+		    }
+	    }
+
+	    public UITableView (CGRect frame, UITableViewStyle style)
+            : base (frame)
+        {
+        }
+    }
+
+    public enum UITableViewStyle : long
+    {
+        Plain,
+        Grouped,
+        InsetGrouped,
+    }
+
+
     public class UITapGestureRecognizer : UIGestureRecognizer
     {
         readonly NSClickGestureRecognizer recognizer;
@@ -1616,6 +1647,11 @@ namespace UIKit
             set => textView.Font = value;
         }
         public event EventHandler? Changed;
+        
+        public new UIViewAutoresizing AutoresizingMask {
+	        get => this.GetAutoresizingMask ();
+	        set => this.SetAutoresizingMask (value);
+        }
 
         public UITextView ()
         {

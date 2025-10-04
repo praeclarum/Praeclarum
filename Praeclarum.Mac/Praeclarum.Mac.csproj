@@ -38,6 +38,9 @@
     <Compile Include="..\Praeclarum.iOS\IO\NSUrlFileSystem.cs">
       <Link>IO\NSUrlFileSystem.cs</Link>
     </Compile>
+    <Compile Include="..\Praeclarum.iOS\UI\AIChatView.cs">
+      <Link>UI\AIChatView.cs</Link>
+    </Compile>
     <Compile Include="..\Praeclarum\App\StoreManager.cs">
       <Link>App\StoreManager.cs</Link>
     </Compile>

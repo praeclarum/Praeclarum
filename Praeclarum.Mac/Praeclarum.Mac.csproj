@@ -75,4 +75,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Praeclarum\Praeclarum.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CrossIntelligence" />
+  </ItemGroup>
 </Project>

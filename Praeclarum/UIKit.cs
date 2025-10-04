@@ -1858,7 +1858,11 @@ namespace UIKit
         }
         public void SetNeedsLayout ()
         {
-            this.NeedsLayout = true;
+            base.NeedsLayout = true;
+        }
+        public virtual void LayoutIfNeeded ()
+        {
+	        base.LayoutSubtreeIfNeeded ();
         }
         public virtual void LayoutSubviews ()
         {
@@ -1929,6 +1933,15 @@ namespace UIKit
                 return;
             TouchesEnded (new NSSet (new NSObject[] { mouseTouch }), new UIEvent (theEvent));
             mouseTouch = null;
+        }
+
+        public static void Animate (double duration, Action animation)
+        {
+	        NSAnimationContext.RunAnimation (ctx =>
+	        {
+		        ctx.Duration = duration;
+		        animation ();
+	        });
         }
 
         public static void BeginAnimations (string name)

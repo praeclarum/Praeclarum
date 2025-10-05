@@ -80,6 +80,7 @@ public class AIChatView : UIView
 	    _tableView.BackgroundView = new UIView (bounds) { BackgroundColor = UIColor.Clear, };
 	    _tableView.TranslatesAutoresizingMaskIntoConstraints = false;
 	    _tableView.Source = _chatSource;
+	    _tableView.AllowsSelection = false;
 	    
 	    var iframe = new CGRect (0, bounds.Height - _inputBoxHeight, bounds.Width, _inputBoxHeight);
 	    _inputBox.Frame = iframe;

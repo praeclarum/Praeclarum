@@ -560,6 +560,12 @@ namespace UIKit
         public static readonly UIColor Blue = new UIColor (NSColor.Blue);
         public static readonly UIColor Yellow = new UIColor (NSColor.Yellow);
 
+        public static readonly UIColor SystemGray = new UIColor (NSColor.SystemGray);
+        public static readonly UIColor SystemRed = new UIColor (NSColor.SystemRed);
+        public static readonly UIColor SystemGreen = new UIColor (NSColor.SystemGreen);
+        public static readonly UIColor SystemBlue = new UIColor (NSColor.SystemBlue);
+        public static readonly UIColor SystemYellow = new UIColor (NSColor.SystemYellow);
+        
         public static readonly UIColor SystemBackground = new UIColor (NSColor.TextBackground);
         public static readonly UIColor SecondarySystemBackground = new UIColor (NSColor.ControlBackground);
         public static readonly UIColor Label = new UIColor (NSColor.Label);
@@ -1500,6 +1506,15 @@ namespace UIKit
 			    {
 				    base.BackgroundColor = backgroundView.BackgroundColor;
 			    }
+		    }
+	    }
+
+	    public bool AllowsSelection
+	    {
+		    get => base.SelectionHighlightStyle != NSTableViewSelectionHighlightStyle.None;
+		    set
+		    {
+			    base.SelectionHighlightStyle = value ? NSTableViewSelectionHighlightStyle.Regular : NSTableViewSelectionHighlightStyle.None;
 		    }
 	    }
 

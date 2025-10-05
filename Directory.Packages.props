@@ -7,7 +7,7 @@
     <PackageVersion Include="CLanguage.Editor" Version="0.20.74" />
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
     <PackageVersion Include="CrossGraphics" Version="1.2.14" />
-    <PackageVersion Include="CrossIntelligence" Version="0.4.0" />
+    <PackageVersion Include="CrossIntelligence" Version="0.4.41" />
     <PackageVersion Include="MarkdownDeep.NET.Core" Version="1.5.0.4" />
     <PackageVersion Include="Microsoft.AppCenter.Analytics" Version="5.0.7" />
     <PackageVersion Include="Microsoft.AppCenter.Crashes" Version="5.0.7" />

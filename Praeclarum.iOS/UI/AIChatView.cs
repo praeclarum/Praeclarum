@@ -32,6 +32,8 @@ public class AIChatView : UIView
 	static readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
 #endif
 	
+	readonly AIChatHistory _history;
+	
 	readonly UITableView _tableView;
 	readonly UIView _inputBox = new() { BackgroundColor = ios13 ? UIColor.SecondarySystemBackground : UIColor.Gray, };
 	readonly UITextView _inputField = new ();
@@ -57,10 +59,25 @@ public class AIChatView : UIView
 		}
 	}
 
-    public AIChatView (CGRect frame)
+	private string? _initialPrompt = null;
+	public string? InitialPrompt
+	{
+		get => _initialPrompt;
+		set
+		{
+			_initialPrompt = value;
+			if (_history.ActiveChat.Messages.Count == 0 && !string.IsNullOrWhiteSpace (value))
+			{
+				Prompt = value;
+			}
+		}
+	}
+
+    public AIChatView (CGRect frame, AIChatHistory? history = null)
         : base (frame)
     {
-	    _chatSource = new ChatSource (this);
+	    _history = history ?? new AIChatHistory ();
+	    _chatSource = new ChatSource (this, _history);
 	    _tableView = new UITableView (frame, UITableViewStyle.Plain);
 	    Initialize ();
     }
@@ -68,7 +85,8 @@ public class AIChatView : UIView
     public AIChatView (NativeHandle handle)
         : base (handle)
     {
-	    _chatSource = new ChatSource (this);
+	    _history = new AIChatHistory ();
+	    _chatSource = new ChatSource (this, _history);
 	    _tableView = new UITableView (base.Frame, UITableViewStyle.Plain);
 	    Initialize ();
     }
@@ -195,14 +213,13 @@ public class AIChatView : UIView
 
 	class ChatSource : UITableViewSource
 	{
-		private WeakReference<AIChatView> _chatView;
-		List<AIChat> Chats { get; } = [new ()];
-		private int ActiveChatIndex { get; } = 0;
-		AIChat ActiveChat => Chats[ActiveChatIndex];
+		private readonly WeakReference<AIChatView> _chatView;
+		private readonly AIChatHistory _history;
 
-		public ChatSource (AIChatView chatView)
+		public ChatSource (AIChatView chatView, AIChatHistory history)
 		{
 			_chatView = new WeakReference<AIChatView> (chatView);
+			_history = history;
 		}
 
 		public override IntPtr NumberOfSections (UITableView tableView)
@@ -212,14 +229,14 @@ public class AIChatView : UIView
 
 		public override IntPtr RowsInSection (UITableView tableView, IntPtr section)
 		{
-			var chat = ActiveChat;
+			var chat = _history.ActiveChat;
 			return (IntPtr)chat.Messages.Count;
 		}
 
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
 			var cell = tableView.DequeueReusableCell ("M") as MessageCell ?? new MessageCell ("M");
-			var chat = ActiveChat;
+			var chat = _history.ActiveChat;
 #if __MACOS__
 			var message = chat.Messages[(int)indexPath.Item];
 #else
@@ -231,7 +248,7 @@ public class AIChatView : UIView
 
 		async Task AddMessageAsync (AIChat.Message message, UITableView tableView)
 		{
-			var chat = ActiveChat;
+			var chat = _history.ActiveChat;
 			chat.Messages.Add (message);
 #if __MACOS__
 			var indexPath = NSIndexPath.FromItemSection ((IntPtr)(chat.Messages.Count - 1), IntPtr.Zero);
@@ -325,11 +342,16 @@ public class AIChatViewController : UIViewController
 		get => chatView.Prompt;
 		set => chatView.Prompt = value;
 	}
+	public string? InitialPrompt
+	{
+		get => chatView.InitialPrompt;
+		set => chatView.InitialPrompt = value;
+	}
 
-	public AIChatViewController() 
+	public AIChatViewController(AIChatHistory? history) 
 	{
 		base.Title = "AI Chat".Localize();
-		chatView = new AIChatView (new CGRect (0, 0, 320, 480));
+		chatView = new AIChatView (new CGRect (0, 0, 320, 480), history);
 		base.View = chatView;
 
 		// base.NavigationItem.RightBarButtonItems =

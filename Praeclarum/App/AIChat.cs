@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -68,5 +69,36 @@ public class AIChat
 		User,
 		Assistant,
 		Error
+	}
+}
+
+public class AIChatHistory : INotifyPropertyChanged
+{
+	private int _activeChatIndex = 0;
+	public ObservableCollection<AIChat> Chats { get; } = [new ()];
+
+	public int ActiveChatIndex
+	{
+		get => _activeChatIndex;
+		set
+		{
+			var safeValue = Math.Clamp(value, 0, Chats.Count - 1);
+			if (safeValue == _activeChatIndex)
+			{
+				return;
+			}
+
+			_activeChatIndex = safeValue;
+			OnPropertyChanged ();
+			OnPropertyChanged (nameof(ActiveChat));
+		}
+	}
+
+	public AIChat ActiveChat => Chats[ActiveChatIndex];
+	public event PropertyChangedEventHandler? PropertyChanged;
+
+	protected virtual void OnPropertyChanged ([CallerMemberName] string? propertyName = null)
+	{
+		PropertyChanged?.Invoke (this, new PropertyChangedEventArgs (propertyName));
 	}
 }

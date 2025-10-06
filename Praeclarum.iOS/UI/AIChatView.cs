@@ -312,6 +312,7 @@ public class AIChatView : UIView
 	
 	class MessageCell : UITableViewCell
 	{
+		private UIActivityIndicatorView? _progressView;
 		private AIChat.Message? _message;
 		public AIChat.Message? Message
 		{
@@ -346,6 +347,7 @@ public class AIChatView : UIView
 
 		private void UpdateUI ()
 		{
+			var shouldShowProgress = false;
 			if (_message is { } msg)
 			{
 				base.TextLabel.Text = msg.Text;
@@ -357,7 +359,7 @@ public class AIChatView : UIView
 				else if (msg.IsAssistant)
 				{
 					base.TextLabel.TextAlignment = UITextAlignment.Left;
-					base.TextLabel.TextColor = UIColor.Label;
+					base.TextLabel.TextColor = msg.ShowProgress ? UIColor.SecondaryLabel : UIColor.Label;
 				}
 				else if (msg.IsError)
 				{
@@ -369,12 +371,50 @@ public class AIChatView : UIView
 					base.TextLabel.TextAlignment = UITextAlignment.Left;
 					base.TextLabel.TextColor = UIColor.Gray;
 				}
+				shouldShowProgress = msg.ShowProgress;
 			}
 			else
 			{
 				base.TextLabel.TextAlignment = UITextAlignment.Left;
 				base.TextLabel.TextColor = UIColor.Gray;
 				base.TextLabel.Text = "";
+				shouldShowProgress = false;
+			}
+
+			if (shouldShowProgress)
+			{
+				ShowProgress ();
+			}
+			else
+			{
+				HideProgress ();
+			}
+		}
+
+		void ShowProgress ()
+		{
+			if (_progressView is { } pv)
+			{
+				return;
+			}
+
+			pv = new UIActivityIndicatorView (UIActivityIndicatorViewStyle.Medium);
+			var size = pv.Frame.Height;
+			var bounds = ContentView.Bounds;
+			pv.Frame = new CGRect (bounds.Width - size - 11, bounds.Top + (bounds.Height - size)/2 + 3, size, size);
+			pv.AutoresizingMask = UIViewAutoresizing.FlexibleLeftMargin | UIViewAutoresizing.FlexibleBottomMargin;
+			pv.StartAnimating ();
+			ContentView.AddSubview (pv);
+			_progressView = pv;
+		}
+		
+		void HideProgress ()
+		{
+			if (_progressView is { } pv)
+			{
+				pv.StopAnimating ();
+				pv.RemoveFromSuperview ();
+				_progressView = null;
 			}
 		}
 	}

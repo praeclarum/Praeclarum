@@ -17,6 +17,36 @@ using ObjCRuntime;
 
 namespace UIKit
 {
+	public class UIActivityIndicatorView : NSProgressIndicator
+	{
+		public new UIViewAutoresizing AutoresizingMask {
+			get => this.GetAutoresizingMask ();
+			set => this.SetAutoresizingMask (value);
+		}
+		public UIActivityIndicatorView (UIActivityIndicatorViewStyle style)
+		{
+			base.Style = NSProgressIndicatorStyle.Spinning;
+			base.Indeterminate = true;
+			base.ControlSize = style == UIActivityIndicatorViewStyle.Large
+				? NSControlSize.Large
+				: NSControlSize.Regular;
+		}
+		public void StartAnimating ()
+		{
+			base.StartAnimation (this);
+		}
+		public void StopAnimating ()
+		{
+			base.StopAnimation (this);
+		}
+	}
+
+	public enum UIActivityIndicatorViewStyle : long
+	{
+		Medium = 100,
+		Large = 101,
+	}
+
     public struct NSDirectionalEdgeInsets
     {
         public static readonly NSDirectionalEdgeInsets Zero;
@@ -570,6 +600,7 @@ namespace UIKit
         public static readonly UIColor SystemBackground = new UIColor (NSColor.TextBackground);
         public static readonly UIColor SecondarySystemBackground = new UIColor (NSColor.ControlBackground);
         public static readonly UIColor Label = new UIColor (NSColor.Label);
+        public static readonly UIColor SecondaryLabel = new UIColor (NSColor.SecondaryLabel);
 
         static readonly ThreadLocal<UIColor> currentFill = new ThreadLocal<UIColor> ();
         public static UIColor CurrentFill => currentFill.Value ?? UIColor.Black;
@@ -1303,6 +1334,21 @@ namespace UIKit
         public NSView? SourceView { get; set; }
         public CGRect SourceRect { get; set; }
     }
+
+    public class UIProgressView : NSProgressIndicator
+    {
+	    public UIProgressView (UIProgressViewStyle style)
+	    {
+		    base.Style = style == UIProgressViewStyle.Bar ? NSProgressIndicatorStyle.Bar : NSProgressIndicatorStyle.Spinning;
+	    }
+    }
+
+    public enum UIProgressViewStyle : long
+    {
+	    Default,
+	    Bar,
+    }
+
     
     public enum UIReturnKeyType : long
     {
@@ -1546,6 +1592,8 @@ namespace UIKit
 	    public UITableViewCellStyle Style { get; }
 	    
 	    public UILabel TextLabel => (UILabel)TextField;
+	    
+	    public NSView ContentView => this;
 
 	    public UITableViewCell (UITableViewCellStyle style, string reuseIdentifier)
 	    {
@@ -2006,14 +2054,18 @@ namespace UIKit
     }
 
     [Flags]
-    public enum UIViewAutoresizing
+    public enum UIViewAutoresizing : ulong
     {
-        None = 0,
-        FlexibleLeftMargin = 1,
-        FlexibleWidth = 2,
-        FlexibleTopMargin = 8,
-        FlexibleHeight = 16,
-        FlexibleDimensions = 18,
+	    None = 0,
+	    FlexibleLeftMargin = 1,
+	    FlexibleWidth = 2,
+	    FlexibleRightMargin = 4,
+	    FlexibleTopMargin = 8,
+	    FlexibleHeight = 16,
+	    FlexibleBottomMargin = 32,
+	    FlexibleMargins = FlexibleBottomMargin | FlexibleTopMargin | FlexibleRightMargin | FlexibleLeftMargin,
+	    FlexibleDimensions = FlexibleHeight | FlexibleWidth,
+	    All = FlexibleDimensions | FlexibleMargins,
     }
 
     public class UIViewController : NSViewController

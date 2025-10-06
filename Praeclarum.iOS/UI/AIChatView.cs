@@ -126,7 +126,12 @@ public class AIChatView : UIView
     public void SetFocus ()
     {
 	    _inputField.BecomeFirstResponder ();
-    } 
+    }
+
+    public void ScrollToBottom (bool animated)
+    {
+	    _chatSource.ScrollToBottom (_tableView, animated);
+    }
 
     private bool ShouldChangeText (UITextView textView, NSRange range, string text)
     {
@@ -216,6 +221,22 @@ public class AIChatView : UIView
 		private readonly WeakReference<AIChatView> _chatView;
 		private readonly AIChatHistory _history;
 
+		NSIndexPath? BottomIndexPath
+		{
+			get
+			{
+				var chat = _history.ActiveChat;
+				var row = chat.Messages.Count - 1;
+				if (row < 0)
+					return null;
+#if __MACOS__
+				return NSIndexPath.FromItemSection ((IntPtr)row, IntPtr.Zero);
+#else
+				return NSIndexPath.FromRowSection (row, 0);
+#endif
+			}
+		}
+
 		public ChatSource (AIChatView chatView, AIChatHistory history)
 		{
 			_chatView = new WeakReference<AIChatView> (chatView);
@@ -230,7 +251,7 @@ public class AIChatView : UIView
 		public override IntPtr RowsInSection (UITableView tableView, IntPtr section)
 		{
 			var chat = _history.ActiveChat;
-			return (IntPtr)chat.Messages.Count;
+			return chat.Messages.Count;
 		}
 
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
@@ -250,15 +271,18 @@ public class AIChatView : UIView
 		{
 			var chat = _history.ActiveChat;
 			chat.Messages.Add (message);
-#if __MACOS__
-			var indexPath = NSIndexPath.FromItemSection ((IntPtr)(chat.Messages.Count - 1), IntPtr.Zero);
-#else
-			var indexPath = NSIndexPath.FromRowSection (chat.Messages.Count - 1, 0);
-#endif
-			tableView.InsertRows ([indexPath], UITableViewRowAnimation.Automatic);
+			if (BottomIndexPath is not {} bottom)
+				return;
+			tableView.InsertRows ([bottom], UITableViewRowAnimation.Automatic);
 			await Task.Delay (1);
-			tableView.ScrollToRow (indexPath, UITableViewScrollPosition.Bottom, true);
-			await Task.Delay (1);
+			ScrollToBottom (tableView, true);
+		}
+
+		public void ScrollToBottom (UITableView tableView, bool animated)
+		{
+			if (BottomIndexPath is not {} bottom)
+				return;
+			tableView.ScrollToRow (bottom, UITableViewScrollPosition.Bottom, animated);
 		}
 
 		public async Task AddPromptAsync (IntelligenceSession session, string prompt, UITableView tableView)
@@ -364,6 +388,7 @@ public class AIChatViewController : UIViewController
 	{
 		base.ViewDidAppear (animated);
 		chatView.SetFocus ();
+		chatView.ScrollToBottom (animated: false);
 	}
 	
 	void HandleAddChat (object? sender, EventArgs e)

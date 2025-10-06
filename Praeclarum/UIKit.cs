@@ -118,6 +118,7 @@ namespace UIKit
 
     public enum UIBarButtonSystemItem
     {
+		Add,
         Done,
         Undo,
         FixedSpace,

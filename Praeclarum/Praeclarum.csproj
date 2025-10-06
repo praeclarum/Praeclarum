@@ -6,7 +6,7 @@
     <Version>1.0.0</Version>
     <IsPackable>false</IsPackable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
+    <NoWarn>$(NoWarn);NU1900;XCODE_26_0_PREVIEW</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
     <SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>

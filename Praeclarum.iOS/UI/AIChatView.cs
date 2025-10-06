@@ -1,23 +1,25 @@
-// ReSharper disable UseSymbolAlias
 #nullable enable
+
+// ReSharper disable UseSymbolAlias
+// ReSharper disable InconsistentNaming
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using Foundation;
 using UIKit;
 using CoreGraphics;
-
-using CrossIntelligence;
-
 using ObjCRuntime;
+
+using Praeclarum.App;
+using CrossIntelligence;
 
 // ReSharper disable once CheckNamespace
 namespace Praeclarum.UI;
 
-// ReSharper disable once InconsistentNaming
 public class AIChatView : UIView
 {
 	static readonly NFloat maxInputBoxHeight = 168;
@@ -194,9 +196,9 @@ public class AIChatView : UIView
 	class ChatSource : UITableViewSource
 	{
 		private WeakReference<AIChatView> _chatView;
-		List<Chat> Chats { get; } = [new ()];
+		List<AIChat> Chats { get; } = [new ()];
 		private int ActiveChatIndex { get; } = 0;
-		Chat ActiveChat => Chats[ActiveChatIndex];
+		AIChat ActiveChat => Chats[ActiveChatIndex];
 
 		public ChatSource (AIChatView chatView)
 		{
@@ -227,7 +229,7 @@ public class AIChatView : UIView
 			return cell;
 		}
 
-		async Task AddMessageAsync (Message message, UITableView tableView)
+		async Task AddMessageAsync (AIChat.Message message, UITableView tableView)
 		{
 			var chat = ActiveChat;
 			chat.Messages.Add (message);
@@ -244,23 +246,23 @@ public class AIChatView : UIView
 
 		public async Task AddPromptAsync (IntelligenceSession session, string prompt, UITableView tableView)
 		{
-			await AddMessageAsync (new Message { Text = prompt, Type = MessageType.User }, tableView);
+			await AddMessageAsync (new AIChat.Message { Text = prompt, Type = AIChat.MessageType.User }, tableView);
 			try
 			{
 				var response = await session.RespondAsync (prompt);
-				await AddMessageAsync (new Message { Text = response, Type = MessageType.Assistant }, tableView);
+				await AddMessageAsync (new AIChat.Message { Text = response, Type = AIChat.MessageType.Assistant }, tableView);
 			}
 			catch (Exception ex)
 			{
-				await AddMessageAsync (new Message { Text = ex.Message, Type = MessageType.Error }, tableView);
+				await AddMessageAsync (new AIChat.Message { Text = ex.Message, Type = AIChat.MessageType.Error }, tableView);
 			}
 		}
 	}
 	
 	class MessageCell : UITableViewCell
 	{
-		private Message? _message;
-		public Message? Message
+		private AIChat.Message? _message;
+		public AIChat.Message? Message
 		{
 			get => _message;
 			set
@@ -302,32 +304,49 @@ public class AIChatView : UIView
 			base.TextLabel.Lines = 1000000;
 		}
 	}
+}
+
+public class AIChatViewController : UIViewController
+{
+	private readonly AIChatView chatView;
+
+	public string Instructions
+	{
+		get => chatView.Instructions;
+		set => chatView.Instructions = value;
+	}
+	public IIntelligenceTool[] Tools
+	{
+		get => chatView.Tools;
+		set => chatView.Tools = value ?? [];
+	}
+	public string Prompt
+	{
+		get => chatView.Prompt;
+		set => chatView.Prompt = value;
+	}
+
+	public AIChatViewController() 
+	{
+		base.Title = "AI Chat".Localize();
+		chatView = new AIChatView (new CGRect (0, 0, 320, 480));
+		base.View = chatView;
+
+		// base.NavigationItem.RightBarButtonItems =
+		// [
+		// 	new UIBarButtonItem(UIBarButtonSystemItem.Add, HandleAddChat),
+		// ];
+	}
+
+	public override void ViewDidAppear (bool animated)
+	{
+		base.ViewDidAppear (animated);
+		chatView.SetFocus ();
+	}
 	
-	class Message
+	void HandleAddChat (object? sender, EventArgs e)
 	{
-		public string Text { get; set; } = "";
-		public MessageType Type { get; set; } = MessageType.Assistant;
-		public bool IsSystem => Type == MessageType.System;
-		public bool IsUser => Type == MessageType.User;
-		public bool IsAssistant => Type == MessageType.Assistant;
-		public bool IsError => Type == MessageType.Error;
-	}
-
-	enum MessageType
-	{
-		System,
-		User,
-		Assistant,
-		Error
-	}
-
-	class Chat
-	{
-		public List<Message> Messages { get; }
-
-		public Chat ()
-		{
-			Messages = new();
-		}
+		chatView.Prompt = "";
+		chatView.SetFocus ();
 	}
 }

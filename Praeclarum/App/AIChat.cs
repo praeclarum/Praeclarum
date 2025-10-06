@@ -18,6 +18,7 @@ public class AIChat
 	{
 		private string _text = "";
 		private MessageType _type = MessageType.Assistant;
+		private bool _showProgress;
 
 		public string Text
 		{
@@ -56,6 +57,20 @@ public class AIChat
 		public bool IsAssistant => Type == MessageType.Assistant;
 		public bool IsError => Type == MessageType.Error;
 		public event PropertyChangedEventHandler? PropertyChanged;
+
+		public bool ShowProgress
+		{
+			get => _showProgress;
+			set
+			{
+				if (value == _showProgress)
+				{
+					return;
+				}
+				_showProgress = value;
+				OnPropertyChanged ();
+			}
+		}
 
 		protected virtual void OnPropertyChanged ([CallerMemberName] string? propertyName = null)
 		{

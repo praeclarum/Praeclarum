@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -288,14 +289,23 @@ public class AIChatView : UIView
 		public async Task AddPromptAsync (IntelligenceSession session, string prompt, UITableView tableView)
 		{
 			await AddMessageAsync (new AIChat.Message { Text = prompt, Type = AIChat.MessageType.User }, tableView);
+			var newMessage = new AIChat.Message { Text = "Thinking...", Type = AIChat.MessageType.Assistant, ShowProgress = true};
+			await AddMessageAsync (newMessage, tableView);
 			try
 			{
 				var response = await session.RespondAsync (prompt);
-				await AddMessageAsync (new AIChat.Message { Text = response, Type = AIChat.MessageType.Assistant }, tableView);
+				tableView.BeginUpdates ();
+				newMessage.Text = response;
+				newMessage.ShowProgress = false;
+				tableView.EndUpdates ();
 			}
 			catch (Exception ex)
 			{
-				await AddMessageAsync (new AIChat.Message { Text = ex.Message, Type = AIChat.MessageType.Error }, tableView);
+				tableView.BeginUpdates ();
+				newMessage.Text = ex.Message;
+				newMessage.Type = AIChat.MessageType.Error;
+				newMessage.ShowProgress = false;
+				tableView.EndUpdates ();
 			}
 		}
 	}
@@ -308,41 +318,64 @@ public class AIChatView : UIView
 			get => _message;
 			set
 			{
-				_message = value;
-				if (value is { } msg)
+				if (ReferenceEquals (_message, value))
+					return;
+				if (_message is { } oldMessage)
 				{
-					base.TextLabel.Text = msg.Text;
-					if (msg.IsUser)
-					{
-						base.TextLabel.TextAlignment = UITextAlignment.Right;
-						base.TextLabel.TextColor = UIColor.SystemBlue;
-					}
-					else if (msg.IsAssistant)
-					{
-						base.TextLabel.TextAlignment = UITextAlignment.Left;
-						base.TextLabel.TextColor = UIColor.Label;
-					}
-					else if (msg.IsError)
-					{
-						base.TextLabel.TextAlignment = UITextAlignment.Left;
-						base.TextLabel.TextColor = UIColor.SystemRed;
-					}
-					else
-					{
-						base.TextLabel.TextAlignment = UITextAlignment.Left;
-						base.TextLabel.TextColor = UIColor.Gray;
-					}
+					oldMessage.PropertyChanged -= HandleMessagePropertyChanged;
 				}
-				else
+				_message = value;
+				if (_message is { } msg)
 				{
-					base.TextLabel.Text = "";
+					msg.PropertyChanged += HandleMessagePropertyChanged;
+					UpdateUI ();
 				}
 			}
 		}
+
 		public MessageCell (string reuseIdentifier) : base (UITableViewCellStyle.Default, reuseIdentifier)
 		{
 			base.TextLabel.LineBreakMode = UILineBreakMode.WordWrap;
 			base.TextLabel.Lines = 1000000;
+		}
+
+		private void HandleMessagePropertyChanged (object? sender, PropertyChangedEventArgs e)
+		{
+			UpdateUI ();
+		}
+
+		private void UpdateUI ()
+		{
+			if (_message is { } msg)
+			{
+				base.TextLabel.Text = msg.Text;
+				if (msg.IsUser)
+				{
+					base.TextLabel.TextAlignment = UITextAlignment.Right;
+					base.TextLabel.TextColor = UIColor.SystemBlue;
+				}
+				else if (msg.IsAssistant)
+				{
+					base.TextLabel.TextAlignment = UITextAlignment.Left;
+					base.TextLabel.TextColor = UIColor.Label;
+				}
+				else if (msg.IsError)
+				{
+					base.TextLabel.TextAlignment = UITextAlignment.Left;
+					base.TextLabel.TextColor = UIColor.SystemRed;
+				}
+				else
+				{
+					base.TextLabel.TextAlignment = UITextAlignment.Left;
+					base.TextLabel.TextColor = UIColor.Gray;
+				}
+			}
+			else
+			{
+				base.TextLabel.TextAlignment = UITextAlignment.Left;
+				base.TextLabel.TextColor = UIColor.Gray;
+				base.TextLabel.Text = "";
+			}
 		}
 	}
 }

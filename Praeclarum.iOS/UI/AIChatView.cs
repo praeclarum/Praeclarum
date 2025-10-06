@@ -122,6 +122,8 @@ public class AIChatView : UIView
 	    AddSubview (_tableView);
 	    AddSubview (_inputBox);
 	    AdjustInputBoxHeight (animated: false);
+
+	    UIKeyboard.Notifications.ObserveDidChangeFrame (HandleKeyboardFrameChange);
     }
 
     public void SetFocus ()
@@ -153,17 +155,39 @@ public class AIChatView : UIView
 	    AdjustInputBoxHeight (animated: true);
     }
 
+    private CGRect? _keyboardFrameOnScreen;
+
+    private void HandleKeyboardFrameChange (object? sender, UIKeyboardEventArgs e)
+    {
+	    _keyboardFrameOnScreen = e.FrameEnd;
+	    SetNeedsLayout ();
+	    LayoutIfNeeded ();
+    }
+
     public override void LayoutSubviews ()
     {
 	    base.LayoutSubviews ();
 
 	    var bounds = this.Bounds;
-	    
-	    var tframe = new CGRect (0, 0, bounds.Width, bounds.Height - _inputBoxHeight);
+	    var safeInputBoxHeight = (nfloat)(_inputBoxHeight + this.SafeAreaInsets.Bottom.Value);
+
+	    if (_keyboardFrameOnScreen is { } kscreen && Window?.Screen?.CoordinateSpace is {} scrnCoords)
+	    {
+		    var keyboardFrameInView = ConvertRectFromCoordinateSpace (kscreen, scrnCoords);
+		    if (keyboardFrameInView.Y < bounds.Bottom)
+		    {
+			    safeInputBoxHeight = _inputBoxHeight + (bounds.Bottom - keyboardFrameInView.Y);
+		    }
+	    }
+
+	    var tframe = new CGRect (0, 0, bounds.Width, bounds.Height - safeInputBoxHeight);
 	    _tableView.Frame = tframe;
 	    
-	    var iframe = new CGRect (0, bounds.Height - _inputBoxHeight, bounds.Width, _inputBoxHeight);
+	    var iframe = new CGRect (0, tframe.Bottom, bounds.Width, safeInputBoxHeight);
 	    _inputBox.Frame = iframe;
+
+	    var fframe = new CGRect (inputBoxHPadding, inputBoxVPadding, iframe.Width - 2*inputBoxHPadding, _inputBoxHeight - 2*inputBoxVPadding);
+	    _inputField.Frame = fframe;
     }
 
     void AdjustInputBoxHeight (bool animated)

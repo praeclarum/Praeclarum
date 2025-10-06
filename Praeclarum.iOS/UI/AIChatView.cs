@@ -186,7 +186,7 @@ public class AIChatView : UIView
     {
 	    if (_session is { } s)
 		    return s;
-	    var ns = new IntelligenceSession (IntelligenceModel.AppleIntelligence, tools: Tools, instructions: Instructions);
+	    var ns = new IntelligenceSession (IntelligenceModels.AppleIntelligence, tools: Tools, instructions: Instructions);
 	    _session = ns;
 	    return ns;
     }

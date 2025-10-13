@@ -1215,8 +1215,6 @@ namespace Praeclarum.UI
 			controller.PresentViewController (n, true, null);
 		}
 
-		string lastClipboard = "";
-
 		protected virtual string GetNewDocumentText ()
 		{
 			return "";
@@ -1341,9 +1339,7 @@ namespace Praeclarum.UI
 					async () => await AddAndOpenNewDocument ()),
 			};
 
-			var pbtext = GetPasteboardText ();
-			if (ShowAddFromClipboard && !string.IsNullOrWhiteSpace (pbtext) && lastClipboard != pbtext) {
-				lastClipboard = pbtext;
+			if (ShowAddFromClipboard) {
 				form.Add (new FormAction (
 					"From Clipboard",
 					async () => await AddAndOpenDocRef (await DocumentReference.New (
@@ -1352,7 +1348,7 @@ namespace Praeclarum.UI
 						App.DefaultExtension,
 						ActiveFileSystem,
 						App.CreateDocument,
-						GetNewDocumentText () + pbtext))));
+						GetNewDocumentText () + GetPasteboardText ()))));
 			}
 
 			var odi = OpenedDocIndex;

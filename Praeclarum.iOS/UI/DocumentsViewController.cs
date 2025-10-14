@@ -403,12 +403,6 @@ namespace Praeclarum.UI
 
 		void SetEditingNavItems (bool animated)
 		{
-			EditButtonItem.TintColor = UIColor.White;
-			dupBtn.TintColor = UIColor.White;
-			moveBtn.TintColor = UIColor.White;
-			deleteBtn.TintColor = UIColor.White;
-			thereforeBtn.TintColor = UIColor.White;
-
 			NavigationItem.LeftItemsSupplementBackButton = false;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
 				dupBtn,
@@ -422,8 +416,6 @@ namespace Praeclarum.UI
 
 		void SetSelectingNavItems (bool animated)
 		{
-			cancelSelBtn.TintColor = UIColor.White;
-
 			NavigationItem.LeftItemsSupplementBackButton = false;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
 				cancelSelBtn,
@@ -882,15 +874,9 @@ namespace Praeclarum.UI
 
 		void SetSpecialNav (bool animated)
 		{
-			NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
-			NavigationController.NavigationBar.BarTintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
-			NavigationController.NavigationBar.TintColor = UIColor.White;
-			NavigationController.NavigationBar.TitleTextAttributes = new UIStringAttributes {
-				ForegroundColor = UIColor.White,
-			};
 			SetNeedsStatusBarAppearanceUpdate ();
-			NavigationController.SetNeedsStatusBarAppearanceUpdate ();
-			NavigationController.SetToolbarHidden (true, animated);
+			NavigationController?.SetNeedsStatusBarAppearanceUpdate ();
+			NavigationController?.SetToolbarHidden (true, animated);
 			UpdateEditingForSelection ();
 		}
 

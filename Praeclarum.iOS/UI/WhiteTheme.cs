@@ -7,27 +7,20 @@ namespace Praeclarum.UI
 {
 	public partial class Theme
 	{
-		static protected readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
+		static readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
+		static readonly bool ios18 = UIDevice.CurrentDevice.CheckSystemVersion (18, 0);
 
 		readonly Lazy<UIImage> CloneButtonImage = new Lazy<UIImage> (
-			() => UIImage.FromBundle ("Clone.png"));
+			() => (ios18 ? UIImage.GetSystemImage ("document.on.document") : null) ?? UIImage.FromBundle ("Clone.png"));
 
 		readonly Lazy<UIImage> MoveButtonImage = new Lazy<UIImage> (
-			() => UIImage.FromBundle ("Move.png"));
+			() => (ios18 ? UIImage.GetSystemImage ("arrow.up.document") : null) ?? UIImage.FromBundle ("Move.png"));
 
-#if NET6_0_OR_GREATER
 		public static UIColor SystemDarkTextColor => UIColor.DarkText;
 		public static UIColor SystemLightTextColor => UIColor.LightText;
 		public static UIColor SystemLabelColor => UIColor.Label;
 		public static UIColor SystemGroupTableViewBackgroundColor => UIColor.GroupTableViewBackground;
 		public static UIColor SystemGroupedBackgroundColor => UIColor.SystemGroupedBackground;
-#else
-		public static UIColor SystemDarkTextColor => UIColor.DarkText;
-		public static UIColor SystemLightTextColor => UIColor.LightText;
-		public static UIColor SystemLabelColor => UIColor.Label;
-		public static UIColor SystemGroupTableViewBackgroundColor => UIColor.GroupTableViewBackgroundColor;
-		public static UIColor SystemGroupedBackgroundColor => UIColor.SystemGroupedBackground;
-#endif
 
 		public static Theme Current;
 

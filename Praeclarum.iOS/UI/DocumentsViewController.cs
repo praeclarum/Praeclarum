@@ -23,6 +23,8 @@ namespace Praeclarum.UI
 		IDocumentsView docsView;
 		IUIViewControllerPreviewing docsPreview;
 
+		readonly bool ios14 = UIDevice.CurrentDevice.CheckSystemVersion (14, 0); 
+
 		DocumentsViewMode viewMode;
 		public DocumentsViewMode ViewMode {
 			get {
@@ -44,7 +46,7 @@ namespace Praeclarum.UI
 			var appDel = DocumentAppDelegate.Shared;
 			var appName = appDel.App.Name;
 
-			var settingsImage = UIImage.FromBundle ("Settings.png");
+			var settingsImage = (ios14 ? UIImage.GetSystemImage ("gearshape") : null) ?? UIImage.FromBundle ("Settings.png");
 			if (settingsImage != null) {
 				thereforeBtn = new UIBarButtonItem (settingsImage, UIBarButtonItemStyle.Plain, HandleLamda);
 			} else {

@@ -76,9 +76,11 @@ namespace Praeclarum.UI
 		{
 			try
 			{
+#if __IOS__ && !__MACCATALYST__
 				if (ObjCRuntime.Runtime.Arch == ObjCRuntime.Arch.SIMULATOR) {
 					return 0;
 				}
+#endif
 				var container = CKContainer.DefaultContainer;
 
 				var status = await container.GetAccountStatusAsync ();

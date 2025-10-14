@@ -865,7 +865,7 @@ namespace Praeclarum.UI
 		public override UIStatusBarStyle PreferredStatusBarStyle ()
 		{
 			try {
-				return (Editing || selecting) ? UIStatusBarStyle.LightContent : DocumentAppDelegate.Shared.Theme.StatusBarStyle;
+				return DocumentAppDelegate.Shared.Theme.StatusBarStyle;
 			} catch (Exception ex) {
 				Log.Error (ex);
 				return UIStatusBarStyle.Default;

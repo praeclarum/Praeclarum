@@ -74,48 +74,63 @@ namespace Praeclarum.UI
 
 		public static async Task<int> GetPastPurchasesAsync ()
 		{
-			var container = CKContainer.DefaultContainer;
+			try
+			{
+				if (ObjCRuntime.Runtime.Arch == ObjCRuntime.Arch.SIMULATOR) {
+					return 0;
+				}
+				var container = CKContainer.DefaultContainer;
 
-			var status = await container.GetAccountStatusAsync ();
-			var hasCloud = status == CKAccountStatus.Available;
-			if (!hasCloud)
-				return 0;
+				var status = await container.GetAccountStatusAsync ();
+				var hasCloud = status == CKAccountStatus.Available;
+				if (!hasCloud)
+					return 0;
 
-			var db = container.PrivateCloudDatabase;
+				var db = container.PrivateCloudDatabase;
 
-			var pred = NSPredicate.FromFormat ("TransactionId != 'tttt'");
-			var query = new CKQuery ("PatronSubscription", pred);
+				var pred = NSPredicate.FromFormat ("TransactionId != 'tttt'");
+				var query = new CKQuery ("PatronSubscription", pred);
 
-			var recs = await db.PerformQueryAsync (query, CKRecordZone.DefaultRecordZone().ZoneId);
+				var recs = await db.PerformQueryAsync (query, CKRecordZone.DefaultRecordZone ().ZoneId);
 
-			Console.WriteLine ("NUM PATRON RECS = {0}", recs.Length);
+				Console.WriteLine ("NUM PATRON RECS = {0}", recs.Length);
 
-			var subs = recs.Select (x => new PatronSubscription (x)).OrderBy (x => x.PurchaseDate).ToArray ();
+				var subs = recs.Select (x => new PatronSubscription (x)).OrderBy (x => x.PurchaseDate).ToArray ();
 
-			var ed = DateTime.UtcNow;
+				var ed = DateTime.UtcNow;
 
-			if (subs.Length > 0) {
-				ed = subs[0].PurchaseEndDate;
-				foreach (var s in subs.Skip (1)) {
-					if (s.PurchaseDate < ed) {
-						ed = ed.AddMonths (s.NumMonths);
-					}
-					else {
-						ed = s.PurchaseEndDate;
+				if (subs.Length > 0)
+				{
+					ed = subs[0].PurchaseEndDate;
+					foreach (var s in subs.Skip (1))
+					{
+						if (s.PurchaseDate < ed)
+						{
+							ed = ed.AddMonths (s.NumMonths);
+						}
+						else
+						{
+							ed = s.PurchaseEndDate;
+						}
 					}
 				}
+
+				Console.WriteLine ("NEW END DATE = {0}", ed);
+
+				var endDate = ed;
+				var isPatron = DateTime.UtcNow < endDate;
+
+				var settings = DocumentAppDelegate.Shared.Settings;
+				settings.IsPatron = isPatron;
+				settings.PatronEndDate = endDate;
+
+				return subs.Length;
 			}
-
-			Console.WriteLine ("NEW END DATE = {0}", ed);
-
-			var endDate = ed;
-			var isPatron = DateTime.UtcNow < endDate;
-
-			var settings = DocumentAppDelegate.Shared.Settings;
-			settings.IsPatron = isPatron;
-			settings.PatronEndDate = endDate;
-
-			return subs.Length;
+			catch (Exception ex)
+			{
+				Log.Error (ex);
+				return 0;
+			}
 		}
 
 		async Task DeletePastPurchasesAsync ()
@@ -136,9 +151,6 @@ namespace Praeclarum.UI
 					await db.DeleteRecordAsync (r.Id);
 				}
 
-			} catch (NSErrorException ex) {
-				Console.WriteLine ("ERROR: {0}", ex.Error);
-				Log.Error (ex);
 			} catch (Exception ex) {
 				Log.Error (ex);
 			}

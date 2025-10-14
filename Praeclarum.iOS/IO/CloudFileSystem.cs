@@ -48,11 +48,8 @@ namespace Praeclarum.IO
 
 		public static bool CloudAvailable {
 			get {
-				if (UIDevice.CurrentDevice.CheckSystemVersion (6, 0)) {
-					var currentIdentityToken = NSFileManager.DefaultManager.UbiquityIdentityToken;
-					return currentIdentityToken != null;
-				}
-				return true;
+				var currentIdentityToken = NSFileManager.DefaultManager.UbiquityIdentityToken;
+				return currentIdentityToken is not null;
 			}
 		}
 
@@ -483,37 +480,9 @@ namespace Praeclarum.IO
 				ModifiedTime = DateTime.MinValue;
 			}
 
-#if NET6_0_OR_GREATER
 			var isDownloading = item.UbiquitousItemIsDownloading ?? false;
-			if (UIDevice.CurrentDevice.CheckSystemVersion(7, 0))
-			{
-				IsDownloaded = item.UbiquitousItemDownloadingStatus == NSItemDownloadingStatus.Downloaded;
-			}
-			else
-			{
-				try
-				{
-					IsDownloaded = ((NSNumber)item.ValueForKey(NSMetadataQuery.UbiquitousItemIsDownloadedKey)).BoolValue;
-				}
-				catch (Exception)
-				{
-					IsDownloaded = false;
-				}
-			}
+			IsDownloaded = item.UbiquitousItemDownloadingStatus == NSItemDownloadingStatus.Downloaded;
 			DownloadProgress = isDownloading ? (item.UbiquitousItemPercentDownloaded??0.0) / 100.0 : 1;
-#else
-			var isDownloading = item.UbiquitousItemIsDownloading;
-			if (UIDevice.CurrentDevice.CheckSystemVersion (7, 0)) {
-				IsDownloaded = item.DownloadingStatus == NSItemDownloadingStatus.Downloaded;
-			} else {
-				try {
-					IsDownloaded = ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsDownloadedKey)).BoolValue;
-				} catch (Exception) {
-					IsDownloaded = false;
-				}
-			}
-			DownloadProgress = isDownloading ? item.UbiquitousItemPercentDownloaded / 100.0 : 1;
-#endif
 		}
 
 		//		public bool IsUploaded { get { return ((NSNumber)item.ValueForKey (NSMetadataQuery.UbiquitousItemIsUploadedKey)).BoolValue; } }

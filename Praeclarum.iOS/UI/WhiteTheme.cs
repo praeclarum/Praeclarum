@@ -7,7 +7,6 @@ namespace Praeclarum.UI
 {
 	public partial class Theme
 	{
-		static protected readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
 		static protected readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
 
 		readonly Lazy<UIImage> CloneButtonImage = new Lazy<UIImage> (
@@ -103,25 +102,23 @@ namespace Praeclarum.UI
 
 		public virtual void Apply ()
 		{
-			if (ios7) {
-				UINavigationBar.Appearance.TintColor = TintColor;
-				UIBarButtonItem.Appearance.TintColor = TintColor;
+			UINavigationBar.Appearance.TintColor = TintColor;
+			UIBarButtonItem.Appearance.TintColor = TintColor;
 
-				UIPopoverBackgroundView.Appearance.BackgroundColor = NavigationBackgroundColor;
+			UIPopoverBackgroundView.Appearance.BackgroundColor = NavigationBackgroundColor;
 
-				UINavigationBar.Appearance.BarTintColor = NavigationBackgroundColor;
-				UINavigationBar.Appearance.TitleTextAttributes = new UIStringAttributes {
-					ForegroundColor = NavigationTextColor,
-				};
-				UIToolbar.Appearance.BarTintColor = NavigationBackgroundColor;
+			UINavigationBar.Appearance.BarTintColor = NavigationBackgroundColor;
+			UINavigationBar.Appearance.TitleTextAttributes = new UIStringAttributes {
+				ForegroundColor = NavigationTextColor,
+			};
+			UIToolbar.Appearance.BarTintColor = NavigationBackgroundColor;
 
-				if (!ios13) {
-					UITableViewHeaderFooterView.Appearance.BackgroundColor = GroupedTableBackgroundColor;
-				}
+			if (!ios13) {
+				UITableViewHeaderFooterView.Appearance.BackgroundColor = GroupedTableBackgroundColor;
+			}
 
-				foreach (var w in UIApplication.SharedApplication.Windows) {
-					ApplyToVC (w.RootViewController, new HashSet<IntPtr> ());
-				}
+			foreach (var w in UIApplication.SharedApplication.Windows) {
+				ApplyToVC (w.RootViewController, new HashSet<IntPtr> ());
 			}
 		}
 
@@ -143,12 +140,10 @@ namespace Praeclarum.UI
 			if (navigationBar == null)
 				return;
 			navigationBar.BarStyle = NavigationBarStyle;
-			if (ios7) {
-				navigationBar.BarTintColor = NavigationBackgroundColor;
-				navigationBar.TitleTextAttributes = new UIStringAttributes {
-					ForegroundColor = NavigationTextColor,
-				};
-			}
+			navigationBar.BarTintColor = NavigationBackgroundColor;
+			navigationBar.TitleTextAttributes = new UIStringAttributes {
+				ForegroundColor = NavigationTextColor,
+			};
 		}
 
 		public virtual void Apply (UIToolbar toolbar)
@@ -156,9 +151,7 @@ namespace Praeclarum.UI
 			if (toolbar == null)
 				return;
 			toolbar.BarStyle = NavigationBarStyle;
-			if (ios7) {
-				toolbar.BarTintColor = NavigationBackgroundColor;
-			}
+			toolbar.BarTintColor = NavigationBackgroundColor;
 		}
 
 		public virtual void Apply (UITextField textField)
@@ -186,9 +179,7 @@ namespace Praeclarum.UI
 					Apply (nc);
 				}
 
-				if (ios7) {
-					vc.SetNeedsStatusBarAppearanceUpdate ();
-				}
+				vc.SetNeedsStatusBarAppearanceUpdate ();
 
 				var ta = vc as IThemeAware;
 				if (ta != null) {
@@ -304,17 +295,14 @@ namespace Praeclarum.UI
 		public virtual void ApplyCommand (UITableViewCell cell)
 		{
 			var isnav = cell.Accessory == UITableViewCellAccessory.DisclosureIndicator;
-			cell.TextLabel.TextColor = ios7 ? 
-				(isnav ? TableCellTextColor : TintColor) : 
-				TableCellTextColor;
+			cell.TextLabel.TextColor = (isnav ? TableCellTextColor : TintColor);
 		}
 
 		readonly UIColor checkColor = UIColor.FromRGB (50, 79, 133);
 
 		public virtual void ApplyChecked (UITableViewCell cell)
 		{
-			cell.TextLabel.TextColor = ios7 ? 
-				TintColor : checkColor;
+			cell.TextLabel.TextColor = TintColor;
 		}
 
 		public virtual UIBarButtonItem CreateAddButton (EventHandler handler)
@@ -457,12 +445,7 @@ namespace Praeclarum.UI
 		public static string UserTableFontName {
 			get {
 				if (userTableFontName == null) {
-					if (UIDevice.CurrentDevice.CheckSystemVersion (6, 0)) {
-						userTableFontName = "Noteworthy-Light";
-					}
-					else {
-						userTableFontName = "HelveticaNeue-Light";
-					}
+					userTableFontName = "Noteworthy-Light";
 				}
 				return userTableFontName;
 			}

@@ -382,15 +382,13 @@ namespace Praeclarum.UI
 
 		void SetNormalNavItems (bool animated)
 		{
-			if (ios7) {
-				var theme = Theme.Current;
-				var tint = theme.TintColor;
+			var theme = Theme.Current;
+			var tint = theme.TintColor;
 
-				actionBtn.TintColor = tint;
-				addBtn.TintColor = tint;
-				EditButtonItem.TintColor = tint;
-				thereforeBtn.TintColor = tint;
-			}
+			actionBtn.TintColor = tint;
+			addBtn.TintColor = tint;
+			EditButtonItem.TintColor = tint;
+			thereforeBtn.TintColor = tint;
 
 			NavigationItem.LeftItemsSupplementBackButton = true;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
@@ -405,13 +403,11 @@ namespace Praeclarum.UI
 
 		void SetEditingNavItems (bool animated)
 		{
-			if (ios7) {
-				EditButtonItem.TintColor = UIColor.White;
-				dupBtn.TintColor = UIColor.White;
-				moveBtn.TintColor = UIColor.White;
-				deleteBtn.TintColor = UIColor.White;
-				thereforeBtn.TintColor = UIColor.White;
-			}
+			EditButtonItem.TintColor = UIColor.White;
+			dupBtn.TintColor = UIColor.White;
+			moveBtn.TintColor = UIColor.White;
+			deleteBtn.TintColor = UIColor.White;
+			thereforeBtn.TintColor = UIColor.White;
 
 			NavigationItem.LeftItemsSupplementBackButton = false;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
@@ -426,9 +422,7 @@ namespace Praeclarum.UI
 
 		void SetSelectingNavItems (bool animated)
 		{
-			if (ios7) {
-				cancelSelBtn.TintColor = UIColor.White;
-			}
+			cancelSelBtn.TintColor = UIColor.White;
 
 			NavigationItem.LeftItemsSupplementBackButton = false;
 			NavigationItem.SetLeftBarButtonItems (new UIBarButtonItem[] {
@@ -455,7 +449,7 @@ namespace Praeclarum.UI
 				oldView.SortChanged -= HandleSortChanged;
 				oldView.SelectedDocuments.CollectionChanged -= HandleSelectedDocumentsChanged;
 				oldView.RenameRequested -= HandleRenameRequested;
-				if (ios9 && oldPreview != null) {
+				if (oldPreview != null) {
 					UnregisterForPreviewingWithContext (oldPreview);
 				}
 			}
@@ -480,9 +474,7 @@ namespace Praeclarum.UI
 
 			View = (UIView)newView;
 			View.AddGestureRecognizer (longPress);
-			if (ios9) {
-				docsPreview = RegisterForPreviewingWithDelegate (this, View);
-			}
+			docsPreview = RegisterForPreviewingWithDelegate (this, View);
 		}
 
 		public UIViewController GetViewControllerForPreview (IUIViewControllerPreviewing previewingContext, CoreGraphics.CGPoint location)
@@ -888,42 +880,31 @@ namespace Praeclarum.UI
 			}
 		}
 
-		readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
-		readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
-
 		void SetSpecialNav (bool animated)
 		{
-			if (ios7) {
-				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
-				NavigationController.NavigationBar.BarTintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
-				NavigationController.NavigationBar.TintColor = UIColor.White;
-				NavigationController.NavigationBar.TitleTextAttributes = new UIStringAttributes {
-					ForegroundColor = UIColor.White,
-				};
-				SetNeedsStatusBarAppearanceUpdate ();
-				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
-			} else {
-//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
-			}
+			NavigationController.NavigationBar.BarStyle = UIBarStyle.Black;
+			NavigationController.NavigationBar.BarTintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
+			NavigationController.NavigationBar.TintColor = UIColor.White;
+			NavigationController.NavigationBar.TitleTextAttributes = new UIStringAttributes {
+				ForegroundColor = UIColor.White,
+			};
+			SetNeedsStatusBarAppearanceUpdate ();
+			NavigationController.SetNeedsStatusBarAppearanceUpdate ();
 			NavigationController.SetToolbarHidden (true, animated);
 			UpdateEditingForSelection ();
 		}
 
 		void SetNormalNav (bool animated)
 		{
-			if (ios7) {
-				var theme = DocumentAppDelegate.Shared.Theme;
-				NavigationController.NavigationBar.BarStyle = theme.NavigationBarStyle;
-				NavigationController.NavigationBar.BarTintColor = theme.NavigationBackgroundColor;
-				NavigationController.NavigationBar.TintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
-				NavigationController.NavigationBar.TitleTextAttributes = new UIStringAttributes {
-					ForegroundColor = theme.NavigationTextColor,
-				};
-				SetNeedsStatusBarAppearanceUpdate ();
-				NavigationController.SetNeedsStatusBarAppearanceUpdate ();
-			} else {
-//				NavigationController.NavigationBar.BarStyle = UIBarStyle.Default;
-			}
+			var theme = DocumentAppDelegate.Shared.Theme;
+			NavigationController.NavigationBar.BarStyle = theme.NavigationBarStyle;
+			NavigationController.NavigationBar.BarTintColor = theme.NavigationBackgroundColor;
+			NavigationController.NavigationBar.TintColor = UIApplication.SharedApplication.KeyWindow.TintColor;
+			NavigationController.NavigationBar.TitleTextAttributes = new UIStringAttributes {
+				ForegroundColor = theme.NavigationTextColor,
+			};
+			SetNeedsStatusBarAppearanceUpdate ();
+			NavigationController.SetNeedsStatusBarAppearanceUpdate ();
 
 			UpdateToolbar (animated);
 		}
@@ -956,12 +937,8 @@ namespace Praeclarum.UI
 
 			docsView.SetSelecting (selecting, animated);
 
-			if (ios7) {
-				SetNeedsStatusBarAppearanceUpdate ();
-				if (NavigationController != null) {
-					NavigationController.SetNeedsStatusBarAppearanceUpdate ();
-				}
-			}
+			SetNeedsStatusBarAppearanceUpdate ();
+			NavigationController?.SetNeedsStatusBarAppearanceUpdate ();
 		}
 
 		public override void SetEditing (bool editing, bool animated)
@@ -988,12 +965,8 @@ namespace Praeclarum.UI
 
 				docsView.SetEditing (editing, animated);
 
-				if (ios7) {
-					SetNeedsStatusBarAppearanceUpdate ();
-					if (NavigationController != null) {
-						NavigationController.SetNeedsStatusBarAppearanceUpdate ();
-					}
-				}
+				SetNeedsStatusBarAppearanceUpdate ();
+				NavigationController?.SetNeedsStatusBarAppearanceUpdate ();
 
 			} catch (Exception ex) {
 				Log.Error (ex);				

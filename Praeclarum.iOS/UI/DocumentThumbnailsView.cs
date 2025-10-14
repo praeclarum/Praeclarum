@@ -29,9 +29,6 @@ namespace Praeclarum.UI
 		public static float LabelHeight = 33;
 		public static float Margin = 10;
 
-		readonly bool ios8 = UIDevice.CurrentDevice.CheckSystemVersion (8, 0);
-		readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
-
 		public List<DocumentsViewItem> Items {
 			get;
 			set;
@@ -51,9 +48,9 @@ namespace Praeclarum.UI
 			SelectedDocuments = new ObservableCollection<string> ();
 			SelectedDocuments.CollectionChanged += HandleSelectedDocumentsChanged;
 
-			AlwaysBounceVertical = true;
+			base.AlwaysBounceVertical = true;
 
-			BackgroundColor = DocumentAppDelegate.Shared.Theme.DocumentsBackgroundColor;
+			base.BackgroundColor = DocumentAppDelegate.Shared.Theme.DocumentsBackgroundColor;
 
 			RegisterClassForCell (typeof(AddDocumentCell), AddId);
 			RegisterClassForCell (typeof(DocumentThumbnailCell), FileId);
@@ -62,8 +59,8 @@ namespace Praeclarum.UI
 			RegisterClassForCell (typeof(SortThumbnailCell), SortId);
 			RegisterClassForCell (typeof(PatronCell), PatronId);
 
-			if (ios8) {
-				((UICollectionViewFlowLayout)this.CollectionViewLayout).EstimatedItemSize = new CGSize (88, 122);
+			if (base.CollectionViewLayout is UICollectionViewFlowLayout flowLayout) {
+				flowLayout.EstimatedItemSize = new CGSize (88, 122);
 			}
 
 			Delegate = new DocumentThumbnailsViewDelegate ();
@@ -84,9 +81,7 @@ namespace Praeclarum.UI
 
 			ThumbnailSize = new Praeclarum.Graphics.SizeF ((float)thumbWidth, (float)thumbHeight);
 
-			if (ios11) {
-				ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Always;
-			}
+			base.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Always;
 
 //			Console.WriteLine ("THUMB SIZE = {0}", ThumbnailSize);
 		}
@@ -160,9 +155,9 @@ namespace Praeclarum.UI
 
 			foreach (var c in VisibleCells.OfType <ThumbnailCell> ()) {
 				c.Selecting = selecting;
-				var d = c as DocumentThumbnailCell;
-				if (d != null)
+				if (c is DocumentThumbnailCell d) {
 					d.SetDocumentSelected (false, true);
+				}
 			}
 		}
 
@@ -536,9 +531,6 @@ namespace Praeclarum.UI
 			Initialize ();
 		}
 
-		readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
-		readonly bool ios8 = UIDevice.CurrentDevice.CheckSystemVersion (8, 0);
-
 		void Initialize ()
 		{
 			segs = new UISegmentedControl (new[] { "Date", "Name" }) {
@@ -556,9 +548,7 @@ namespace Praeclarum.UI
 		public void ApplyTheme (Theme theme)
 		{
 			BackgroundColor = theme.DocumentsBackgroundColor;
-			if (ios7) {
-				segs.TintColor = theme.DocumentsControlColor;
-			}
+			segs.TintColor = theme.DocumentsControlColor;
 		}
 
 		#endregion
@@ -676,7 +666,7 @@ namespace Praeclarum.UI
 		public static UIColor GetNotSelectableColor (Theme theme)
 		{
 			if (theme.IsDark) {
-				return UIColor.FromWhiteAlpha (1.0f - 0.875f, 0.5961f); ;
+				return UIColor.FromWhiteAlpha (1.0f - 0.875f, 0.5961f);
 			}
 			return UIColor.FromWhiteAlpha (0.875f, 0.5961f);
 		}

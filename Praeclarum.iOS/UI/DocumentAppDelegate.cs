@@ -17,9 +17,6 @@ namespace Praeclarum.UI
 	[Register ("DocumentAppDelegate")]
 	public class DocumentAppDelegate : UIApplicationDelegate
 	{
-		protected static readonly bool ios7 = UIDevice.CurrentDevice.CheckSystemVersion (7, 0);
-		protected static readonly bool ios9 = UIDevice.CurrentDevice.CheckSystemVersion (9, 0);
-		protected static readonly bool ios11 = UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
 		protected static readonly bool ios13 = UIDevice.CurrentDevice.CheckSystemVersion (13, 0);
 
 		public ReviewNagging ReviewNagging { get; private set; }
@@ -70,7 +67,7 @@ namespace Praeclarum.UI
 				throw new ApplicationException ("You must set the App property before calling FinishedLaunching");
 			}
 
-			useDocumentBrowser = ios11 && App.UseDocumentBrowser;
+			useDocumentBrowser = App.UseDocumentBrowser;
 
 			//
 			// Initialize the caches
@@ -100,9 +97,6 @@ namespace Praeclarum.UI
 			//
 			try {
 				DeviceFileSystemProvider.DeviceName = UIDevice.CurrentDevice.Name;
-				//			if (!UIDevice.CurrentDevice.CheckSystemVersion (7, 0)) {
-				//				app.SetStatusBarStyle (UIStatusBarStyle.BlackOpaque, false);
-				//			}
 			}
 			catch (Exception ex) {
 				Log.Error (ex);
@@ -125,7 +119,7 @@ namespace Praeclarum.UI
 			// Apply the theme
 			//
 			try {
-				WhiteTheme.IsModern = ios7;
+				WhiteTheme.IsModern = true;
 
 				UpdateTheme ();
 
@@ -233,10 +227,7 @@ namespace Praeclarum.UI
 			}
 
 			try {
-				if (ios7) {
-					window.TintColor = TintColor;
-				}
-
+				window.TintColor = TintColor;
 				SetRootViewController ();
 			}
 			catch (Exception ex) {
@@ -248,12 +239,10 @@ namespace Praeclarum.UI
 			var shouldPerformAdditionalDelegateHandling = true;
 
 			UIApplicationShortcutItem scitem = null;
-			if (ios9) {
-				var scitemKey = UIApplication.LaunchOptionsShortcutItemKey;
-				if (launchOptions != null && launchOptions.ContainsKey (scitemKey)) {
-					shouldPerformAdditionalDelegateHandling = false;
-					scitem = launchOptions[scitemKey] as UIApplicationShortcutItem;
-				}
+			var scitemKey = UIApplication.LaunchOptionsShortcutItemKey;
+			if (launchOptions != null && launchOptions.ContainsKey (scitemKey)) {
+				shouldPerformAdditionalDelegateHandling = false;
+				scitem = launchOptions[scitemKey] as UIApplicationShortcutItem;
 			}
 
 			if (useDocumentBrowser) {
@@ -1262,13 +1251,8 @@ namespace Praeclarum.UI
 				picker.PopoverPresentationController.BarButtonItem = addButton;
 			}
 
-			if (ios11) {
-				picker.DidPickDocumentAtUrls += Picker_DidPickDocumentAtUrls;
-				picker.AllowsMultipleSelection = false;
-			}
-			else {
-				picker.DidPickDocument += Picker_DidPickDocument;
-			}
+			picker.DidPickDocumentAtUrls += Picker_DidPickDocumentAtUrls;
+			picker.AllowsMultipleSelection = false;
 
 			var presenter = docListNav.TopViewController;
 
@@ -2107,16 +2091,14 @@ namespace Praeclarum.UI
 
 			public void InitializeMRU ()
 			{
-				if (ios9) {
-					entries =
-						UIApplication.SharedApplication.ShortcutItems
-							.Where (i => i.Type == "open" && i.UserInfo != null)
-							.Select (scitem => {
-								var path = scitem.UserInfo["path"].ToString ();
-								var fsId = scitem.UserInfo["fsId"].ToString ();
-								return Tuple.Create (fsId, path);
-							}).ToList ();
-				}
+				entries =
+					UIApplication.SharedApplication.ShortcutItems
+						.Where (i => i.Type == "open" && i.UserInfo != null)
+						.Select (scitem => {
+							var path = scitem.UserInfo["path"].ToString ();
+							var fsId = scitem.UserInfo["fsId"].ToString ();
+							return Tuple.Create (fsId, path);
+						}).ToList ();
 			}
 
 			public void AddToMRU (IFileSystem fs, DocumentReference docRef)
@@ -2134,23 +2116,20 @@ namespace Praeclarum.UI
 				}
 				entries.Insert (0, key);
 
-
 				Console.WriteLine ("SAVE MRU {0}: {1}", entries.Count, docRef);
 
-				if (ios9) {
-					var icon = UIApplicationShortcutIcon.FromType (UIApplicationShortcutIconType.Compose);
-					var newItems = entries.Take (3).Select (e => {
-						var fsId = e.Item1;
-						var path = e.Item2;
-						var name = System.IO.Path.GetFileNameWithoutExtension (path);
-						var userInfo = new NSDictionary<NSString, NSObject> (
-							keys: new[] { new NSString ("fsId"), new NSString ("path") },
-							values: new NSObject[] { new NSString (fsId), new NSString (path) });
-						var item = new UIMutableApplicationShortcutItem ("open", "Open " + name, "", icon, userInfo);
-						return item;
-					}).ToArray ();
-					UIApplication.SharedApplication.ShortcutItems = newItems;
-				}
+				var icon = UIApplicationShortcutIcon.FromType (UIApplicationShortcutIconType.Compose);
+				var newItems = entries.Take (3).Select (UIApplicationShortcutItem (e) => {
+					var fsId = e.Item1;
+					var path = e.Item2;
+					var name = System.IO.Path.GetFileNameWithoutExtension (path);
+					var userInfo = new NSDictionary<NSString, NSObject> (
+						keys: new[] { new NSString ("fsId"), new NSString ("path") },
+						values: new NSObject[] { new NSString (fsId), new NSString (path) });
+					var item = new UIMutableApplicationShortcutItem ("open", "Open " + name, "", icon, userInfo);
+					return item;
+				}).ToArray ();
+				UIApplication.SharedApplication.ShortcutItems = newItems;
 			}
 		}
 

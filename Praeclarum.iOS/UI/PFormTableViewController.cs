@@ -21,13 +21,13 @@ namespace Praeclarum.UI
 		/// </summary>
 		public bool AutoCancelButton { get; set; }
 
-		readonly bool useBlur = false;//!UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
+		readonly bool useBlur = false;
 		UIBlurEffect blurEffect;
 
 		public PForm (string title = "")
 			: base (UIKit.UITableViewStyle.Grouped)
 		{
-			Title = (title ?? "").Localize ();
+			base.Title = (title ?? "").Localize ();
 
 			_sections = new ObservableCollection<PFormSection> ();
 			_sections.CollectionChanged += HandleSectionsChanged;
@@ -238,7 +238,7 @@ namespace Praeclarum.UI
 			static readonly Dictionary<string, UIImage> imageCache =
 				new Dictionary<string, UIImage> ();
 
-			readonly bool useBlur = !UIAccessibility.IsReduceTransparencyEnabled && UIDevice.CurrentDevice.CheckSystemVersion (11, 0);
+			readonly bool useBlur = !UIAccessibility.IsReduceTransparencyEnabled;
 
 			UIActivityIndicatorView activityView = null;
 

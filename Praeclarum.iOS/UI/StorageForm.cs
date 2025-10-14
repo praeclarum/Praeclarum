@@ -77,11 +77,6 @@ namespace Praeclarum.UI
 				if (await fileSystemProvider.ShowAddUI (form) is {} newFileSystem)
 				{
 					FileSystemManager.Shared.Add (newFileSystem);
-					FileSystemManager.Shared.ActiveFileSystem = newFileSystem;
-					if (DocumentAppDelegate.Shared is { } appDelegate)
-					{
-						await appDelegate.SetFileSystemAsync (newFileSystem, true);
-					}
 				}
 				await form.DismissAsync (true);
 			}
@@ -208,14 +203,7 @@ namespace Praeclarum.UI
 				var fs = item as IFileSystem;
 				SetNeedsFormat ();
 
-				Form?.DismissAsync (true).ContinueWith (t => {
-					if (t.IsFaulted)
-						Log.Error (t.Exception);
-				});
-				DocumentAppDelegate.Shared.SetFileSystemAsync (fs, true).ContinueWith (t => {
-					if (t.IsFaulted)
-						Log.Error (t.Exception);
-				});
+				DocumentAppDelegate.Shared.SetFileSystemAsync (fs, true).ContinueWith (Log.TaskError);
 
 				return true;
 			}

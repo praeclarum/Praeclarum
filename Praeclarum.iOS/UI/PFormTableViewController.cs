@@ -456,7 +456,7 @@ namespace Praeclarum.UI
 					}
 
 				} catch (Exception ex) {
-					Debug.WriteLine (ex);
+					Log.Error (ex);
 				}
 			}
 

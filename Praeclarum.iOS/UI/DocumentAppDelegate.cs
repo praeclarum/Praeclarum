@@ -36,6 +36,7 @@ namespace Praeclarum.UI
 		}
 
 		public DocumentApplication App { get; protected set; }
+		public static string AppName => Shared?.App?.Name ?? "App";
 
 		public UIColor TintColor {
 			get {

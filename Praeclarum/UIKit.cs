@@ -1331,8 +1331,13 @@ namespace UIKit
 
     public class UIPopoverPresentationController : NSObject
     {
+	    public NSPopover? NSPopover { get; set; }
         public NSView? SourceView { get; set; }
         public CGRect SourceRect { get; set; }
+        public UIPopoverPresentationController (NSPopover? popover = null)
+        {
+	        NSPopover = popover;
+        }
     }
 
     public class UIProgressView : NSProgressIndicator
@@ -2071,7 +2076,7 @@ namespace UIKit
     public class UIViewController : NSViewController
     {
         public UINavigationItem NavigationItem { get; } = new UINavigationItem ();
-        public UIPopoverPresentationController? PopoverPresentationController { get; }
+        public UIPopoverPresentationController? PopoverPresentationController { get; set; }
 
         public virtual bool PrefersHomeIndicatorAutoHidden { get; set; }
 
@@ -2082,7 +2087,7 @@ namespace UIKit
         {
         }
 
-        public UIViewController (IntPtr handle)
+        public UIViewController (NativeHandle handle)
             : base (handle)
         {
         }
@@ -2105,9 +2110,16 @@ namespace UIKit
             return tcs.Task;
         }
 
-        public void DismissViewController (bool animated, Action completionHandler)
+        public void DismissViewController (bool animated, Action? completionHandler)
         {
-            this.PresentingViewController?.DismissViewController (this);
+	        if (this.PresentingViewController is { } pvc)
+	        {
+		        pvc.DismissViewController (this);
+	        }
+	        else if (this.PopoverPresentationController is { } ppc)
+	        {
+		        ppc?.NSPopover?.Close ();
+	        }
             completionHandler?.Invoke ();
         }
 

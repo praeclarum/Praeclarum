@@ -1080,7 +1080,7 @@ namespace UIKit
 
         public new UIColor TextColor
         {
-	        get => new UIColor (base.TextColor ?? NSColor.Black);
+	        get => new UIColor (base.TextColor ?? NSColor.Label);
 	        set => base.TextColor = value;
         }
         public UITextAlignment TextAlignment {

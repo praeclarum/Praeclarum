@@ -47,8 +47,8 @@ namespace Praeclarum.App
 			{
 				try
 				{
-					var settings = DocumentAppDelegate.Shared.Settings;
-					return DateTime.UtcNow <= settings.SubscribedToProEndDate ();
+					var settings = DocumentAppDelegate.Shared?.Settings;
+					return settings is not null && DateTime.UtcNow <= settings.SubscribedToProEndDate ();
 				}
 				catch
 				{
@@ -61,8 +61,8 @@ namespace Praeclarum.App
 		{
 			get
 			{
-				var settings = DocumentAppDelegate.Shared.Settings;
-				return settings.SubscribedToProDate;
+				var settings = DocumentAppDelegate.Shared?.Settings;
+				return settings?.SubscribedToProDate ?? DateTime.MinValue;
 			}
 		}
 
@@ -70,8 +70,8 @@ namespace Praeclarum.App
 		{
 			get
 			{
-				var settings = DocumentAppDelegate.Shared.Settings;
-				return settings.SubscribedToProFromPlatform;
+				var settings = DocumentAppDelegate.Shared?.Settings;
+				return settings?.SubscribedToProFromPlatform ?? "";
 			}
 		}
 
@@ -79,24 +79,30 @@ namespace Praeclarum.App
 		{
 			get
 			{
-				var settings = DocumentAppDelegate.Shared.Settings;
-				return settings.SubscribedToProMonths;
+				var settings = DocumentAppDelegate.Shared?.Settings;
+				return settings?.SubscribedToProMonths ?? 0;
 			}
 		}
 
 		private ProService ()
 		{
-			var appdel = DocumentAppDelegate.Shared;
-			var app = appdel.App;
-			var appName = app.Name;
-			IEnumerable<ProPriceSpec> names = app.GetProPrices ();
-			var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
-			prices = names.Select (x => new ProPrice (bundleId + ".pro." + x.Months + "_month", x.Months, appName + " Pro (" + x.Name + ")")).ToArray ();
+			if (DocumentAppDelegate.Shared?.App is { } app)
+			{
+				var appName = app.Name;
+				IEnumerable<ProPriceSpec> names = app.GetProPrices ();
+				var bundleId = Foundation.NSBundle.MainBundle.BundleIdentifier;
+				prices = names.Select (x => new ProPrice (bundleId + ".pro." + x.Months + "_month", x.Months,
+					appName + " Pro (" + x.Name + ")")).ToArray ();
+			}
+			else
+			{
+				prices = [];
+			}
 		}
 
 		void SignalProChanged ()
 		{
-			DocumentAppDelegate.Shared.BeginInvokeOnMainThread(() =>
+			DocumentAppDelegate.Shared?.BeginInvokeOnMainThread(() =>
 				NSNotificationCenter.DefaultCenter.PostNotificationName (nameof (SubscribedToPro), null));
 		}
 
@@ -115,7 +121,7 @@ namespace Praeclarum.App
 		{
 			try
 			{
-				var containerId = DocumentAppDelegate.Shared.App.CloudKitContainerId;
+				var containerId = DocumentAppDelegate.Shared?.App.CloudKitContainerId;
 				var container = containerId is { } cid ? CKContainer.FromIdentifier(cid) : CKContainer.DefaultContainer;
 				var status = await container.GetAccountStatusAsync();
 				var hasCloud = status == CKAccountStatus.Available;
@@ -279,7 +285,7 @@ namespace Praeclarum.App
 					var saveName = $"ProSub-{thisPlat}.txt";
 #if __IOS__ || __MACOS__
 					NSFileManager defaultManager = Foundation.NSFileManager.DefaultManager;
-					if (DocumentAppDelegate.Shared.App.AppGroup is string appGroup && defaultManager.GetContainerUrl (appGroup) is NSUrl saveDirUrl)
+					if (DocumentAppDelegate.Shared?.App.AppGroup is {} appGroup && defaultManager.GetContainerUrl (appGroup) is {} saveDirUrl)
 					{
 						var saveUrl = saveDirUrl.Append (saveName, false);
 						NSData.FromString (saveText, NSStringEncoding.UTF8).Save (saveUrl, true);
@@ -302,7 +308,7 @@ namespace Praeclarum.App
 					var saveName = $"ProSub-{otherPlat}.txt";
 #if __IOS__ || __MACOS__
 					NSFileManager defaultManager = Foundation.NSFileManager.DefaultManager;
-					if (DocumentAppDelegate.Shared.App.AppGroup is string appGroup && defaultManager.GetContainerUrl(appGroup) is NSUrl saveDirUrl)
+					if (DocumentAppDelegate.Shared?.App?.AppGroup is {} appGroup && defaultManager.GetContainerUrl(appGroup) is {} saveDirUrl)
 					{
 						var saveUrlO = saveDirUrl.Append(saveName, false);
 						if (saveUrlO is { } saveUrl)
@@ -334,8 +340,8 @@ namespace Praeclarum.App
 
 		async Task SaveSubscriptionIfNewerAsync(DateTime date, int months, SubPlatform fromPlatform)
 		{
-			var settings = DocumentAppDelegate.Shared.Settings;
-			if (date > settings.SubscribedToProDate)
+			var settings = DocumentAppDelegate.Shared?.Settings;
+			if (settings is null || date > settings.SubscribedToProDate)
 			{
 				await SaveSubscriptionAsync(date, months, fromPlatform);
 				SignalProChanged ();
@@ -344,10 +350,13 @@ namespace Praeclarum.App
 
 		async Task SaveSubscriptionAsync (DateTime date, int months, SubPlatform fromPlatform)
 		{
-			var settings = DocumentAppDelegate.Shared.Settings;
-			settings.SubscribedToProDate = date;
-			settings.SubscribedToProMonths = months;
-			settings.SubscribedToProFromPlatform = fromPlatform.ToString();
+			if (DocumentAppDelegate.Shared?.Settings is { } settings)
+			{
+				settings.SubscribedToProDate = date;
+				settings.SubscribedToProMonths = months;
+				settings.SubscribedToProFromPlatform = fromPlatform.ToString ();
+			}
+
 			//var save = new SavedSub (date, months);
 			//save.TrySave ();
 			if (fromPlatform == GetThisPlatform())

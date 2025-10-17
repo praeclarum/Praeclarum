@@ -34,11 +34,9 @@ namespace Praeclarum.UI
 		{
 			service = ProService.Shared;
 
-			var appdel = DocumentAppDelegate.Shared;			
-			var app = appdel.App;
-			var appName = app.Name;			
+			var appName = DocumentAppDelegate.AppName;
 
-			Title = appName + " Pro";
+			base.Title = appName + " Pro";
 
 			aboutSection = new ProAboutSection(appName);
 			featuresSection = new ProFeaturesSection(appName);
@@ -196,7 +194,7 @@ namespace Praeclarum.UI
 
 		private static void ShowThanksAlert ()
 		{
-			visibleForm?.ShowAlert ("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared.App.Name} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
+			visibleForm?.ShowAlert ("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared?.App?.Name ?? ""} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
 		}
 
 		public static async Task HandlePurchaseRestoredAsync(NSError? error)
@@ -242,7 +240,9 @@ namespace Praeclarum.UI
 
 			public void SetPatronage()
 			{
-				DocumentApplication app = DocumentAppDelegate.Shared.App;
+				if (DocumentAppDelegate.Shared?.App is not { } app)
+					return;
+
 				var appName = app.Name;
 				Title = appName + " Pro";
 				Hint = app.ProMarketing;
@@ -276,8 +276,9 @@ namespace Praeclarum.UI
 			}
 			void ShowFeatures()
 			{
-				var appdel = DocumentAppDelegate.Shared;
-				var features = appdel.App.GetProFeatures();
+				if (DocumentAppDelegate.Shared?.App is not { } app)
+					return;
+				var features = app.GetProFeatures();
 				var featuresForm = new PForm("Pro Feature List");
 				foreach (var (title, items) in features)
 				{
@@ -295,7 +296,7 @@ namespace Praeclarum.UI
 
 		class SubscribeSection : PFormSection
 		{
-			readonly string baseHint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be able to re-subscribe using that plan.";
+			readonly string baseHint = $"Tapping one of the above will subscribe you to {DocumentAppDelegate.Shared?.App.Name} Pro. If you are already subscribed to that plan, you will be able to manage your subscription. If you select a new plan, you will be able to re-subscribe using that plan.";
 
 			readonly Command manageItem;
 
@@ -323,9 +324,7 @@ namespace Praeclarum.UI
 
 			public override string GetItemTitle(object item)
 			{
-				if (item is ProPrice p)
-				{
-					var app = DocumentAppDelegate.Shared.App;
+				if (item is ProPrice p && DocumentAppDelegate.Shared?.App is { } app) {
 					if (p.Months == ProService.SubscribedToProMonths)
 					{
 						return app.ProSymbol + " " + p.Name;
@@ -506,11 +505,10 @@ namespace Praeclarum.UI
 	public class ProSection : PFormSection
 	{
 		public ProSection()
-			: base(new Command($"Upgrade to {DocumentAppDelegate.Shared.App.Name} Pro"))
+			: base(new Command($"Upgrade to {DocumentAppDelegate.AppName} Pro"))
 		{
-			var appdel = DocumentAppDelegate.Shared;
-			var appName = appdel.App.Name;
-			Hint = $"If you love using {appName}, you can upgrade to iCircuit Pro!";
+			var appName = DocumentAppDelegate.AppName;
+			Hint = $"If you love using {appName}, you can upgrade to {appName} Pro!";
 		}
 
 		public static bool ShouldBeAtTop
@@ -535,8 +533,10 @@ namespace Praeclarum.UI
 
 		public override string GetItemTitle(object item)
 		{
+			if (DocumentAppDelegate.Shared?.App is not { } app)
+				return "";
+
 			var isp = ProService.SubscribedToPro;
-			var app = DocumentAppDelegate.Shared.App;
 			var appName = app.Name;
 			return isp ?
 				$"{app.ProSymbol} Subscribed to {appName} Pro!" :

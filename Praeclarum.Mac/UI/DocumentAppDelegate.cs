@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Threading.Tasks;
 using AppKit;
 using Foundation;
@@ -16,20 +18,34 @@ namespace Praeclarum.UI
 	[Register("DocumentAppDelegate")]
 	public abstract class DocumentAppDelegate : NSApplicationDelegate
 	{
-		public DocumentApplication App { get; protected set; }
+		private DocumentApplication? _app;
 
-		public static DocumentAppDelegate Shared { get; private set; }
+		public DocumentApplication App
+		{
+			get
+			{
+				if (_app is null)
+				{
+					_app = CreateApplication();
+				}
+				return _app;
+			}
+		}
 
-		public IDocumentAppSettings Settings
+		public static DocumentAppDelegate? Shared { get; private set; }
+		public static string AppName => Shared?.App.Name ?? "App";
+
+		public IDocumentAppSettings? Settings
 		{
 			get;
 			private set;
 		}
 
+		NSWindow? _proWindow;
+
 		public override void WillFinishLaunching(NSNotification notification)
 		{
 			Shared = this;
-			App = CreateApplication();
 			Settings = CreateSettings();
 		}
 
@@ -40,11 +56,11 @@ namespace Praeclarum.UI
 			//
 			try
 			{
-				if (App.IsPatronSupported || App.HasTips || App.HasPro)
+				if (App is {} app && (app.IsPatronSupported || app.HasTips || app.HasPro))
 				{
-					if (Settings.IsPatron)
+					if (Settings is {} settings && settings.IsPatron)
 					{
-						Settings.IsPatron = DateTime.UtcNow <= Settings.PatronEndDate;
+						settings.IsPatron = DateTime.UtcNow <= Settings.PatronEndDate;
 					}
 					StoreManager.Shared.RestoredActions.Add (HandlePurchaseRestoredAsync);
 					StoreManager.Shared.PurchasingActions.Add (HandlePurchasingAsync);
@@ -77,7 +93,7 @@ namespace Praeclarum.UI
 
 		protected abstract DocumentApplication CreateApplication();
 
-		static async Task HandlePurchaseRestoredAsync (NSError error)
+		static async Task HandlePurchaseRestoredAsync (NSError? error)
 		{
 			// await TipJarForm.HandlePurchaseRestoredAsync(error);
 			await ProService.Shared.HandlePurchaseRestoredAsync (error);
@@ -133,6 +149,29 @@ namespace Praeclarum.UI
 			{
 				//return PatronForm.HandlePurchaseFailAsync(t);
 			}
+		}
+
+		[Export("showProPanel:")]
+		public void ShowProPanel(NSObject? sender)
+		{
+			PForm.ShowWindow(sender, ref _proWindow, () => new ProForm());
+		}
+
+		public void PromotePro (string error, NSObject? sender)
+		{
+			BeginInvokeOnMainThread(() =>
+			{
+				if (App is not {} app )
+					return;
+				var message = $"{App.ProSymbol} This feature is only available in {App.Name} Pro.\n\nYou can unlock this feature and others by clicking \"Learn More\" below.";
+
+				var alert = NSAlert.WithMessage (error, "Learn More About Pro", "Cancel", otherButton: null, full: message);
+				var result = alert.RunSheetModal (null, NSApplication.SharedApplication);
+				if (result.ToInt64 () == 1)
+				{
+					ShowProPanel (sender);
+				}
+			});
 		}
 	}
 }

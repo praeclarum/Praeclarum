@@ -37,7 +37,7 @@ public class AIChatView : UIView
 	
 	readonly UITableView _tableView;
 	readonly UIView _inputBox = new() { BackgroundColor = ios13 ? UIColor.SecondarySystemBackground : UIColor.Gray, };
-	readonly UITextView _inputField = new ();
+	readonly UITextField _inputField = new ();
 	readonly ChatSource _chatSource;
 	readonly UIFont _inputFieldFont = UIFont.SystemFontOfSize (UIFont.SystemFontSize);
 
@@ -110,17 +110,21 @@ public class AIChatView : UIView
 	    var fframe = new CGRect (inputBoxHPadding, inputBoxVPadding, iframe.Width - 2*inputBoxHPadding, iframe.Height - 2*inputBoxVPadding);
 	    _inputField.Frame = fframe;
 	    _inputField.BackgroundColor = UIColor.SystemBackground;
-	    _inputField.AutoresizingMask = UIViewAutoresizing.FlexibleDimensions;
-	    _inputField.TranslatesAutoresizingMaskIntoConstraints = true;
+	    _inputField.TranslatesAutoresizingMaskIntoConstraints = false;
 	    _inputField.Font = _inputFieldFont;
-#if !__MACOS__
-	    _inputField.ShouldChangeText = ShouldChangeText;
-#endif
-	    _inputField.Changed += InputFieldOnValueChanged;
-	    _inputBox.AddSubview (_inputField);
-	    
+	    // _inputField.ShouldChangeText = ShouldChangeText;
+	    // _inputField.Changed += InputFieldOnValueChanged;
+	    _inputField.ValueChanged += InputFieldOnValueChanged;
+	    _inputField.ReturnKeyType = UIReturnKeyType.Send;
+	    _inputField.ShouldReturn += _ =>
+	    {
+		    SubmitInputAsync ().ContinueWith (Log.TaskError);
+		    return false;
+	    };
+
 	    AddSubview (_tableView);
 	    AddSubview (_inputBox);
+	    AddSubview (_inputField);
 	    AdjustInputBoxHeight (animated: false);
 #if __IOS__
 	    UIKeyboard.Notifications.ObserveDidChangeFrame (HandleKeyboardFrameChange);
@@ -191,7 +195,7 @@ public class AIChatView : UIView
 	    var iframe = new CGRect (0, tframe.Bottom, bounds.Width, safeInputBoxHeight);
 	    _inputBox.Frame = iframe;
 
-	    var fframe = new CGRect (inputBoxHPadding, inputBoxVPadding, iframe.Width - 2*inputBoxHPadding, _inputBoxHeight - 2*inputBoxVPadding);
+	    var fframe = new CGRect (inputBoxHPadding, inputBoxVPadding + iframe.Top, iframe.Width - 2*inputBoxHPadding, _inputBoxHeight - 2*inputBoxVPadding);
 	    _inputField.Frame = fframe;
     }
 
@@ -207,7 +211,6 @@ public class AIChatView : UIView
 	    var minTextHeight = lines * lineSize.Height;
 	    var newTextHeight = minTextHeight * 1.15 + 2 * inputBoxVPadding + 16;
 	    var newInputBoxHeight = (NFloat)Math.Min (maxInputBoxHeight, newTextHeight);
-		// Console.WriteLine ($"Adjust Text ({text.Length}) size {lineSize}: {lines} * {lineSize.Height} = {minTextHeight} => {newInputBoxHeight}");
 	    if (Math.Abs (newInputBoxHeight - _inputBoxHeight) > 1.0f)
 	    {
 		    _inputBoxHeight = newInputBoxHeight;

@@ -485,7 +485,12 @@ public class AIChatViewController : UIViewController
 	public AIChatViewController(AIChatHistory? history) 
 	{
 		base.Title = "AI Chat".Localize();
-		chatView = new AIChatView (new CGRect (0, 0, 320, 480), history);
+#if __MACOS__
+		var frame = new CGRect (0, 0, 480, 2048);
+#else
+		var frame = new CGRect (0, 0, 320, 768);
+#endif
+		chatView = new AIChatView (frame, history);
 		base.View = chatView;
 
 		// base.NavigationItem.RightBarButtonItems =

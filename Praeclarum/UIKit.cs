@@ -1558,6 +1558,14 @@ namespace UIKit
 		    public ActualTableView (UITableView uiTableView)
 		    {
 			    this.uiTableView = new WeakReference<UITableView> (uiTableView);
+			    base.UsesAutomaticRowHeights = true;
+			    // base.HeaderView = null;
+			    var col = new NSTableColumn (identifier: "Column0")
+			    {
+				    ResizingMask = NSTableColumnResizing.Autoresizing,
+			    };
+			    base.AddColumn (col);
+			    base.ColumnAutoresizingStyle = NSTableViewColumnAutoresizingStyle.FirstColumnOnly;
 		    }
 	    }
 
@@ -1598,16 +1606,9 @@ namespace UIKit
             : base (frame)
 	    {
 		    tableView = new ActualTableView (this);
-	        tableView.AddColumn (new NSTableColumn(identifier: "Column0"));
-	        tableView.ColumnAutoresizingStyle = NSTableViewColumnAutoresizingStyle.FirstColumnOnly;
-
-	        base.AddSubview (tableView);
-	        base.AddConstraints ([
-		        tableView.LeftAnchor.ConstraintEqualTo (base.LeftAnchor),
-		        tableView.RightAnchor.ConstraintEqualTo (base.RightAnchor),
-		        tableView.TopAnchor.ConstraintEqualTo (base.TopAnchor),
-		        tableView.BottomAnchor.ConstraintEqualTo (base.BottomAnchor),
-	        ]);
+		    base.DrawsBackground = false;
+		    base.AutomaticallyAdjustsContentInsets = true;
+	        base.DocumentView = tableView;
         }
 
 	    public void BeginUpdates ()
@@ -1642,6 +1643,7 @@ namespace UIKit
 	    public UITableViewCellStyle Style { get; }
 	    
 	    public UILabel TextLabel => (UILabel)TextField;
+	    internal NSLayoutConstraint TextLabelWidthConstraint { get; }
 	    
 	    public NSView ContentView => this;
 
@@ -1649,18 +1651,27 @@ namespace UIKit
 	    {
 		    Style = style;
 		    base.Identifier = reuseIdentifier;
-		    base.TextField = new UILabel
+		    var textField = new UILabel
 		    {
 			    Bordered = false,
 			    BackgroundColor = NSColor.Clear,
 			    Editable = false,
 			    Selectable = false,
 			    TranslatesAutoresizingMaskIntoConstraints = false,
+			    Cell = new NSTextFieldCell (),
 		    };
-		    base.AddSubview (base.TextField);
-		    base.TextField.LeadingAnchor.ConstraintEqualTo (base.LeadingAnchor, 8).Active = true;
-		    base.TextField.TrailingAnchor.ConstraintEqualTo (base.TrailingAnchor, -8).Active = true;
-		    base.TextField.CenterYAnchor.ConstraintEqualTo (base.CenterYAnchor).Active = true;
+		    textField.Cell.Wraps = true;
+		    textField.Cell.LineBreakMode = NSLineBreakMode.ByWordWrapping;
+		    textField.MaximumNumberOfLines = 0;
+		    textField.LineBreakMode = UILineBreakMode.WordWrap;
+		    textField.Cell.TruncatesLastVisibleLine = false;
+		    base.AddSubview (textField);
+		    base.TextField = textField;
+		    textField.LeadingAnchor.ConstraintEqualTo (base.LeadingAnchor).Active = true;
+		    TextLabelWidthConstraint = textField.WidthAnchor.ConstraintLessThanOrEqualTo (288);
+		    TextLabelWidthConstraint.Active = true;
+		    textField.TopAnchor.ConstraintEqualTo (base.TopAnchor).Active = true;
+		    textField.BottomAnchor.ConstraintEqualTo (base.BottomAnchor).Active = true;
 	    }
     }
 
@@ -1720,7 +1731,10 @@ namespace UIKit
 	    {
 		    if (tableView is not UITableView.ActualTableView { UITableView: {} uiTableView })
 			    return null!;
-		    return GetCell (uiTableView, NSIndexPath.FromItemSection (row.ToInt32(), 0));
+		    var cell = GetCell (uiTableView, NSIndexPath.FromItemSection (row.ToInt32(), 0));
+		    cell.BackgroundStyle = NSBackgroundStyle.Emphasized;
+		    cell.TextLabelWidthConstraint.Constant = tableView.Bounds.Width - 32;
+		    return cell;
 	    }
     }
 

@@ -1778,6 +1778,34 @@ namespace UIKit
                 EditingChanged?.Invoke (s, e);
                 ValueChanged?.Invoke (s, e);
             };
+
+            base.UsesSingleLineMode = false;
+            base.MaximumNumberOfLines = 0;
+            base.Cell.UsesSingleLineMode = false;
+            base.Cell.LineBreakMode = NSLineBreakMode.ByWordWrapping;
+            base.Cell.Wraps = true;
+            base.MaximumNumberOfLines = 0;
+            base.Bordered = false;
+            // base.TranslatesAutoresizingMaskIntoConstraints = false;
+            base.Bezeled = false;
+            base.BezelStyle = NSTextFieldBezelStyle.Rounded;
+            base.FocusRingType = NSFocusRingType.None;
+            base.UsesSingleLineMode = false;
+            base.DoCommandBySelector = (control, view, selector) =>
+            {
+	            if (selector.Name == "insertNewline:")
+	            {
+		            if (ShouldReturn != null)
+		            {
+			            if (ShouldReturn (this))
+			            {
+				            return false;
+			            }
+			            return true;
+		            }
+	            }
+	            return false;
+            };
         }
     }
 
@@ -1825,17 +1853,17 @@ namespace UIKit
             textView.TextContainer.WidthTracksTextView = true;
             textView.TextContainer.LineBreakMode = NSLineBreakMode.Clipping;
 
-            VerticalScrollElasticity = NSScrollElasticity.Allowed;
-            HorizontalScrollElasticity = NSScrollElasticity.Allowed;
-            HasVerticalScroller = true;
-            HasHorizontalScroller = true;
-            AutomaticallyAdjustsContentInsets = true;
-            DocumentView = textView;
+            base.VerticalScrollElasticity = NSScrollElasticity.Allowed;
+            base.HorizontalScrollElasticity = NSScrollElasticity.Allowed;
+            base.HasVerticalScroller = true;
+            base.HasHorizontalScroller = false;
+            base.AutomaticallyAdjustsContentInsets = true;
+            base.DocumentView = textView;
 
             textView.DrawsBackground = true;
             //base.BackgroundColor = textView.BackgroundColor;
-            DrawsBackground = false;
-            ContentView.DrawsBackground = false;
+            base.DrawsBackground = false;
+            base.ContentView.DrawsBackground = false;
 
             textView.TextDidChange += (s, e) => Changed?.Invoke (s, e);
         }

@@ -292,21 +292,26 @@ public class AIChatView : UIView
 			var cell = tableView.DequeueReusableCell ("M") as MessageCell ?? new MessageCell ("M");
 			var chat = _history.ActiveChat;
 #if __MACOS__
-			var message = chat.Messages[(int)indexPath.Item];
+			var row = (int)indexPath.Item;
 #else
-			var message = chat.Messages[indexPath.Row];
+			var row = (int)indexPath.Row;
 #endif
-			cell.Message = message;
+			if (row < chat.Messages.Count)
+			{
+				cell.Message = chat.Messages[row];
+			}
 			return cell;
 		}
 
 		async Task AddMessageAsync (AIChat.Message message, UITableView tableView)
 		{
 			var chat = _history.ActiveChat;
+			tableView.BeginUpdates ();
 			chat.Messages.Add (message);
 			if (BottomIndexPath is not {} bottom)
 				return;
 			tableView.InsertRows ([bottom], UITableViewRowAnimation.Automatic);
+			tableView.EndUpdates ();
 			await Task.Delay (1);
 			ScrollToBottom (tableView, true);
 		}

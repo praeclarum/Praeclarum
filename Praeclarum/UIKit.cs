@@ -1544,9 +1544,22 @@ namespace UIKit
     {
     }
 
-    public class UITableView : NSTableView
+    public class UITableView : NSScrollView
     {
 	    private UIView? backgroundView;
+
+	    readonly ActualTableView tableView;
+
+	    public class ActualTableView : NSTableView
+	    {
+		    readonly WeakReference<UITableView> uiTableView;
+		    public UITableView? UITableView => uiTableView.TryGetTarget (out var tableView) ? tableView : null;
+
+		    public ActualTableView (UITableView uiTableView)
+		    {
+			    this.uiTableView = new WeakReference<UITableView> (uiTableView);
+		    }
+	    }
 
 	    public UIView? BackgroundView
 	    {
@@ -1557,38 +1570,70 @@ namespace UIKit
 			    if (backgroundView != null)
 			    {
 				    base.BackgroundColor = backgroundView.BackgroundColor;
+				    tableView.BackgroundColor = backgroundView.BackgroundColor;
 			    }
 		    }
 	    }
 
 	    public bool AllowsSelection
 	    {
-		    get => base.SelectionHighlightStyle != NSTableViewSelectionHighlightStyle.None;
+		    get => tableView.SelectionHighlightStyle != NSTableViewSelectionHighlightStyle.None;
 		    set
 		    {
-			    base.SelectionHighlightStyle = value ? NSTableViewSelectionHighlightStyle.Regular : NSTableViewSelectionHighlightStyle.None;
+			    tableView.SelectionHighlightStyle = value ? NSTableViewSelectionHighlightStyle.Regular : NSTableViewSelectionHighlightStyle.None;
+		    }
+	    }
+
+	    public UITableViewSource? Source
+	    {
+		    get => tableView.Source as UITableViewSource;
+		    set
+		    {
+			    tableView.Source = value;
+			    tableView.ReloadData ();
 		    }
 	    }
 
 	    public UITableView (CGRect frame, UITableViewStyle style)
             : base (frame)
-        {
+	    {
+		    tableView = new ActualTableView (this);
+	        tableView.AddColumn (new NSTableColumn(identifier: "Column0"));
+	        tableView.ColumnAutoresizingStyle = NSTableViewColumnAutoresizingStyle.FirstColumnOnly;
+
+	        base.AddSubview (tableView);
+	        base.AddConstraints ([
+		        tableView.LeftAnchor.ConstraintEqualTo (base.LeftAnchor),
+		        tableView.RightAnchor.ConstraintEqualTo (base.RightAnchor),
+		        tableView.TopAnchor.ConstraintEqualTo (base.TopAnchor),
+		        tableView.BottomAnchor.ConstraintEqualTo (base.BottomAnchor),
+	        ]);
         }
+
+	    public void BeginUpdates ()
+	    {
+		    tableView.BeginUpdates ();
+	    }
+
+	    public void EndUpdates ()
+	    {
+		    tableView.EndUpdates ();
+	    }
 
 	    public void ScrollToRow (NSIndexPath indexPath, UITableViewScrollPosition bottom, bool b)
 	    {
-		    ScrollRowToVisible (indexPath.Item);
+		    tableView.ScrollRowToVisible (indexPath.Item);
 	    }
 
 	    public virtual void InsertRows (NSIndexPath[] atIndexPaths, UITableViewRowAnimation withRowAnimation)
 	    {
 		    var items = atIndexPaths.Select (x => (int)x.Item).ToArray ();
-		    base.InsertRows (NSIndexSet.FromArray (items), NSTableViewAnimation.None);
+		    tableView.InsertRows (NSIndexSet.FromArray (items), NSTableViewAnimation.None);
 	    }
 
 	    public UITableViewCell? DequeueReusableCell (string reuseIdentifier)
 	    {
-		    return MakeView (reuseIdentifier, this) as UITableViewCell;
+		    return tableView.MakeView (reuseIdentifier, this) as UITableViewCell;
 	    }
     }
 
@@ -1658,11 +1703,13 @@ namespace UIKit
 
 	    public override IntPtr GetRowCount (NSTableView tableView)
 	    {
-		    var numSections = NumberOfSections ((UITableView)tableView).ToInt32 ();
+		    if (tableView is not UITableView.ActualTableView { UITableView: {} uiTableView })
+			    return 0;
+		    var numSections = NumberOfSections (uiTableView).ToInt32 ();
 		    var numRows = 0;
 		    for (var i = 0; i < numSections; i++)
 		    {
-			    numRows += RowsInSection ((UITableView)tableView, i).ToInt32 ();
+			    numRows += RowsInSection (uiTableView, i).ToInt32 ();
 		    }
 		    return numRows;
 	    }
@@ -1671,7 +1718,9 @@ namespace UIKit
 
 	    public override NSView GetViewForItem (NSTableView tableView, NSTableColumn tableColumn, IntPtr row)
 	    {
-		    return GetCell ((UITableView)tableView, NSIndexPath.FromItemSection (row.ToInt32(), 0));
+		    if (tableView is not UITableView.ActualTableView { UITableView: {} uiTableView })
+			    return null!;
+		    return GetCell (uiTableView, NSIndexPath.FromItemSection (row.ToInt32(), 0));
 	    }
     }
 

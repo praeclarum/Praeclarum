@@ -361,9 +361,7 @@ namespace Praeclarum.UI
             var right = GetAnchor (binary.Right);
             if (left != null && right != null) {
                 var t = left.GetType ();
-#pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
 				var m = t.GetMethods ().FirstOrDefault (x => x.Name == "ConstraintEqualTo" && x.GetParameters ().Length == 1);
-#pragma warning restore IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
 				if (m?.Invoke (left, new object[] { right }) is NSLayoutConstraint r)
 					return r;
             }

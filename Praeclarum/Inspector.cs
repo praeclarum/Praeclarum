@@ -575,11 +575,9 @@ namespace Praeclarum.Inspector
             }
 
             var type = target.GetType ();
-#pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicConstructors'
             var members =
                 type.GetMembers (BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
                     .Where (x => x.MemberType != MemberTypes.Constructor && x.MemberType != MemberTypes.Event);
-#pragma warning restore IL2075
 
             foreach (var m in members) {
                 infos.AddRange (GetEditInfosForMember (target, m, context));
@@ -595,9 +593,7 @@ namespace Praeclarum.Inspector
                 yield break;
 
             var type = target.GetType ();
-#pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicConstructors'
             var shouldProp = type.GetMethod ("ShouldInspect" + m.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-#pragma warning restore IL2075
             //Console.WriteLine ($"? {m.Name} {shouldProp}");
             if (shouldProp is not null && (bool)(shouldProp.Invoke (target, new object[0]) ?? false) == false)
                 yield break;
@@ -699,9 +695,7 @@ namespace Praeclarum.Inspector
                             var name = "";
                             var lname = name;
                             var itype = i.GetType ();
-                            #pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicProperties'
                             var namep = itype.GetProperty ("Name");
-                            #pragma warning restore IL2075
                             if (namep != null) {
                                 try {
                                     name = namep.GetValue (i)?.ToString () ?? name;

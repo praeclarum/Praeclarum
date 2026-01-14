@@ -6,7 +6,8 @@
     <Version>1.0.0</Version>
     <IsPackable>false</IsPackable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>$(NoWarn);NU1900;XCODE_26_0_PREVIEW</NoWarn>
+    <WarningsNotAsErrors>IL2026;IL2067;IL2072;IL2075;IL2104</WarningsNotAsErrors>
+    <NoWarn>$(NoWarn);NU1900</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
     <SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>

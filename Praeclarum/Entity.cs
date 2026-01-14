@@ -373,7 +373,6 @@ namespace Praeclarum
         }
 
         public static JsonSerializerSettings GetJsonSerializerSettings(Assembly assembly) {
-#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 			return new JsonSerializerSettings {
                 Formatting = Formatting.Indented,
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
@@ -388,7 +387,6 @@ namespace Praeclarum
                 },
                 SerializationBinder = new AssemblylessTypeBinder (assembly),
             };
-#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
 		}
 
         [RequiresUnreferencedCode("The type is queried by name from the assembly at runtime.")]

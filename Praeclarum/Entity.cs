@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -19,6 +20,7 @@ using UIKit;
 
 namespace Praeclarum
 {
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties|DynamicallyAccessedMemberTypes.PublicEvents)]
     public abstract class Entity : INotifyPropertyChanged
     {
         Dictionary<string, object>? propertySetters;
@@ -371,7 +373,8 @@ namespace Praeclarum
         }
 
         public static JsonSerializerSettings GetJsonSerializerSettings(Assembly assembly) {
-            return new JsonSerializerSettings {
+#pragma warning disable IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+			return new JsonSerializerSettings {
                 Formatting = Formatting.Indented,
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
                 TypeNameHandling = TypeNameHandling.Auto,
@@ -385,8 +388,10 @@ namespace Praeclarum
                 },
                 SerializationBinder = new AssemblylessTypeBinder (assembly),
             };
-        }
+#pragma warning restore IL2026 // Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code
+		}
 
+        [RequiresUnreferencedCode("The type is queried by name from the assembly at runtime.")]
         class AssemblylessTypeBinder : Newtonsoft.Json.Serialization.ISerializationBinder
         {
 	        private readonly Assembly assembly;
@@ -407,7 +412,7 @@ namespace Praeclarum
                 var t = assembly.GetType (typeName);
                 if (t is null)
                 {
-	                t = Type.GetType (typeName);
+                    t = Type.GetType (typeName);
                 }
                 if (t is null || t.IsAbstract) {
                     t = typeof (Praeclarum.Entity);

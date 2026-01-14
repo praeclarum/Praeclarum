@@ -1,11 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Praeclarum
 {
 	public static class AsyncExtensions
 	{
+		[RequiresUnreferencedCode("The event is found at runtime.")]
 		public static Task<T> GetEventAsync<T> (this object eventSource, string eventName)
 			where T : EventArgs
 		{
@@ -25,6 +27,7 @@ namespace Praeclarum
 			return tcs.Task;
 		}
 
+		[RequiresUnreferencedCode("The event is found at runtime.")]
 		public static Task<EventArgs> GetEventAsync (this object eventSource, string eventName)
 		{
 			var tcs = new TaskCompletionSource<EventArgs>();
@@ -44,4 +47,3 @@ namespace Praeclarum
 		}
 	}
 }
-

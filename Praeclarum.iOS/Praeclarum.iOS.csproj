@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0-ios26.0;net9.0-maccatalyst26.0</TargetFrameworks>
+    <TargetFrameworks>net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
     <Version>1.0.0</Version>
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>

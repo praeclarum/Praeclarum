@@ -565,6 +565,7 @@ namespace Praeclarum.Inspector
             return (byte)(b * 16 + l);
         }
 
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Uses reflection to get member info.")]
         public static EditInfo[] GetEditInfos (object target, EditContextBase context)
         {
             var infos = new List<EditInfo> ();
@@ -585,6 +586,7 @@ namespace Praeclarum.Inspector
             return infos.OrderBy (x => x.SortOrder).ToArray ();
         }
 
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Uses reflection to get member info of target.")]
         public static IEnumerable<EditInfo> GetEditInfosForMember (object? target, MemberInfo m, EditContextBase context)
         {
             if (m.Name.StartsWith ("ShouldInspect", StringComparison.Ordinal) ||

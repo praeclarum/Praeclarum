@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0-macos26.0</TargetFramework>
+    <TargetFramework>net10.0-macos</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>false</ImplicitUsings>
     <Version>1.0.0</Version>

@@ -1,6 +1,6 @@
 #nullable enable
 //
-// Copyright (c) 2013-2025 Frank A. Krueger
+// Copyright (c) 2013-2026 Frank A. Krueger
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -360,8 +361,10 @@ namespace Praeclarum.UI
             var right = GetAnchor (binary.Right);
             if (left != null && right != null) {
                 var t = left.GetType ();
-                var m = t.GetMethods ().FirstOrDefault (x => x.Name == "ConstraintEqualTo" && x.GetParameters ().Length == 1);
-                if (m?.Invoke (left, new object[] { right }) is NSLayoutConstraint r)
+#pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
+				var m = t.GetMethods ().FirstOrDefault (x => x.Name == "ConstraintEqualTo" && x.GetParameters ().Length == 1);
+#pragma warning restore IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method. The return value of the source method does not have matching annotations.
+				if (m?.Invoke (left, new object[] { right }) is NSLayoutConstraint r)
 					return r;
             }
             throw new Exception ("Failed to get the left and right anchors from " + binary);

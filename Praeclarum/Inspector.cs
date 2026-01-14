@@ -7,6 +7,7 @@ using System.Linq;
 
 using NGraphics;
 
+
 #if __IOS__
 using SceneKit;
 using UIKit;
@@ -565,7 +566,6 @@ namespace Praeclarum.Inspector
             return (byte)(b * 16 + l);
         }
 
-        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Uses reflection to get member info.")]
         public static EditInfo[] GetEditInfos (object target, EditContextBase context)
         {
             var infos = new List<EditInfo> ();
@@ -575,9 +575,11 @@ namespace Praeclarum.Inspector
             }
 
             var type = target.GetType ();
+#pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicConstructors'
             var members =
                 type.GetMembers (BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance)
                     .Where (x => x.MemberType != MemberTypes.Constructor && x.MemberType != MemberTypes.Event);
+#pragma warning restore IL2075
 
             foreach (var m in members) {
                 infos.AddRange (GetEditInfosForMember (target, m, context));
@@ -586,14 +588,16 @@ namespace Praeclarum.Inspector
             return infos.OrderBy (x => x.SortOrder).ToArray ();
         }
 
-        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode("Uses reflection to get member info of target.")]
-        public static IEnumerable<EditInfo> GetEditInfosForMember (object? target, MemberInfo m, EditContextBase context)
+        public static IEnumerable<EditInfo> GetEditInfosForMember (object target, MemberInfo m, EditContextBase context)
         {
             if (m.Name.StartsWith ("ShouldInspect", StringComparison.Ordinal) ||
                 m.Name.StartsWith ("ShouldSerialize", StringComparison.Ordinal))
                 yield break;
 
-            var shouldProp = (target != null ? target.GetType () : m.DeclaringType)?.GetMethod ("ShouldInspect" + m.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+            var type = target.GetType ();
+#pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicConstructors'
+            var shouldProp = type.GetMethod ("ShouldInspect" + m.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+#pragma warning restore IL2075
             //Console.WriteLine ($"? {m.Name} {shouldProp}");
             if (shouldProp is not null && (bool)(shouldProp.Invoke (target, new object[0]) ?? false) == false)
                 yield break;
@@ -695,7 +699,9 @@ namespace Praeclarum.Inspector
                             var name = "";
                             var lname = name;
                             var itype = i.GetType ();
+                            #pragma warning disable IL2075 // 'this' argument does not satisfy 'DynamicallyAccessedMemberTypes.PublicProperties'
                             var namep = itype.GetProperty ("Name");
+                            #pragma warning restore IL2075
                             if (namep != null) {
                                 try {
                                     name = namep.GetValue (i)?.ToString () ?? name;

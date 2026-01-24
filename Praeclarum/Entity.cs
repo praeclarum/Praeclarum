@@ -373,21 +373,45 @@ namespace Praeclarum
         }
 
         public static JsonSerializerSettings GetJsonSerializerSettings(Assembly assembly) {
+            var converters = new JsonConverter[] {
+                #if __MACOS__ || __IOS__ || __MACCATALYST__ || __TVOS__
+                new SceneKitConverter (),
+                new UIKitConverter (),
+                #endif
+                new OldMatrixConverter ()
+            };
 			return new JsonSerializerSettings {
                 Formatting = Formatting.Indented,
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
                 TypeNameHandling = TypeNameHandling.Auto,
                 TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
-                Converters = {
-	                #if __MACOS__ || __IOS__ || __MACCATALYST__
-                    new SceneKitConverter (),
-	                new UIKitConverter (),
-                    #endif
-	                new OldMatrixConverter ()
-                },
+                Converters = converters,
+                ContractResolver = new EntityContractResolver (converters),
                 SerializationBinder = new AssemblylessTypeBinder (assembly),
             };
 		}
+
+        class EntityContractResolver : Newtonsoft.Json.Serialization.DefaultContractResolver
+        {
+            private readonly JsonConverter[] converters;
+
+            public EntityContractResolver (JsonConverter[] converters)
+            {
+                this.converters = converters;
+            }
+
+            protected override Newtonsoft.Json.Serialization.JsonContract CreateContract (Type objectType)
+            {
+                foreach (var converter in converters) {
+                    if (converter.CanConvert (objectType)) {
+                        var contract = CreatePrimitiveContract (objectType);
+                        contract.Converter = converter;
+                        return contract;
+                    }
+                }
+                return base.CreateContract (objectType);
+            }
+        }
 
         [RequiresUnreferencedCode("The type is queried by name from the assembly at runtime.")]
         class AssemblylessTypeBinder : Newtonsoft.Json.Serialization.ISerializationBinder
@@ -419,7 +443,7 @@ namespace Praeclarum
             }
         }
 
-		#if __MACOS__ || __IOS__ || __MACCATALYST__
+		#if __MACOS__ || __IOS__ || __MACCATALYST__ || __TVOS__
         class SceneKitConverter : JsonConverter
         {
             public override void WriteJson (JsonWriter writer, object? value, JsonSerializer serializer)

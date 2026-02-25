@@ -209,10 +209,28 @@ namespace UIKit
 
     public enum UIBlurEffectStyle
     {
-        Dark,
-        ExtraDark,
+        ExtraLight,
         Light,
-    }
+        Dark,
+		ExtraDark,
+		Regular,
+		Prominent,
+		SystemUltraThinMaterial,
+		SystemThinMaterial,
+		SystemMaterial,
+		SystemThickMaterial,
+		SystemChromeMaterial,
+		SystemUltraThinMaterialLight,
+		SystemThinMaterialLight,
+		SystemMaterialLight,
+		SystemThickMaterialLight,
+		SystemChromeMaterialLight,
+		SystemUltraThinMaterialDark,
+		SystemThinMaterialDark,
+		SystemMaterialDark,
+		SystemThickMaterialDark,
+		SystemChromeMaterialDark,
+	}
 
     public class UIButton : NSButton
     {

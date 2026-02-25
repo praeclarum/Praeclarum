@@ -614,6 +614,7 @@ namespace UIKit
         public static readonly UIColor SystemGreen = new UIColor (NSColor.SystemGreen);
         public static readonly UIColor SystemBlue = new UIColor (NSColor.SystemBlue);
         public static readonly UIColor SystemYellow = new UIColor (NSColor.SystemYellow);
+        public static readonly UIColor SystemPurple = new UIColor (NSColor.SystemPurple);
         
         public static readonly UIColor SystemBackground = new UIColor (NSColor.TextBackground);
         public static readonly UIColor SecondarySystemBackground = new UIColor (NSColor.ControlBackground);

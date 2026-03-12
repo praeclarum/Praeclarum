@@ -20,14 +20,14 @@ namespace ObjCRuntime
         NativeHandle Handle { get; }
     }
 
-    public readonly unsafe struct NativeHandle : IEquatable<NativeHandle>
+    public readonly struct NativeHandle : IEquatable<NativeHandle>
     {
         private readonly IntPtr handle;
         public static NativeHandle Zero;
 
         public IntPtr Handle => handle;
 
-        public NativeHandle(IntPtr handle)
+        public NativeHandle (IntPtr handle)
         {
             this.handle = handle;
         }
@@ -48,9 +48,9 @@ namespace ObjCRuntime
 
         public static implicit operator NativeHandle(IntPtr value) => new NativeHandle(value);
 
-        public static explicit operator void*(NativeHandle value) => value.handle.ToPointer();
+        // public static explicit operator void*(NativeHandle value) => value.handle.ToPointer();
 
-        public static explicit operator NativeHandle(void* value) => new NativeHandle(new IntPtr(value));
+        // public static explicit operator NativeHandle(void* value) => new NativeHandle(new IntPtr(value));
 
         public override bool Equals(object? o) => o is NativeHandle other && Equals(other);
 

@@ -10,11 +10,7 @@ using ObjCRuntime;
 
 namespace CloudKit
 {
-    [SupportedOSPlatform("maccatalyst")]
-    [SupportedOSPlatform("ios")]
-    [SupportedOSPlatform("macos")]
-    [SupportedOSPlatform("tvos")]
-    [Protocol(Name = "CKRecordValue", WrapperType = typeof(CKRecordValueWrapper))]
+    [Protocol(Name = "CKRecordValue")]
     public interface ICKRecordValue : INativeObject, IDisposable
     {
     }

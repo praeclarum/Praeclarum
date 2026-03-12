@@ -8,6 +8,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsNotAsErrors>IL2026;IL2067;IL2072;IL2075;IL2104</WarningsNotAsErrors>
     <NoWarn>$(NoWarn);NU1900</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">
     <SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>

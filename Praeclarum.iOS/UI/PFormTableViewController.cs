@@ -209,11 +209,24 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public void ShowAlert (string title, string m)
+		public void ShowAlert (string title, string m, Action callback = null)
 		{
 			var alert = UIAlertController.Create (title, m, UIAlertControllerStyle.Alert);
-			alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a => { }));
+			alert.AddAction (UIAlertAction.Create ("OK", UIAlertActionStyle.Default, a =>
+			{
+				callback?.Invoke();
+			}));
 			PresentViewController (alert, true, null);
+		}
+
+		// ReSharper disable once NotAccessedField.Local
+		TaskCompletionSource<bool> _showAlertTcs;
+		public Task ShowAlertAsync (string title, string m)
+		{
+			var tcs = new TaskCompletionSource<bool> ();
+			_showAlertTcs = tcs; // Keep a GC reference
+			ShowAlert (title, m, () => tcs.TrySetResult (true));
+			return tcs.Task;
 		}
 
 		public void PushForm (PForm f)

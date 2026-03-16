@@ -21,7 +21,13 @@ namespace Praeclarum
 			if (string.IsNullOrWhiteSpace(Url))
 				return;
 #if __IOS__
-			UIKit.UIApplication.SharedApplication.OpenUrl (NSUrl.FromString (Url));
+			UIKit.UIApplication.SharedApplication.OpenUrl (NSUrl.FromString (Url), new NSDictionary(), opened =>
+			{
+				if (!opened)
+				{
+					Log.Error ("OpenUrlCommand: OpenUrl failed");
+				}
+			});
 #elif __MACOS__
 			AppKit.NSWorkspace.SharedWorkspace.OpenUrl (NSUrl.FromString (Url));
 #else

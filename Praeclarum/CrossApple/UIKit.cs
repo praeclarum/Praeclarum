@@ -2145,6 +2145,626 @@ namespace UIKit
         Failed,
     }
 
+    public class UIView : NSObject
+    {
+        public CGRect Frame { get; set; }
+        public CGRect Bounds { get; set; }
+        public CGPoint Center { get; set; }
+        public UIView? Superview { get; set; }
+        public UIView[] Subviews { get; set; } = Array.Empty<UIView> ();
+        public UIColor? BackgroundColor { get; set; }
+        public bool Hidden { get; set; }
+        public bool ClipsToBounds { get; set; }
+        public nfloat Alpha { get; set; } = 1;
+        public bool UserInteractionEnabled { get; set; } = true;
+        public bool MultipleTouchEnabled { get; set; }
+        public CoreAnimation.CALayer Layer { get; } = new ();
+        public UIViewContentMode ContentMode { get; set; }
+        public UIViewAutoresizing AutoresizingMask { get; set; }
+        public CGAffineTransform Transform { get; set; } = CGAffineTransform.MakeIdentity ();
+        public bool TranslatesAutoresizingMaskIntoConstraints { get; set; } = true;
+        public UITraitCollection TraitCollection { get; } = new ();
+        public UIView () { }
+        public UIView (CGRect frame) { Frame = frame; }
+        public virtual void AddSubview (UIView view) { }
+        public virtual void InsertSubview (UIView view, nint atIndex) { }
+        public virtual void RemoveFromSuperview () { }
+        public virtual void SetNeedsDisplay () { }
+        public virtual void SetNeedsDisplayInRect (CGRect rect) { }
+        public virtual void SetNeedsLayout () { }
+        public virtual void LayoutIfNeeded () { }
+        public virtual void LayoutSubviews () { }
+        public virtual UIView? HitTest (CGPoint point, UIEvent? evt) => null;
+        public virtual bool PointInside (CGPoint point, UIEvent? evt) => Bounds.Contains (point);
+        public virtual void TouchesBegan (NSSet touches, UIEvent? evt) { }
+        public virtual void TouchesMoved (NSSet touches, UIEvent? evt) { }
+        public virtual void TouchesEnded (NSSet touches, UIEvent? evt) { }
+        public virtual void TouchesCancelled (NSSet touches, UIEvent? evt) { }
+        public virtual CGPoint ConvertPointToView (CGPoint point, UIView? toView) => point;
+        public virtual CGPoint ConvertPointFromView (CGPoint point, UIView? fromView) => point;
+        public virtual CGRect ConvertRectToView (CGRect rect, UIView? toView) => rect;
+        public virtual CGRect ConvertRectFromView (CGRect rect, UIView? fromView) => rect;
+        public void AddGestureRecognizer (UIGestureRecognizer gr) { }
+        public void RemoveGestureRecognizer (UIGestureRecognizer gr) { }
+        public virtual void Draw (CGRect rect) { }
+        public static void Animate (double duration, Action animations) => animations ();
+        public static void Animate (double duration, Action animations, Action? completion) { animations (); completion?.Invoke (); }
+        public static void AnimateNotify (double duration, Action animations, Action<bool>? completion) { animations (); completion?.Invoke (true); }
+    }
+
+    public class UIViewController : NSObject
+    {
+        public UIView View { get; set; } = new ();
+        public string? Title { get; set; }
+        public UIViewController[] ChildViewControllers { get; set; } = Array.Empty<UIViewController> ();
+        public UIViewController? ParentViewController { get; set; }
+        public UIViewController? PresentedViewController { get; set; }
+        public UIViewController? PresentingViewController { get; set; }
+        public UINavigationController? NavigationController { get; set; }
+        public UINavigationItem NavigationItem { get; } = new ();
+        public CGSize PreferredContentSize { get; set; }
+        public UITraitCollection TraitCollection { get; } = new ();
+        public UIModalPresentationStyle ModalPresentationStyle { get; set; }
+        public UIViewController () { }
+        public virtual void ViewDidLoad () { }
+        public virtual void ViewWillAppear (bool animated) { }
+        public virtual void ViewDidAppear (bool animated) { }
+        public virtual void ViewWillDisappear (bool animated) { }
+        public virtual void ViewDidDisappear (bool animated) { }
+        public virtual void ViewWillLayoutSubviews () { }
+        public virtual void ViewDidLayoutSubviews () { }
+        public virtual void DidReceiveMemoryWarning () { }
+        public virtual void PresentViewController (UIViewController vc, bool animated, Action? completion) => completion?.Invoke ();
+        public virtual void DismissViewController (bool animated, Action? completion) => completion?.Invoke ();
+        public virtual void AddChildViewController (UIViewController vc) { }
+        public virtual void RemoveFromParentViewController () { }
+        public virtual void DidMoveToParentViewController (UIViewController? parent) { }
+    }
+
+    public class UINavigationController : UIViewController
+    {
+        public UIViewController[] ViewControllers { get; set; } = Array.Empty<UIViewController> ();
+        public UIViewController? TopViewController { get; set; }
+        public UINavigationBar NavigationBar { get; } = new ();
+        public UINavigationController () { }
+        public UINavigationController (UIViewController root) { ViewControllers = new[] { root }; TopViewController = root; }
+        public void PushViewController (UIViewController vc, bool animated) { }
+        public UIViewController? PopViewController (bool animated) => null;
+    }
+
+    public class UINavigationBar : UIView { }
+
+    public class UINavigationItem : NSObject
+    {
+        public string? Title { get; set; }
+        public UIBarButtonItem[]? LeftBarButtonItems { get; set; }
+        public UIBarButtonItem[]? RightBarButtonItems { get; set; }
+        public UIBarButtonItem? BackBarButtonItem { get; set; }
+        public UINavigationItemLargeTitleDisplayMode LargeTitleDisplayMode { get; set; }
+    }
+
+    public enum UINavigationItemLargeTitleDisplayMode { Automatic, Always, Never }
+
+    public class UIColor : NSObject
+    {
+        public nfloat R { get; }
+        public nfloat G { get; }
+        public nfloat B { get; }
+        public nfloat A { get; }
+        public CoreGraphics.CGColor CGColor { get; }
+        public UIColor () { CGColor = new CoreGraphics.CGColor (); }
+        public UIColor (nfloat r, nfloat g, nfloat b, nfloat a) { R = r; G = g; B = b; A = a; CGColor = new CoreGraphics.CGColor (r, g, b, a); }
+        public UIColor (nfloat white, nfloat alpha) : this (white, white, white, alpha) { }
+        public UIColor (CoreGraphics.CGColor color) { CGColor = color; var c = color.Components; if (c.Length >= 4) { R = c[0]; G = c[1]; B = c[2]; A = c[3]; } }
+        public static UIColor FromRGB (nfloat r, nfloat g, nfloat b) => new (r, g, b, 1);
+        public static UIColor FromRGB (int r, int g, int b) => new (r/255f, g/255f, b/255f, 1);
+        public static UIColor FromRGBA (nfloat r, nfloat g, nfloat b, nfloat a) => new (r, g, b, a);
+        public static UIColor FromRGBA (int r, int g, int b, int a) => new (r/255f, g/255f, b/255f, a/255f);
+        public static UIColor FromWhiteAlpha (nfloat white, nfloat alpha) => new (white, alpha);
+        public UIColor ColorWithAlpha (nfloat alpha) => new (R, G, B, alpha);
+        public void GetRGBA (out nfloat r, out nfloat g, out nfloat b, out nfloat a) { r = R; g = G; b = B; a = A; }
+        public void GetRGBA2 (out nfloat r, out nfloat g, out nfloat b, out nfloat a) { r = R; g = G; b = B; a = A; }
+        public static UIColor Clear { get; } = new (0, 0, 0, 0);
+        public static UIColor Black { get; } = new (0, 0, 0, 1);
+        public static UIColor White { get; } = new (1, 1, 1, 1);
+        public static UIColor Red { get; } = new (1, 0, 0, 1);
+        public static UIColor Green { get; } = new (0, 1, 0, 1);
+        public static UIColor Blue { get; } = new (0, 0, 1, 1);
+        public static UIColor Yellow { get; } = new (1, 1, 0, 1);
+        public static UIColor Cyan { get; } = new (0, 1, 1, 1);
+        public static UIColor Magenta { get; } = new (1, 0, 1, 1);
+        public static UIColor Orange { get; } = new ((nfloat)1.0, (nfloat)0.5, 0, 1);
+        public static UIColor Purple { get; } = new ((nfloat)0.5, 0, (nfloat)0.5, 1);
+        public static UIColor Gray { get; } = new ((nfloat)0.5, (nfloat)0.5, (nfloat)0.5, 1);
+        public static UIColor LightGray { get; } = new ((nfloat)0.75, (nfloat)0.75, (nfloat)0.75, 1);
+        public static UIColor DarkGray { get; } = new ((nfloat)0.25, (nfloat)0.25, (nfloat)0.25, 1);
+        public static UIColor Brown { get; } = new ((nfloat)0.6, (nfloat)0.4, (nfloat)0.2, 1);
+        public static UIColor LabelColor { get; } = Black;
+        public static UIColor SystemBackgroundColor { get; } = White;
+        public static UIColor SystemGray { get; } = Gray;
+        public static UIColor SystemBlue { get; } = Blue;
+        public static UIColor SystemRed { get; } = Red;
+        public static UIColor SystemGreen { get; } = Green;
+        public static UIColor SystemYellow { get; } = Yellow;
+        public static UIColor SystemOrange { get; } = Orange;
+        public static UIColor SystemPurple { get; } = Purple;
+    }
+
+    public class UIImage : NSObject
+    {
+        public CGSize Size { get; set; }
+        public nfloat CurrentScale { get; set; } = 1;
+        public CoreGraphics.CGImage? CGImage { get; set; }
+        public UIImage () { }
+        public static UIImage? FromFile (string path) => null;
+        public static UIImage? FromBundle (string name) => null;
+        public static UIImage FromImage (CoreGraphics.CGImage image, nfloat scale, UIImageOrientation orientation) => new () { CGImage = image, CurrentScale = scale };
+        public static UIImage LoadFromData (NSData data) => new ();
+        public NSData? AsPNG () => new NSData ();
+        public NSData? AsJPEG (nfloat quality) => new NSData ();
+        public UIImage ImageWithRenderingMode (int mode) => this;
+    }
+
+    public class UIImageView : UIView
+    {
+        public UIImage? Image { get; set; }
+        public UIImageView () { }
+        public UIImageView (UIImage? image) { Image = image; }
+    }
+
+    public class UIScreen : NSObject
+    {
+        public static UIScreen MainScreen { get; } = new ();
+        public CGRect Bounds { get; set; }
+        public CGRect NativeBounds { get; set; }
+        public nfloat Scale { get; set; } = 1;
+        public nfloat NativeScale { get; set; } = 1;
+        public UITraitCollection TraitCollection { get; } = new ();
+    }
+
+    public class UIBezierPath : NSObject
+    {
+        public CoreGraphics.CGPath CGPath { get; } = new ();
+        public nfloat LineWidth { get; set; } = 1;
+        public UIBezierPath () { }
+        public UIBezierPath (CGRect rect) { }
+        public static UIBezierPath FromRect (CGRect rect) => new (rect);
+        public static UIBezierPath FromOval (CGRect rect) => new ();
+        public static UIBezierPath FromRoundedRect (CGRect rect, nfloat cornerRadius) => new ();
+        public void MoveTo (CGPoint p) { }
+        public void AddLineTo (CGPoint p) { }
+        public void AddCurveToPoint (CGPoint endPoint, CGPoint controlPoint1, CGPoint controlPoint2) { }
+        public void AddArc (CGPoint center, nfloat radius, nfloat startAngle, nfloat endAngle, bool clockwise) { }
+        public void ClosePath () { }
+        public void Stroke () { }
+        public void Fill () { }
+    }
+
+    public class UIPasteboard : NSObject
+    {
+        public static UIPasteboard General { get; } = new ();
+        public string? String { get; set; }
+        public NSData? Data { get; set; }
+        public UIImage? Image { get; set; }
+        public string[]? Types { get; set; }
+        public NSData? DataForPasteboardType (string type) => null;
+        public void SetData (NSData data, string type) { }
+        public bool ContainsString => String is not null;
+    }
+
+    public class UIScrollView : UIView
+    {
+        public CGSize ContentSize { get; set; }
+        public CGPoint ContentOffset { get; set; }
+        public UIEdgeInsets ContentInset { get; set; }
+        public bool ShowsHorizontalScrollIndicator { get; set; } = true;
+        public bool ShowsVerticalScrollIndicator { get; set; } = true;
+        public bool ScrollEnabled { get; set; } = true;
+        public bool PagingEnabled { get; set; }
+        public bool Bounces { get; set; } = true;
+        public nfloat ZoomScale { get; set; } = 1;
+        public nfloat MinimumZoomScale { get; set; } = 1;
+        public nfloat MaximumZoomScale { get; set; } = 1;
+        public IUIScrollViewDelegate? Delegate { get; set; }
+        public void SetContentOffset (CGPoint offset, bool animated) => ContentOffset = offset;
+        public void SetZoomScale (nfloat scale, bool animated) => ZoomScale = scale;
+    }
+
+    public interface IUIScrollViewDelegate
+    {
+        void Scrolled (UIScrollView scrollView);
+    }
+
+    public class UIScrollViewDelegate : NSObject, IUIScrollViewDelegate
+    {
+        public virtual void Scrolled (UIScrollView scrollView) { }
+        public virtual UIView? ViewForZoomingInScrollView (UIScrollView scrollView) => null;
+        public virtual void ZoomingEnded (UIScrollView scrollView, UIView? withView, nfloat atScale) { }
+    }
+
+    public class UIStackView : UIView
+    {
+        public UILayoutConstraintAxis Axis { get; set; }
+        public UIStackViewAlignment Alignment { get; set; }
+        public UIStackViewDistribution Distribution { get; set; }
+        public nfloat Spacing { get; set; }
+        public UIView[] ArrangedSubviews { get; set; } = Array.Empty<UIView> ();
+        public UIStackView () { }
+        public UIStackView (UIView[] views) { ArrangedSubviews = views; }
+        public void AddArrangedSubview (UIView view) { }
+        public void RemoveArrangedSubview (UIView view) { }
+        public void InsertArrangedSubview (UIView view, nuint index) { }
+    }
+
+    public enum UIStackViewAlignment { Fill, Leading, Top = Leading, FirstBaseline, Center, Trailing, Bottom = Trailing, LastBaseline }
+    public enum UIStackViewDistribution { Fill, FillEqually, FillProportionally, EqualSpacing, EqualCentering }
+
+    public class UIFont : NSObject
+    {
+        public string FontName { get; set; } = "System";
+        public nfloat PointSize { get; set; } = 12;
+        public nfloat LineHeight => PointSize * (nfloat)1.2;
+        public nfloat Ascender => PointSize * (nfloat)0.8;
+        public nfloat Descender => -PointSize * (nfloat)0.2;
+        public UIFont () { }
+        public UIFont (string name, nfloat size) { FontName = name; PointSize = size; }
+        public static UIFont SystemFontOfSize (nfloat size) => new ("System", size);
+        public static UIFont BoldSystemFontOfSize (nfloat size) => new ("System-Bold", size);
+        public static UIFont ItalicSystemFontOfSize (nfloat size) => new ("System-Italic", size);
+        public static UIFont FromName (string name, nfloat size) => new (name, size);
+        public static nfloat SystemFontSize { get; } = 12;
+        public static nfloat LabelFontSize { get; } = 17;
+        public static nfloat ButtonFontSize { get; } = 17;
+        public static nfloat SmallSystemFontSize { get; } = 11;
+        public UIFont WithSize (nfloat size) => new (FontName, size);
+    }
+
+    public class UILabel : UIView
+    {
+        public string? Text { get; set; }
+        public NSAttributedString? AttributedText { get; set; }
+        public UIFont? Font { get; set; }
+        public UIColor? TextColor { get; set; }
+        public UITextAlignment TextAlignment { get; set; }
+        public UILineBreakMode LineBreakMode { get; set; }
+        public nint Lines { get; set; } = 1;
+        public bool AdjustsFontSizeToFitWidth { get; set; }
+        public CGSize SizeThatFits (CGSize size) => Font is null ? CGSize.Empty : new CGSize ((nfloat)((Text?.Length ?? 0) * Font.PointSize * 0.5), Font.LineHeight);
+    }
+
+    public class UIButton : UIView
+    {
+        public UIButtonType ButtonType { get; }
+        public UILabel? TitleLabel { get; set; }
+        public UIImageView? ImageView { get; set; }
+        public bool Enabled { get; set; } = true;
+        public bool Selected { get; set; }
+        public bool Highlighted { get; set; }
+        public event EventHandler? TouchUpInside;
+        public UIButton () { }
+        public UIButton (UIButtonType type) { ButtonType = type; }
+        public static UIButton FromType (UIButtonType type) => new (type);
+        public void SetTitle (string? title, UIControlState state) { }
+        public void SetTitleColor (UIColor color, UIControlState state) { }
+        public void SetImage (UIImage? image, UIControlState state) { }
+        public void SetBackgroundImage (UIImage? image, UIControlState state) { }
+        public void AddTarget (Action handler, UIControlEvent ev) => TouchUpInside += (s, e) => handler ();
+        protected void OnTouchUpInside () => TouchUpInside?.Invoke (this, EventArgs.Empty);
+    }
+
+    public enum UIControlEvent { TouchUpInside }
+
+    public class UICollectionView : UIScrollView
+    {
+        public UICollectionViewLayout? CollectionViewLayout { get; set; }
+        public IUICollectionViewDataSource? DataSource { get; set; }
+        public new IUICollectionViewDelegate? Delegate { get; set; }
+        public UICollectionView () { }
+        public UICollectionView (CGRect frame, UICollectionViewLayout layout) : base () { Frame = frame; CollectionViewLayout = layout; }
+        public void RegisterClassForCell (Type type, NSString reuseIdentifier) { }
+        public UICollectionViewCell DequeueReusableCell (NSString reuseIdentifier, NSIndexPath indexPath) => new ();
+        public void ReloadData () { }
+        public void ReloadSections (NSIndexSet sections) { }
+        public void ReloadItems (NSIndexPath[] indexPaths) { }
+        public void SelectItem (NSIndexPath? indexPath, bool animated, UICollectionViewScrollPosition scrollPosition) { }
+        public NSIndexPath[]? IndexPathsForSelectedItems => Array.Empty<NSIndexPath> ();
+        public NSIndexPath[] IndexPathsForVisibleItems => Array.Empty<NSIndexPath> ();
+        public UICollectionViewCell? CellForItem (NSIndexPath path) => null;
+    }
+
+    public enum UICollectionViewScrollPosition { None, Top, CenteredVertically, Bottom, Left, CenteredHorizontally, Right }
+
+    public class UICollectionViewCell : UIView
+    {
+        public UIView ContentView { get; } = new ();
+        public bool Selected { get; set; }
+        public bool Highlighted { get; set; }
+    }
+
+    public class UICollectionViewLayout : NSObject
+    {
+        public CGSize CollectionViewContentSize { get; set; }
+    }
+
+    public class UICollectionViewFlowLayout : UICollectionViewLayout
+    {
+        public CGSize ItemSize { get; set; }
+        public nfloat MinimumInteritemSpacing { get; set; }
+        public nfloat MinimumLineSpacing { get; set; }
+        public UIEdgeInsets SectionInset { get; set; }
+        public UICollectionViewScrollDirection ScrollDirection { get; set; }
+    }
+
+    public enum UICollectionViewScrollDirection { Vertical, Horizontal }
+
+    public interface IUICollectionViewDataSource
+    {
+        nint NumberOfSections (UICollectionView collectionView);
+        nint GetItemsCount (UICollectionView collectionView, nint section);
+        UICollectionViewCell GetCell (UICollectionView collectionView, NSIndexPath indexPath);
+    }
+
+    public interface IUICollectionViewDelegate { }
+    public interface IUICollectionViewDelegateFlowLayout : IUICollectionViewDelegate { }
+
+    public class UICollectionViewController : UIViewController
+    {
+        public UICollectionView CollectionView { get; set; } = new ();
+        public UICollectionViewController () { }
+        public UICollectionViewController (UICollectionViewLayout layout) { CollectionView = new UICollectionView (CGRect.Empty, layout); }
+    }
+
+    public class UIDocument : NSObject
+    {
+        public NSUrl? FileUrl { get; set; }
+        public string? LocalizedName { get; set; }
+        public UIDocumentState DocumentState { get; set; }
+        public NSUndoManager UndoManager { get; } = new ();
+        public bool HasUnsavedChanges { get; set; }
+        public UIDocument () { }
+        public UIDocument (NSUrl url) { FileUrl = url; }
+        public virtual System.Threading.Tasks.Task<bool> OpenAsync () => System.Threading.Tasks.Task.FromResult (true);
+        public virtual System.Threading.Tasks.Task<bool> CloseAsync () => System.Threading.Tasks.Task.FromResult (true);
+        public virtual System.Threading.Tasks.Task<bool> SaveAsync (NSUrl url, UIDocumentSaveOperation op) => System.Threading.Tasks.Task.FromResult (true);
+        public virtual NSObject? ContentsForType (string typeName, out NSError? outError) { outError = null; return null; }
+        public virtual bool LoadFromContents (NSObject contents, string typeName, out NSError? outError) { outError = null; return true; }
+        public void UpdateChangeCount (UIDocumentChangeKind change) { }
+    }
+
+    public enum UIDocumentSaveOperation { ForCreating, ForOverwriting }
+    public enum UIDocumentChangeKind { Done, Undone, Redone, Cleared }
+    [Flags]
+    public enum UIDocumentState { Normal = 0, Closed = 1, InConflict = 2, SavingError = 4, EditingDisabled = 8, ProgressAvailable = 16 }
+
+    public class UIEvent : NSObject
+    {
+        public double Timestamp { get; set; }
+        public NSSet AllTouches { get; set; } = new ();
+    }
+
+    public class UITouch : NSObject
+    {
+        public CGPoint Location { get; set; }
+        public CGPoint PreviousLocation { get; set; }
+        public nuint TapCount { get; set; }
+        public double Timestamp { get; set; }
+        public UITouchPhase Phase { get; set; }
+        public UIView? View { get; set; }
+        public UITouchType Type { get; set; }
+        public nfloat Force { get; set; }
+        public nfloat MaximumPossibleForce { get; set; } = 1;
+        public CGPoint LocationInView (UIView? view) => Location;
+        public CGPoint PreviousLocationInView (UIView? view) => PreviousLocation;
+    }
+
+    public enum UITouchPhase { Began, Moved, Stationary, Ended, Cancelled }
+    public enum UITouchType { Direct, Indirect, Pencil, Stylus = Pencil }
+
+    public class UIGestureRecognizer : NSObject
+    {
+        public UIGestureRecognizerState State { get; set; }
+        public UIView? View { get; set; }
+        public bool Enabled { get; set; } = true;
+        public nuint NumberOfTouches { get; set; }
+        public CGPoint LocationInView (UIView? view) => CGPoint.Empty;
+        public CGPoint LocationOfTouch (nuint touchIndex, UIView? view) => CGPoint.Empty;
+    }
+
+    public class UIPanGestureRecognizer : UIGestureRecognizer
+    {
+        public UIPanGestureRecognizer () { }
+        public UIPanGestureRecognizer (Action<UIPanGestureRecognizer> handler) { }
+        public CGPoint TranslationInView (UIView? view) => CGPoint.Empty;
+        public void SetTranslation (CGPoint translation, UIView? view) { }
+        public CGPoint VelocityInView (UIView? view) => CGPoint.Empty;
+        public nuint MinimumNumberOfTouches { get; set; } = 1;
+        public nuint MaximumNumberOfTouches { get; set; } = uint.MaxValue;
+    }
+
+    public class UITapGestureRecognizer : UIGestureRecognizer
+    {
+        public UITapGestureRecognizer () { }
+        public UITapGestureRecognizer (Action<UITapGestureRecognizer> handler) { }
+        public nuint NumberOfTapsRequired { get; set; } = 1;
+        public nuint NumberOfTouchesRequired { get; set; } = 1;
+    }
+
+    public class UIPinchGestureRecognizer : UIGestureRecognizer
+    {
+        public UIPinchGestureRecognizer () { }
+        public UIPinchGestureRecognizer (Action<UIPinchGestureRecognizer> handler) { }
+        public nfloat Scale { get; set; } = 1;
+        public nfloat Velocity { get; set; }
+    }
+
+    public class UILongPressGestureRecognizer : UIGestureRecognizer
+    {
+        public UILongPressGestureRecognizer () { }
+        public UILongPressGestureRecognizer (Action<UILongPressGestureRecognizer> handler) { }
+        public double MinimumPressDuration { get; set; } = 0.5;
+    }
+
+    public class UISegmentedControl : UIView
+    {
+        public nint NumberOfSegments => 0;
+        public nint SelectedSegment { get; set; }
+        public event EventHandler? ValueChanged;
+        public UISegmentedControl () { }
+        public UISegmentedControl (params object[] segments) { }
+        public void SetTitle (string title, nint segment) { }
+        public void SetImage (UIImage image, nint segment) { }
+        public void InsertSegment (string title, nint pos, bool animated) { }
+        public void RemoveSegmentAtIndex (nint pos, bool animated) { }
+        protected void OnValueChanged () => ValueChanged?.Invoke (this, EventArgs.Empty);
+    }
+
+    public class UISelectionFeedbackGenerator : NSObject
+    {
+        public void Prepare () { }
+        public void SelectionChanged () { }
+    }
+
+    public class UIVisualEffectView : UIView
+    {
+        public UIVisualEffect? Effect { get; set; }
+        public UIView ContentView { get; } = new ();
+        public UIVisualEffectView () { }
+        public UIVisualEffectView (UIVisualEffect? effect) { Effect = effect; }
+    }
+
+    public class UIBlurEffect : UIVisualEffect
+    {
+        public UIBlurEffect () { }
+        public static UIBlurEffect FromStyle (UIBlurEffectStyle style) => new ();
+    }
+
+    public class UITextField : UIView
+    {
+        public string? Text { get; set; }
+        public string? Placeholder { get; set; }
+        public UIFont? Font { get; set; }
+        public UIColor? TextColor { get; set; }
+        public UITextAlignment TextAlignment { get; set; }
+        public UITextBorderStyle BorderStyle { get; set; }
+        public UIKeyboardType KeyboardType { get; set; }
+        public UIReturnKeyType ReturnKeyType { get; set; }
+        public bool SecureTextEntry { get; set; }
+        public bool Editing { get; set; }
+        public event EventHandler? EditingChanged;
+        public event EventHandler? EditingDidEnd;
+        public event EventHandler? EditingDidBegin;
+        protected void OnEditingChanged () => EditingChanged?.Invoke (this, EventArgs.Empty);
+        protected void OnEditingDidEnd () => EditingDidEnd?.Invoke (this, EventArgs.Empty);
+        protected void OnEditingDidBegin () => EditingDidBegin?.Invoke (this, EventArgs.Empty);
+        public bool BecomeFirstResponder () => true;
+        public bool ResignFirstResponder () => true;
+    }
+
+    public class UITextView : UIScrollView
+    {
+        public string? Text { get; set; }
+        public NSAttributedString? AttributedText { get; set; }
+        public UIFont? Font { get; set; }
+        public UIColor? TextColor { get; set; }
+        public UITextAlignment TextAlignment { get; set; }
+        public bool Editable { get; set; } = true;
+    }
+
+    public enum UITextAlignment { Left, Center, Right, Justified, Natural }
+    public enum UITextBorderStyle : long { None, Line, Bezel, RoundedRect }
+    public enum UIReturnKeyType : long { Default, Go, Google, Join, Next, Route, Search, Send, Yahoo, Done, EmergencyCall, Continue }
+
+    public enum UIViewContentMode { ScaleToFill, ScaleAspectFit, ScaleAspectFill, Redraw, Center, Top, Bottom, Left, Right, TopLeft, TopRight, BottomLeft, BottomRight }
+
+    public enum UIProgressViewStyle : long { Default, Bar }
+
+    public class UITraitCollection : NSObject
+    {
+        public UIUserInterfaceSizeClass HorizontalSizeClass { get; set; }
+        public UIUserInterfaceSizeClass VerticalSizeClass { get; set; }
+        public UIUserInterfaceStyle UserInterfaceStyle { get; set; }
+        public nfloat DisplayScale { get; set; } = 1;
+    }
+
+    public enum UIUserInterfaceSizeClass : long { Unspecified, Compact, Regular }
+    public enum UIUserInterfaceStyle : long { Unspecified, Light, Dark }
+
+    public struct UIEdgeInsets
+    {
+        public nfloat Top, Left, Bottom, Right;
+        public UIEdgeInsets (nfloat top, nfloat left, nfloat bottom, nfloat right) { Top = top; Left = left; Bottom = bottom; Right = right; }
+        public static readonly UIEdgeInsets Zero;
+    }
+
+    public struct NSDirectionalEdgeInsets
+    {
+        public nfloat Top, Leading, Bottom, Trailing;
+        public NSDirectionalEdgeInsets (nfloat top, nfloat leading, nfloat bottom, nfloat trailing) { Top = top; Leading = leading; Bottom = bottom; Trailing = trailing; }
+        public static readonly NSDirectionalEdgeInsets Zero;
+    }
+
+    public enum UIUserInterfaceIdiom : long { Unspecified = -1, Phone, Pad, TV, CarPlay, Mac, Vision }
+
+    public class UIAlertController : UIViewController
+    {
+        public string? Message { get; set; }
+        public UIAlertControllerStyle PreferredStyle { get; }
+        public UIAlertController () { }
+        public static UIAlertController Create (string title, string message, UIAlertControllerStyle style) =>
+            new () { Title = title, Message = message };
+        public void AddAction (UIAlertAction action) { }
+    }
+
+    public class UIAlertAction : NSObject
+    {
+        public string? Title { get; }
+        public UIAlertActionStyle Style { get; }
+        public UIAlertAction (string title, UIAlertActionStyle style, Action<UIAlertAction>? handler) { Title = title; Style = style; }
+        public static UIAlertAction Create (string title, UIAlertActionStyle style, Action<UIAlertAction>? handler) => new (title, style, handler);
+    }
+
+    public enum UIAlertActionStyle { Default, Cancel, Destructive }
+
+    public class UIPopoverPresentationController : NSObject
+    {
+        public UIView? SourceView { get; set; }
+        public CGRect SourceRect { get; set; }
+        public UIBarButtonItem? BarButtonItem { get; set; }
+    }
+
+    public class NSStringAttributes : NSObject
+    {
+        public UIFont? Font { get; set; }
+        public UIColor? ForegroundColor { get; set; }
+        public UIColor? BackgroundColor { get; set; }
+        public NSDictionary Dictionary => new ();
+    }
+
+    public class UIStringAttributes : NSStringAttributes { }
+
+    public class NSIndexSet : NSObject
+    {
+        readonly System.Collections.Generic.SortedSet<nuint> _items = new ();
+        public NSIndexSet () { }
+        public NSIndexSet (nuint index) { _items.Add (index); }
+        public nuint Count => (nuint)_items.Count;
+        public bool Contains (nuint index) => _items.Contains (index);
+    }
+
+    public class UIActivityIndicatorView : UIView
+    {
+        public bool IsAnimating { get; private set; }
+        public UIActivityIndicatorViewStyle ActivityIndicatorViewStyle { get; set; }
+        public void StartAnimating () { IsAnimating = true; }
+        public void StopAnimating () { IsAnimating = false; }
+    }
+
+    public class UIProgressView : UIView
+    {
+        public float Progress { get; set; }
+        public UIProgressViewStyle ProgressViewStyle { get; set; }
+    }
+
 #endif // !__MACOS__ && !__IOS__ && !__MACCATALYST__
 
 #if !__IOS__ && !__MACCATALYST__

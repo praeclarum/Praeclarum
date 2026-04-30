@@ -1103,6 +1103,282 @@ namespace Foundation
         /// </summary>
         public bool IsStubClass { get; set; }
     }
+
+	public class NSAttributedString : NSObject
+	{
+		public string Value { get; set; } = string.Empty;
+		public NSDictionary? Attributes { get; set; }
+		public nint Length => Value.Length;
+		public NSAttributedString () { }
+		public NSAttributedString (string str) { Value = str; }
+		public NSAttributedString (string str, NSDictionary? attributes) { Value = str; Attributes = attributes; }
+		public NSAttributedString (NSString str) : this (str.ToString ()) { }
+		public override string ToString () => Value;
+	}
+
+	public class NSBundle : NSObject
+	{
+		public static NSBundle MainBundle { get; } = new ();
+		public string? BundlePath { get; set; }
+		public string? ResourcePath { get; set; }
+		public string? PathForResource (string name, string? ofType) => null;
+	}
+
+	/// <summary>Real byte-array-backed NSData stub for non-Apple platforms.</summary>
+	public class NSData : NSObject
+	{
+		readonly byte[] _bytes;
+		public NSData () { _bytes = Array.Empty<byte> (); }
+		public NSData (byte[] bytes) { _bytes = bytes; }
+		public NSData (IntPtr ptr, nuint length, bool freeWhenDone)
+		{
+			_bytes = new byte[(int)length];
+			if (ptr != IntPtr.Zero && length > 0) {
+				System.Runtime.InteropServices.Marshal.Copy (ptr, _bytes, 0, (int)length);
+			}
+		}
+		public nuint Length => (nuint)_bytes.LongLength;
+		public IntPtr Bytes
+		{
+			get
+			{
+				var handle = System.Runtime.InteropServices.GCHandle.Alloc (_bytes, System.Runtime.InteropServices.GCHandleType.Pinned);
+				return handle.AddrOfPinnedObject ();
+			}
+		}
+		public byte[] ToArray () => (byte[])_bytes.Clone ();
+		public System.IO.Stream AsStream () => new System.IO.MemoryStream (_bytes, writable: false);
+		public static NSData FromArray (byte[] buffer) => new (buffer);
+		public static NSData FromStream (System.IO.Stream stream)
+		{
+			using var ms = new System.IO.MemoryStream ();
+			stream.CopyTo (ms);
+			return new NSData (ms.ToArray ());
+		}
+		public static NSData FromString (string s) => new (System.Text.Encoding.UTF8.GetBytes (s));
+		public static NSData? FromFile (string path) => System.IO.File.Exists (path) ? new NSData (System.IO.File.ReadAllBytes (path)) : null;
+		public static NSData? FromUrl (NSUrl url) => url.IsFileUrl ? FromFile (url.Path ?? string.Empty) : null;
+		public bool Save (string path, bool atomically)
+		{
+			try { System.IO.File.WriteAllBytes (path, _bytes); return true; } catch { return false; }
+		}
+		public bool Save (NSUrl url, bool atomically) => url.IsFileUrl && Save (url.Path ?? string.Empty, atomically);
+	}
+
+	public class NSDate : NSObject
+	{
+		public DateTime Value { get; set; }
+		public NSDate () { Value = DateTime.UtcNow; }
+		public NSDate (DateTime value) { Value = value; }
+		public static NSDate Now => new (DateTime.UtcNow);
+		public static implicit operator DateTime (NSDate date) => date.Value;
+		public static implicit operator NSDate (DateTime dt) => new (dt);
+	}
+
+	public class NSDictionary : NSObject, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<NSObject, NSObject>>
+	{
+		readonly System.Collections.Generic.Dictionary<NSObject, NSObject> _dict = new ();
+		public NSDictionary () { }
+		public NSDictionary (NSObject key, NSObject value) { _dict[key] = value; }
+		public nuint Count => (nuint)_dict.Count;
+		public NSObject? this [NSObject key] => _dict.TryGetValue (key, out var v) ? v : null;
+		public NSObject? this [NSString key] => this[(NSObject)key];
+		public NSObject? ObjectForKey (NSObject key) => this[key];
+		public NSObject[] Keys => System.Linq.Enumerable.ToArray (_dict.Keys);
+		public NSObject[] Values => System.Linq.Enumerable.ToArray (_dict.Values);
+		public static NSDictionary FromObjectsAndKeys (NSObject[] objects, NSObject[] keys)
+		{
+			var d = new NSDictionary ();
+			for (int i = 0; i < keys.Length && i < objects.Length; i++)
+				d._dict[keys[i]] = objects[i];
+			return d;
+		}
+		public System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<NSObject, NSObject>> GetEnumerator () => _dict.GetEnumerator ();
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator () => _dict.GetEnumerator ();
+	}
+
+	public class NSDictionary<TKey, TValue> : NSDictionary
+		where TKey : NSObject
+		where TValue : NSObject
+	{
+	}
+
+	public class NSError : NSObject
+	{
+		public string Domain { get; set; } = string.Empty;
+		public nint Code { get; set; }
+		public string LocalizedDescription { get; set; } = string.Empty;
+		public NSDictionary? UserInfo { get; set; }
+		public NSError () { }
+		public NSError (NSString domain, nint code) { Domain = domain.ToString (); Code = code; }
+		public NSError (NSString domain, nint code, NSDictionary? userInfo) { Domain = domain.ToString (); Code = code; UserInfo = userInfo; }
+		public override string ToString () => $"{Domain} ({Code}): {LocalizedDescription}";
+	}
+
+	public class NSIndexPath : NSObject
+	{
+		public nint[] Indexes { get; }
+		public nint Section => Indexes.Length > 0 ? Indexes[0] : 0;
+		public nint Row => Indexes.Length > 1 ? Indexes[1] : 0;
+		public nint Item => Row;
+		public nint Length => Indexes.Length;
+		public NSIndexPath () { Indexes = Array.Empty<nint> (); }
+		public NSIndexPath (nint[] indexes) { Indexes = indexes; }
+		public static NSIndexPath FromRowSection (nint row, nint section) => new (new[] { section, row });
+		public static NSIndexPath FromItemSection (nint item, nint section) => new (new[] { section, item });
+		public static NSIndexPath FromIndexes (nuint[] indexes)
+		{
+			var arr = new nint[indexes.Length];
+			for (int i = 0; i < indexes.Length; i++) arr[i] = (nint)indexes[i];
+			return new NSIndexPath (arr);
+		}
+	}
+
+	public class NSItemProvider : NSObject
+	{
+		public string[] RegisteredTypeIdentifiers { get; set; } = Array.Empty<string> ();
+		public bool HasItemConformingTo (string typeIdentifier) => false;
+	}
+
+	public class NSMutableDictionary : NSDictionary
+	{
+		public new NSObject? this [NSObject key]
+		{
+			get => base[key];
+			set { if (value is not null) SetObject (value, key); }
+		}
+		public void SetObject (NSObject value, NSObject key) { }
+		public void Remove (NSObject key) { }
+	}
+
+	public class NSNotification : NSObject
+	{
+		public string Name { get; set; } = string.Empty;
+		public NSObject? Object { get; set; }
+		public NSDictionary? UserInfo { get; set; }
+	}
+
+	public class NSNotificationCenter : NSObject
+	{
+		public static NSNotificationCenter DefaultCenter { get; } = new ();
+		public NSObject AddObserver (NSString name, Action<NSNotification> handler) => new ();
+		public NSObject AddObserver (NSString name, Action<NSNotification> handler, NSObject? sender) => new ();
+		public void RemoveObserver (NSObject observer) { }
+		public void PostNotificationName (string name, NSObject? sender) { }
+	}
+
+	public class NSNumber : NSObject
+	{
+		public object Value { get; }
+		public NSNumber () { Value = 0; }
+		public NSNumber (int value) { Value = value; }
+		public NSNumber (long value) { Value = value; }
+		public NSNumber (float value) { Value = value; }
+		public NSNumber (double value) { Value = value; }
+		public NSNumber (bool value) { Value = value; }
+		public NSNumber (nint value) { Value = value; }
+		public NSNumber (nuint value) { Value = value; }
+		public int Int32Value => Convert.ToInt32 (Value);
+		public long Int64Value => Convert.ToInt64 (Value);
+		public float FloatValue => Convert.ToSingle (Value);
+		public double DoubleValue => Convert.ToDouble (Value);
+		public bool BoolValue => Convert.ToBoolean (Value);
+		public static NSNumber FromInt32 (int value) => new (value);
+		public static NSNumber FromInt64 (long value) => new (value);
+		public static NSNumber FromFloat (float value) => new (value);
+		public static NSNumber FromDouble (double value) => new (value);
+		public static NSNumber FromBoolean (bool value) => new (value);
+		public static implicit operator NSNumber (int value) => new (value);
+		public static implicit operator NSNumber (double value) => new (value);
+		public override string ToString () => Value.ToString () ?? string.Empty;
+	}
+
+	public class NSSet : NSObject, System.Collections.Generic.IEnumerable<NSObject>
+	{
+		readonly System.Collections.Generic.HashSet<NSObject> _set = new ();
+		public NSSet () { }
+		public NSSet (params NSObject[] items) { foreach (var i in items) _set.Add (i); }
+		public nuint Count => (nuint)_set.Count;
+		public bool Contains (NSObject obj) => _set.Contains (obj);
+		public System.Collections.Generic.IEnumerator<NSObject> GetEnumerator () => _set.GetEnumerator ();
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator () => _set.GetEnumerator ();
+	}
+
+	public class NSSet<T> : NSSet where T : NSObject { }
+
+	public class NSTimer : NSObject
+	{
+		public bool IsValid { get; private set; } = true;
+		public void Invalidate () { IsValid = false; }
+		public static NSTimer CreateRepeatingScheduledTimer (TimeSpan interval, Action<NSTimer> callback) => new ();
+		public static NSTimer CreateScheduledTimer (TimeSpan interval, Action<NSTimer> callback) => new ();
+	}
+
+	public class NSUndoManager : NSObject
+	{
+		public bool CanUndo { get; set; }
+		public bool CanRedo { get; set; }
+		public bool IsUndoing { get; set; }
+		public bool IsRedoing { get; set; }
+		public void Undo () { }
+		public void Redo () { }
+		public void RemoveAllActions () { }
+		public void BeginUndoGrouping () { }
+		public void EndUndoGrouping () { }
+		public void RegisterUndoWithTarget (NSObject target, Action<NSObject> handler) { }
+	}
+
+	public class NSUrl : NSObject, IEquatable<NSUrl>
+	{
+		public string AbsoluteString { get; set; } = string.Empty;
+		public string? Path { get; set; }
+		public string? Scheme { get; set; }
+		public string? Host { get; set; }
+		public string? LastPathComponent => System.IO.Path.GetFileName (Path ?? AbsoluteString);
+		public string? PathExtension => System.IO.Path.GetExtension (Path ?? AbsoluteString)?.TrimStart ('.');
+		public bool IsFileUrl => Scheme == "file";
+		public NSUrl () { }
+		public NSUrl (string url)
+		{
+			AbsoluteString = url;
+			if (Uri.TryCreate (url, UriKind.Absolute, out var u)) {
+				Scheme = u.Scheme;
+				Host = u.Host;
+				Path = u.IsFile ? u.LocalPath : u.AbsolutePath;
+			} else {
+				Path = url;
+			}
+		}
+		public static NSUrl FromFilename (string path) => new () { AbsoluteString = "file://" + path, Scheme = "file", Path = path };
+		public static NSUrl FromString (string url) => new (url);
+		public NSUrl Append (string component, bool isDirectory)
+		{
+			var p = (Path ?? string.Empty).TrimEnd ('/') + "/" + component;
+			return FromFilename (p);
+		}
+		public NSUrl RemoveLastPathComponent () => FromFilename (System.IO.Path.GetDirectoryName (Path ?? string.Empty) ?? string.Empty);
+		public bool Equals (NSUrl? other) => other is not null && AbsoluteString == other.AbsoluteString;
+		public override bool Equals (object? obj) => obj is NSUrl u && Equals (u);
+		public override int GetHashCode () => AbsoluteString.GetHashCode ();
+		public override string ToString () => AbsoluteString;
+	}
+
+	public class NSUrlRequest : NSObject
+	{
+		public NSUrl? Url { get; set; }
+		public NSUrlRequest () { }
+		public NSUrlRequest (NSUrl url) { Url = url; }
+		public static NSUrlRequest FromUrl (NSUrl url) => new (url);
+	}
+
+	public class NSValue : NSObject
+	{
+		public object? Value { get; }
+		public NSValue () { }
+		public NSValue (object value) { Value = value; }
+	}
+
+	public class NSZone { }
 }
 
 #endif

@@ -6,6 +6,26 @@ using System;
 
 namespace ObjCRuntime
 {
+    public abstract class NativeObject : INativeObject, IDisposable
+    {
+        public NativeHandle Handle { get; protected set; }
+        public virtual void Dispose () { GC.SuppressFinalize (this); }
+    }
+
+    public class Class : INativeObject
+    {
+        public NativeHandle Handle { get; }
+        public string Name { get; }
+        public Class (string name) { Name = name; Handle = NativeHandle.Zero; }
+        public Class (Type type) : this (type.Name) { }
+    }
+
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    public class BindAsAttribute : Attribute { public BindAsAttribute (Type type) { Type = type; } public Type Type { get; } }
+
+    [AttributeUsage(AttributeTargets.Parameter)]
+    public class BlockProxyAttribute : Attribute { public BlockProxyAttribute (Type type) { Type = type; } public Type Type { get; } }
+
     /// <summary>A simple interface that is used to expose the unmanaged object pointer in various classes in Xamarin.iOS.</summary>
     /// <remarks>
     ///   <para>All this interface requires is for a class to expose an IntPtr that points to the unmanaged pointer to the actual object.</para>

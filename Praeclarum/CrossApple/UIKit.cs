@@ -7,16 +7,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-#if __MACOS__
-
-using AppKit;
 using Foundation;
 using CoreGraphics;
 using ObjCRuntime;
+
 // ReSharper disable InconsistentNaming
 
 namespace UIKit
 {
+#if __MACOS__
+
+    // DEFINITIONS DEPENDENT ON MACOS ONLY
+
+    using AppKit;
+    
 	public class UIActivityIndicatorView : NSProgressIndicator
 	{
 		public new UIViewAutoresizing AutoresizingMask {
@@ -39,12 +43,6 @@ namespace UIKit
 		{
 			base.StopAnimation (this);
 		}
-	}
-
-	public enum UIActivityIndicatorViewStyle : long
-	{
-		Medium = 100,
-		Large = 101,
 	}
 
     public struct NSDirectionalEdgeInsets
@@ -119,42 +117,6 @@ namespace UIKit
         }
     }
 
-    public enum UIAlertControllerStyle
-    {
-        Alert
-    }
-
-    public class UIBarButtonItem : NSObject
-    {
-        public nfloat Width { get; set; }
-
-        public UIBarButtonItem (UIBarButtonSystemItem systemItem, Action<object, EventArgs> handlee)
-        {
-        }
-
-        public UIBarButtonItem (string v, UIBarButtonItemStyle plain, Action<object, EventArgs> handler)
-        {
-        }
-
-        public UIBarButtonItem (UIBarButtonSystemItem fixedSpace)
-        {
-        }
-    }
-
-    public enum UIBarButtonItemStyle
-    {
-        Plain,
-    }
-
-    public enum UIBarButtonSystemItem
-    {
-		Add,
-        Done,
-        Undo,
-        FixedSpace,
-        Cancel
-    }
-
     public class UIBezierPath
     {
         readonly NSBezierPath path;
@@ -207,31 +169,6 @@ namespace UIKit
         }
     }
 
-    public enum UIBlurEffectStyle
-    {
-        ExtraLight,
-        Light,
-        Dark,
-		ExtraDark,
-		Regular,
-		Prominent,
-		SystemUltraThinMaterial,
-		SystemThinMaterial,
-		SystemMaterial,
-		SystemThickMaterial,
-		SystemChromeMaterial,
-		SystemUltraThinMaterialLight,
-		SystemThinMaterialLight,
-		SystemMaterialLight,
-		SystemThickMaterialLight,
-		SystemChromeMaterialLight,
-		SystemUltraThinMaterialDark,
-		SystemThinMaterialDark,
-		SystemMaterialDark,
-		SystemThickMaterialDark,
-		SystemChromeMaterialDark,
-	}
-
     public class UIButton : NSButton
     {
         NSActionDispatcher? dispatcher;
@@ -280,11 +217,6 @@ namespace UIKit
         {
             return new UIButton ();
         }
-    }
-
-    public enum UIButtonType
-    {
-        RoundedRect,
     }
 
     public class UICollectionView : NSScrollView
@@ -549,51 +481,6 @@ namespace UIKit
 	    public abstract UICollectionViewCell GetCell (UICollectionView collectionView, NSIndexPath indexPath);
     }
 
-    public class UIDevice : NSObject
-	{
-		public static UIDevice CurrentDevice { get; } = new UIDevice ();
-		//public UIUserInterfaceIdiom UserInterfaceIdiom { get; } = UIUserInterfaceIdiom.Desktop;
-
-		public bool CheckSystemVersion (int major, int minor)
-		{
-			return true;
-		}
-	}
-
-    abstract class NSDispatcher : NSObject
-    {
-        public const string SelectorName = "uikitApplySelector";
-
-        public static readonly ObjCRuntime.Selector Selector = new ObjCRuntime.Selector ("uikitApplySelector");
-
-        protected NSDispatcher ()
-        {
-            base.IsDirectBinding = false;
-        }
-
-        [Export ("uikitApplySelector")]
-        [Preserve (Conditional = true)]
-        public abstract void Apply ();
-    }
-
-    class NSActionDispatcher : NSDispatcher
-    {
-        private readonly Action action;
-
-        public NSActionDispatcher (Action action)
-        {
-            if (action == null) {
-                throw new ArgumentNullException (nameof (action));
-            }
-            this.action = action;
-        }
-
-        public override void Apply ()
-        {
-            action ();
-        }
-    }
-
     public class UIColor
     {
         readonly NSColor color;
@@ -666,12 +553,6 @@ namespace UIKit
             currentFill.Value = this;
         }
         public void SetStroke () => color.SetStroke ();
-    }
-
-    public enum UIControlState
-    {
-        Normal,
-        Selected,
     }
 
     public class UIDocument : NSDocument
@@ -1034,60 +915,9 @@ namespace UIKit
         }
     }
 
-    public enum UIImageOrientation
-    {
-        Up
-    }
-
     public class UIImageView : NSImageView
     {
         public UIColor? BackgroundColor { get; set; }
-    }
-
-    public class UIImpactFeedbackGenerator : NSObject
-    {
-        public UIImpactFeedbackGenerator (UIImpactFeedbackStyle style)
-        {
-        }
-        public void ImpactOccurred ()
-        {
-        }
-        public void Prepare ()
-        {
-        }
-    }
-
-    public enum UIImpactFeedbackStyle
-    {
-        Light
-    }
-    
-    public enum UIKeyboardType : long
-    {
-	    Default = 0,
-	    ASCIICapable = 1,
-	    AsciiCapable = 1,
-	    NumbersAndPunctuation = 2,
-	    Url = 3,
-	    NumberPad = 4,
-	    PhonePad = 5,
-	    NamePhonePad = 6,
-	    EmailAddress = 7,
-	    DecimalPad = 8,
-	    Twitter = 9,
-	    WebSearch = 10, // 0x000000000000000A
-	    AsciiCapableNumberPad = 11, // 0x000000000000000B
-    }
-
-    [Flags]
-    public enum UIKeyModifierFlags : long
-    {
-        AlphaShift = 0x10000,
-        Shift = 0x20000,
-        Control = 0x40000,
-        Alternate = 0x80000,
-        Command = 0x100000,
-        NumericPad = 0x200000
     }
 
     public class UILabel : NSTextField
@@ -1249,32 +1079,6 @@ namespace UIKit
                 base.SelectWithFrame (TitleRectForBounds (aRect), inView, editor, delegateObject, selStart, selLength);
             }
         }
-    }
-
-    public enum UILayoutConstraintAxis
-    {
-        Horizontal,
-        Vertical
-    }
-
-    public enum UILineBreakMode
-    {
-	    WordWrap,
-	    CharacterWrap,
-	    Clip,
-	    HeadTruncation,
-	    TailTruncation,
-	    MiddleTruncation,
-    }
-
-    public enum UIModalPresentationStyle
-    {
-        FullScreen
-    }
-
-    public enum UIModalTransitionStyle
-    {
-        CrossDissolve
     }
 
     public class UINavigationBar : UIView
@@ -1694,34 +1498,6 @@ namespace UIKit
 	    }
     }
 
-    public enum UITableViewCellStyle : long
-    {
-	    Default,
-	    Value1,
-	    Value2,
-	    Subtitle,
-    }
-
-    public enum UITableViewRowAnimation : long
-    {
-	    Fade = 0,
-	    Right = 1,
-	    Left = 2,
-	    Top = 3,
-	    Bottom = 4,
-	    None = 5,
-	    Middle = 6,
-	    Automatic = 100,
-    }
-
-    public enum UITableViewScrollPosition : long
-    {
-	    None,
-	    Top,
-	    Middle,
-	    Bottom,
-    }
-
     public abstract class UITableViewSource : NSTableViewSource
     {
 	    public virtual IntPtr NumberOfSections (UITableView tableView)
@@ -1755,13 +1531,6 @@ namespace UIKit
 		    cell.TextLabelWidthConstraint.Constant = tableView.Bounds.Width - 32;
 		    return cell;
 	    }
-    }
-
-    public enum UITableViewStyle : long
-    {
-        Plain,
-        Grouped,
-        InsetGrouped,
     }
 
     public class UITapGestureRecognizer : UIGestureRecognizer
@@ -2168,21 +1937,6 @@ namespace UIKit
         }
     }
 
-    [Flags]
-    public enum UIViewAutoresizing : ulong
-    {
-	    None = 0,
-	    FlexibleLeftMargin = 1,
-	    FlexibleWidth = 2,
-	    FlexibleRightMargin = 4,
-	    FlexibleTopMargin = 8,
-	    FlexibleHeight = 16,
-	    FlexibleBottomMargin = 32,
-	    FlexibleMargins = FlexibleBottomMargin | FlexibleTopMargin | FlexibleRightMargin | FlexibleLeftMargin,
-	    FlexibleDimensions = FlexibleHeight | FlexibleWidth,
-	    All = FlexibleDimensions | FlexibleMargins,
-    }
-
     public class UIViewController : NSViewController
     {
         public UINavigationItem NavigationItem { get; } = new UINavigationItem ();
@@ -2351,9 +2105,6 @@ namespace UIKit
         }
     }
 
-    public class UIVisualEffect : NSObject
-    {
-    }
 
     public class UIVisualEffectView : NSVisualEffectView
     {
@@ -2379,6 +2130,284 @@ namespace UIKit
 	    [DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
 	    public static extern bool void_objc_msgSend_bool(IntPtr receiver, IntPtr selector, bool arg0);
     }
+
+#endif // __MACOS__
+
+#if !__MACOS__ && !__IOS__ && !__MACCATALYST__
+    // CROSS PLATFORM BASE DEFINITIONS
+
+    public enum UIGestureRecognizerState
+    {
+        Began,
+        Changed,
+        Ended,
+        Cancelled,
+        Failed,
+    }
+
+#endif // !__MACOS__ && !__IOS__ && !__MACCATALYST__
+
+#if !__IOS__ && !__MACCATALYST__
+
+    // DEFINITIONS
+
+	public enum UIActivityIndicatorViewStyle : long
+	{
+		Medium = 100,
+		Large = 101,
+	}
+
+    public enum UIAlertControllerStyle
+    {
+        Alert
+    }
+
+    public class UIBarButtonItem : NSObject
+    {
+        public nfloat Width { get; set; }
+
+        public UIBarButtonItem (UIBarButtonSystemItem systemItem, Action<object, EventArgs> handlee)
+        {
+        }
+
+        public UIBarButtonItem (string v, UIBarButtonItemStyle plain, Action<object, EventArgs> handler)
+        {
+        }
+
+        public UIBarButtonItem (UIBarButtonSystemItem fixedSpace)
+        {
+        }
+    }
+
+    public enum UIBarButtonItemStyle
+    {
+        Plain,
+    }
+
+    public enum UIBarButtonSystemItem
+    {
+		Add,
+        Done,
+        Undo,
+        FixedSpace,
+        Cancel
+    }
+
+    public enum UIBlurEffectStyle
+    {
+        ExtraLight,
+        Light,
+        Dark,
+		ExtraDark,
+		Regular,
+		Prominent,
+		SystemUltraThinMaterial,
+		SystemThinMaterial,
+		SystemMaterial,
+		SystemThickMaterial,
+		SystemChromeMaterial,
+		SystemUltraThinMaterialLight,
+		SystemThinMaterialLight,
+		SystemMaterialLight,
+		SystemThickMaterialLight,
+		SystemChromeMaterialLight,
+		SystemUltraThinMaterialDark,
+		SystemThinMaterialDark,
+		SystemMaterialDark,
+		SystemThickMaterialDark,
+		SystemChromeMaterialDark,
+	}
+
+    public enum UIButtonType
+    {
+        RoundedRect,
+    }
+
+    public enum UIControlState
+    {
+        Normal,
+        Selected,
+    }
+
+    public class UIDevice : NSObject
+	{
+		public static UIDevice CurrentDevice { get; } = new UIDevice ();
+		//public UIUserInterfaceIdiom UserInterfaceIdiom { get; } = UIUserInterfaceIdiom.Desktop;
+
+		public bool CheckSystemVersion (int major, int minor)
+		{
+			return true;
+		}
+	}
+
+    public abstract class NSDispatcher : NSObject
+    {
+        public const string SelectorName = "uikitApplySelector";
+
+        public static readonly ObjCRuntime.Selector Selector = new ObjCRuntime.Selector ("uikitApplySelector");
+
+        protected NSDispatcher ()
+        {
+#if __MACOS__
+            base.IsDirectBinding = false;
+#endif
+        }
+
+        [Export ("uikitApplySelector")]
+        [Preserve (Conditional = true)]
+        public abstract void Apply ();
+    }
+
+    public class NSActionDispatcher : NSDispatcher
+    {
+        private readonly Action action;
+
+        public NSActionDispatcher (Action action)
+        {
+            if (action == null) {
+                throw new ArgumentNullException (nameof (action));
+            }
+            this.action = action;
+        }
+
+        public override void Apply ()
+        {
+            action ();
+        }
+    }
+
+    public enum UIImageOrientation
+    {
+        Up
+    }
+
+    public class UIImpactFeedbackGenerator : NSObject
+    {
+        public UIImpactFeedbackGenerator (UIImpactFeedbackStyle style)
+        {
+        }
+        public void ImpactOccurred ()
+        {
+        }
+        public void Prepare ()
+        {
+        }
+    }
+
+    public enum UIImpactFeedbackStyle
+    {
+        Light
+    }
+    
+    public enum UIKeyboardType : long
+    {
+	    Default = 0,
+	    ASCIICapable = 1,
+	    AsciiCapable = 1,
+	    NumbersAndPunctuation = 2,
+	    Url = 3,
+	    NumberPad = 4,
+	    PhonePad = 5,
+	    NamePhonePad = 6,
+	    EmailAddress = 7,
+	    DecimalPad = 8,
+	    Twitter = 9,
+	    WebSearch = 10, // 0x000000000000000A
+	    AsciiCapableNumberPad = 11, // 0x000000000000000B
+    }
+
+    [Flags]
+    public enum UIKeyModifierFlags : long
+    {
+        AlphaShift = 0x10000,
+        Shift = 0x20000,
+        Control = 0x40000,
+        Alternate = 0x80000,
+        Command = 0x100000,
+        NumericPad = 0x200000
+    }
+
+    public enum UILayoutConstraintAxis
+    {
+        Horizontal,
+        Vertical
+    }
+
+    public enum UILineBreakMode
+    {
+	    WordWrap,
+	    CharacterWrap,
+	    Clip,
+	    HeadTruncation,
+	    TailTruncation,
+	    MiddleTruncation,
+    }
+
+    public enum UIModalPresentationStyle
+    {
+        FullScreen
+    }
+
+    public enum UIModalTransitionStyle
+    {
+        CrossDissolve
+    }
+
+
+    public enum UITableViewCellStyle : long
+    {
+	    Default,
+	    Value1,
+	    Value2,
+	    Subtitle,
+    }
+
+    public enum UITableViewRowAnimation : long
+    {
+	    Fade = 0,
+	    Right = 1,
+	    Left = 2,
+	    Top = 3,
+	    Bottom = 4,
+	    None = 5,
+	    Middle = 6,
+	    Automatic = 100,
+    }
+
+    public enum UITableViewScrollPosition : long
+    {
+	    None,
+	    Top,
+	    Middle,
+	    Bottom,
+    }
+
+    public enum UITableViewStyle : long
+    {
+        Plain,
+        Grouped,
+        InsetGrouped,
+    }
+
+    [Flags]
+    public enum UIViewAutoresizing : ulong
+    {
+	    None = 0,
+	    FlexibleLeftMargin = 1,
+	    FlexibleWidth = 2,
+	    FlexibleRightMargin = 4,
+	    FlexibleTopMargin = 8,
+	    FlexibleHeight = 16,
+	    FlexibleBottomMargin = 32,
+	    FlexibleMargins = FlexibleBottomMargin | FlexibleTopMargin | FlexibleRightMargin | FlexibleLeftMargin,
+	    FlexibleDimensions = FlexibleHeight | FlexibleWidth,
+	    All = FlexibleDimensions | FlexibleMargins,
+    }
+
+    public class UIVisualEffect : NSObject
+    {
+    }
+
+#endif // !__IOS__ && !__MACCATALYST__
 }
 
-#endif

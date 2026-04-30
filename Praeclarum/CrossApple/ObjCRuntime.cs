@@ -27,7 +27,7 @@ namespace ObjCRuntime
 
         public IntPtr Handle => handle;
 
-        public NativeHandle (IntPtr handle)
+        public NativeHandle(IntPtr handle)
         {
             this.handle = handle;
         }
@@ -59,6 +59,110 @@ namespace ObjCRuntime
         public bool Equals(NativeHandle other) => handle == other.handle;
 
         public override string ToString() => handle.ToString();
+    }
+
+    public class Selector : IEquatable<Selector>, INativeObject
+    {
+        static readonly System.Collections.Generic.Dictionary<string, NativeHandle> selectorCache = new ();
+        static nint nextSelectorHandle = 0x5000; // Start at a high value to avoid conflicts with actual selector handles.
+
+        // public Selector (NativeHandle sel);
+
+        /// <param name="name">The selector name.</param>
+        /// <summary>Creates a new selector and registers it with the Objective-C runtime.</summary>
+        /// <remarks></remarks>
+        public Selector (string name)
+        {
+            Name = name;
+            Handle = GetHandle(name);
+        }
+
+        /// <summary>Handle (pointer) to the unmanaged selector representation.</summary>
+        /// <value>A pointer to the unmanaged selector representation.</value>
+        /// <remarks>
+        ///   <para>This IntPtr is the handle to the underlying unmanaged representation for this selector.</para>
+        /// </remarks>
+        public NativeHandle Handle { get; }
+
+        /// <summary>Name of this selector.</summary>
+        /// <value />
+        /// <remarks></remarks>
+        public string Name { get; }
+
+        public static bool operator !=(Selector left, Selector right)
+        {
+            return !(left == right);
+        }
+
+        public static bool operator ==(Selector left, Selector right)
+        {
+            if (ReferenceEquals(left, right))
+                return true;
+            if (left is null || right is null)
+                return false;
+            return left.Handle == right.Handle;
+        }
+
+        /// <param name="right">The other object to compare against.</param>
+        /// <summary>Compares two objects for equality</summary>
+        /// <returns>True if the objects represent the same object</returns>
+        /// <remarks></remarks>
+        public override bool Equals(object? right)
+        {
+            if (right is Selector other)
+                return Equals(other);
+            return false;
+        }
+
+        /// <param name="right">The other selector to compare against.</param>
+        /// <summary>Compares two selectors for equality.</summary>
+        /// <returns>True if the objects represent the same selector.</returns>
+        /// <remarks></remarks>
+        public bool Equals(Selector? right)
+        {
+            if (ReferenceEquals(this, right))
+                return true;
+            if (right is null)
+                return false;
+            return Handle == right.Handle;
+        }
+
+        /// <summary>Returns the Selector's hash code.</summary>
+        public override int GetHashCode()
+        {
+            return Handle.GetHashCode();
+        }
+
+        // public static Selector? FromHandle(NativeHandle sel)
+        // {
+        //     if (sel == NativeHandle.Zero)
+        //         return null;
+        //     return new Selector(sel);
+        // }
+
+        /// <summary>Creates a managed Selector instance from a native selector.</summary>
+        /// <param name="selector">The native selector handle.</param>
+        /// <param name="owns">Whether the caller owns the native selector handle or not.</param>
+        // public static Selector? FromHandle(NativeHandle selector, bool owns) => FromHandle(selector);
+
+        // public static Selector Register(NativeHandle handle);
+
+        /// <summary>Returns the handle to the specified Objective-C selector.</summary>
+        /// <param name="name">Name of a selector</param>
+        public static IntPtr GetHandle(string name)
+        {
+            lock (selectorCache)
+            {
+                if (!selectorCache.TryGetValue(name, out var handle))
+                {
+                    var handleValue = nextSelectorHandle;
+                    nextSelectorHandle += 1; // Increment by a large value to avoid
+                    handle = new NativeHandle(handleValue);
+                    selectorCache[name] = handle;
+                }
+                return handle;
+            }
+        }
     }
 }
 

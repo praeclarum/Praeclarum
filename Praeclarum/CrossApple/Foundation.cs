@@ -1020,6 +1020,30 @@ namespace Foundation
         int IComparable<NSString>.CompareTo(NSString? other) => string.Compare(_str, other?._str, StringComparison.Ordinal);
     }
 
+    /// <summary>Prevents the MonoTouch linker from linking the target.</summary>
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Event | AttributeTargets.Interface | AttributeTargets.Delegate, AllowMultiple = true)]
+    public sealed class PreserveAttribute : Attribute
+    {
+        /// <summary>Ensures that all members of this type are preserved.</summary>
+        /// <remarks>All members of this type, including fields, properties, methods, subclasses are preserved during linking.</remarks>
+        public bool AllMembers;
+        /// <summary>Flags the method as a method to preserve during linking if the container class is pulled in.</summary>
+        /// <remarks>
+        ///   <para>
+        ///       	    If the Conditional value is set on a Preserve attribute on a method, then the method will be preserved if the containing NSObject is kept after the linker has done its job.
+        ///       	  </para>
+        ///   <para>
+        ///       	    You would typically use this for callbacks that you know will be called in your code dynamically (for example with a selector invocation from Objective-C) since a static linker would not be able to infer that this particual method is required.
+        ///       	  </para>
+        /// </remarks>
+        public bool Conditional;
+
+        /// <summary>Instruct the MonoTouch linker to preserve the decorated code</summary>
+        public PreserveAttribute() {}
+
+        // public PreserveAttribute(Type type);
+    }
+
     /// <summary>Attribute applied to interfaces that represent Objective-C protocols.</summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     public sealed class ProtocolAttribute : Attribute

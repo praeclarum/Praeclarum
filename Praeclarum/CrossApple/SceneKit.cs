@@ -6,7 +6,6 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Numerics;
 
 #if !__IOS__ && !__MACOS__ && !__TVOS__ && !__MACCATALYST__
 
@@ -440,13 +439,66 @@ namespace SceneKit
 
         public static bool TryInvert (SCNMatrix4 matrix, out SCNMatrix4 inverse)
         {
-            // Use System.Numerics for the inversion (only operation we don't implement
-            // by hand). It uses float, which is acceptable since inversion is rarely
-            // chained — the precision-critical operations (mul, ctor, Create*) stay in
-            // nfloat below.
-            var ok = Matrix4x4.Invert (matrix.ToNumerics (), out var inv);
-            inverse = FromNumerics (inv);
-            return ok;
+            // 4x4 inverse via the adjugate (transpose of cofactors) divided by the
+            // determinant. Computed entirely in nfloat (= double) precision. The
+            // 2x2 sub-determinants of the bottom two rows (s0..s5) and top two rows
+            // (c0..c5) are reused throughout, matching the standard "Cramer" form.
+            nfloat a00 = matrix.M11, a01 = matrix.M12, a02 = matrix.M13, a03 = matrix.M14;
+            nfloat a10 = matrix.M21, a11 = matrix.M22, a12 = matrix.M23, a13 = matrix.M24;
+            nfloat a20 = matrix.M31, a21 = matrix.M32, a22 = matrix.M33, a23 = matrix.M34;
+            nfloat a30 = matrix.M41, a31 = matrix.M42, a32 = matrix.M43, a33 = matrix.M44;
+
+            nfloat s0 = a00 * a11 - a10 * a01;
+            nfloat s1 = a00 * a12 - a10 * a02;
+            nfloat s2 = a00 * a13 - a10 * a03;
+            nfloat s3 = a01 * a12 - a11 * a02;
+            nfloat s4 = a01 * a13 - a11 * a03;
+            nfloat s5 = a02 * a13 - a12 * a03;
+
+            nfloat c5 = a22 * a33 - a32 * a23;
+            nfloat c4 = a21 * a33 - a31 * a23;
+            nfloat c3 = a21 * a32 - a31 * a22;
+            nfloat c2 = a20 * a33 - a30 * a23;
+            nfloat c1 = a20 * a32 - a30 * a22;
+            nfloat c0 = a20 * a31 - a30 * a21;
+
+            nfloat det = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+            if (det == 0) {
+                inverse = default;
+                return false;
+            }
+            nfloat invDet = (nfloat)1 / det;
+
+            var r = default (SCNMatrix4);
+            r.M11 = ( a11 * c5 - a12 * c4 + a13 * c3) * invDet;
+            r.M12 = (-a01 * c5 + a02 * c4 - a03 * c3) * invDet;
+            r.M13 = ( a31 * s5 - a32 * s4 + a33 * s3) * invDet;
+            r.M14 = (-a21 * s5 + a22 * s4 - a23 * s3) * invDet;
+
+            r.M21 = (-a10 * c5 + a12 * c2 - a13 * c1) * invDet;
+            r.M22 = ( a00 * c5 - a02 * c2 + a03 * c1) * invDet;
+            r.M23 = (-a30 * s5 + a32 * s2 - a33 * s1) * invDet;
+            r.M24 = ( a20 * s5 - a22 * s2 + a23 * s1) * invDet;
+
+            r.M31 = ( a10 * c4 - a11 * c2 + a13 * c0) * invDet;
+            r.M32 = (-a00 * c4 + a01 * c2 - a03 * c0) * invDet;
+            r.M33 = ( a30 * s4 - a31 * s2 + a33 * s0) * invDet;
+            r.M34 = (-a20 * s4 + a21 * s2 - a23 * s0) * invDet;
+
+            r.M41 = (-a10 * c3 + a11 * c1 - a12 * c0) * invDet;
+            r.M42 = ( a00 * c3 - a01 * c1 + a02 * c0) * invDet;
+            r.M43 = (-a30 * s3 + a31 * s1 - a32 * s0) * invDet;
+            r.M44 = ( a20 * s3 - a21 * s1 + a22 * s0) * invDet;
+
+            inverse = r;
+            return true;
+        }
+
+        public static SCNMatrix4 Invert (SCNMatrix4 mat)
+        {
+            if (!TryInvert (mat, out var inv))
+                throw new InvalidOperationException ("Matrix is singular and cannot be inverted.");
+            return inv;
         }
 
         public static SCNVector4 Transform (SCNVector4 v, SCNMatrix4 m)
@@ -500,25 +552,6 @@ namespace SceneKit
             r.M42 = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + a.M44 * b.M42;
             r.M43 = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + a.M44 * b.M43;
             r.M44 = a.M41 * b.M14 + a.M42 * b.M24 + a.M43 * b.M34 + a.M44 * b.M44;
-            return r;
-        }
-
-        readonly Matrix4x4 ToNumerics ()
-        {
-            return new Matrix4x4 (
-                (float)M11, (float)M12, (float)M13, (float)M14,
-                (float)M21, (float)M22, (float)M23, (float)M24,
-                (float)M31, (float)M32, (float)M33, (float)M34,
-                (float)M41, (float)M42, (float)M43, (float)M44);
-        }
-
-        static SCNMatrix4 FromNumerics (Matrix4x4 m)
-        {
-            var r = default (SCNMatrix4);
-            r.M11 = m.M11; r.M12 = m.M12; r.M13 = m.M13; r.M14 = m.M14;
-            r.M21 = m.M21; r.M22 = m.M22; r.M23 = m.M23; r.M24 = m.M24;
-            r.M31 = m.M31; r.M32 = m.M32; r.M33 = m.M33; r.M34 = m.M34;
-            r.M41 = m.M41; r.M42 = m.M42; r.M43 = m.M43; r.M44 = m.M44;
             return r;
         }
     }

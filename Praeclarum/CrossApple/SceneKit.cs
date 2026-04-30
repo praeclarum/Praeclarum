@@ -333,38 +333,60 @@ namespace SceneKit
     [StructLayout (LayoutKind.Sequential)]
     public struct SCNMatrix4 : IEquatable<SCNMatrix4>
     {
-        public nfloat M11, M12, M13, M14;
-        public nfloat M21, M22, M23, M24;
-        public nfloat M31, M32, M33, M34;
-        public nfloat M41, M42, M43, M44;
+        // Field order chosen to match Microsoft.macOS / Microsoft.iOS SCNMatrix4
+        // which exposes Column0..Column3 SCNVector4 fields. The M_ij accessors
+        // below preserve the convention M_ij = row i, col j (1-based).
+        public SCNVector4 Column0;
+        public SCNVector4 Column1;
+        public SCNVector4 Column2;
+        public SCNVector4 Column3;
+
+        public nfloat M11 { readonly get => Column0.X; set => Column0.X = value; }
+        public nfloat M21 { readonly get => Column0.Y; set => Column0.Y = value; }
+        public nfloat M31 { readonly get => Column0.Z; set => Column0.Z = value; }
+        public nfloat M41 { readonly get => Column0.W; set => Column0.W = value; }
+        public nfloat M12 { readonly get => Column1.X; set => Column1.X = value; }
+        public nfloat M22 { readonly get => Column1.Y; set => Column1.Y = value; }
+        public nfloat M32 { readonly get => Column1.Z; set => Column1.Z = value; }
+        public nfloat M42 { readonly get => Column1.W; set => Column1.W = value; }
+        public nfloat M13 { readonly get => Column2.X; set => Column2.X = value; }
+        public nfloat M23 { readonly get => Column2.Y; set => Column2.Y = value; }
+        public nfloat M33 { readonly get => Column2.Z; set => Column2.Z = value; }
+        public nfloat M43 { readonly get => Column2.W; set => Column2.W = value; }
+        public nfloat M14 { readonly get => Column3.X; set => Column3.X = value; }
+        public nfloat M24 { readonly get => Column3.Y; set => Column3.Y = value; }
+        public nfloat M34 { readonly get => Column3.Z; set => Column3.Z = value; }
+        public nfloat M44 { readonly get => Column3.W; set => Column3.W = value; }
 
         public static readonly SCNMatrix4 Identity = new () {
-            M11 = 1, M22 = 1, M33 = 1, M44 = 1,
+            Column0 = new SCNVector4 (1, 0, 0, 0),
+            Column1 = new SCNVector4 (0, 1, 0, 0),
+            Column2 = new SCNVector4 (0, 0, 1, 0),
+            Column3 = new SCNVector4 (0, 0, 0, 1),
         };
 
+        // NOTE: Microsoft.macOS / Microsoft.iOS use these parameter names but
+        // assign them column-by-column to Column0..Column3. We replicate that
+        // exact behavior — the parameter names do NOT correspond to M_ij entries.
         public SCNMatrix4 (
             nfloat m11, nfloat m12, nfloat m13, nfloat m14,
             nfloat m21, nfloat m22, nfloat m23, nfloat m24,
             nfloat m31, nfloat m32, nfloat m33, nfloat m34,
             nfloat m41, nfloat m42, nfloat m43, nfloat m44)
         {
-            M11 = m11; M12 = m12; M13 = m13; M14 = m14;
-            M21 = m21; M22 = m22; M23 = m23; M24 = m24;
-            M31 = m31; M32 = m32; M33 = m33; M34 = m34;
-            M41 = m41; M42 = m42; M43 = m43; M44 = m44;
+            Column0 = new SCNVector4 (m11, m12, m13, m14);
+            Column1 = new SCNVector4 (m21, m22, m23, m24);
+            Column2 = new SCNVector4 (m31, m32, m33, m34);
+            Column3 = new SCNVector4 (m41, m42, m43, m44);
         }
-
-        public readonly SCNVector4 Column0 => new (M11, M21, M31, M41);
-        public readonly SCNVector4 Column1 => new (M12, M22, M32, M42);
-        public readonly SCNVector4 Column2 => new (M13, M23, M33, M43);
-        public readonly SCNVector4 Column3 => new (M14, M24, M34, M44);
 
         public static SCNMatrix4 CreateTranslation (nfloat x, nfloat y, nfloat z)
         {
+            // Row-vector convention: translation lives in row 4.
             var m = Identity;
-            m.M14 = x;
-            m.M24 = y;
-            m.M34 = z;
+            m.M41 = x;
+            m.M42 = y;
+            m.M43 = z;
             return m;
         }
 
@@ -379,39 +401,49 @@ namespace SceneKit
 
         public static SCNMatrix4 CreateRotationX (double radians)
         {
+            // Row-vector rotation around X: M22=c, M23=+s, M32=-s, M33=c.
             var c = (nfloat)Math.Cos (radians);
             var s = (nfloat)Math.Sin (radians);
-            return new SCNMatrix4 (
-                1, 0, 0, 0,
-                0, c, -s, 0,
-                0, s, c, 0,
-                0, 0, 0, 1);
+            var m = Identity;
+            m.M22 = c;
+            m.M23 = s;
+            m.M32 = -s;
+            m.M33 = c;
+            return m;
         }
 
         public static SCNMatrix4 CreateRotationY (double radians)
         {
+            // Row-vector rotation around Y: M11=c, M13=-s, M31=+s, M33=c.
             var c = (nfloat)Math.Cos (radians);
             var s = (nfloat)Math.Sin (radians);
-            return new SCNMatrix4 (
-                c, 0, s, 0,
-                0, 1, 0, 0,
-                -s, 0, c, 0,
-                0, 0, 0, 1);
+            var m = Identity;
+            m.M11 = c;
+            m.M13 = -s;
+            m.M31 = s;
+            m.M33 = c;
+            return m;
         }
 
         public static SCNMatrix4 CreateRotationZ (double radians)
         {
+            // Row-vector rotation around Z: M11=c, M12=+s, M21=-s, M22=c.
             var c = (nfloat)Math.Cos (radians);
             var s = (nfloat)Math.Sin (radians);
-            return new SCNMatrix4 (
-                c, -s, 0, 0,
-                s, c, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1);
+            var m = Identity;
+            m.M11 = c;
+            m.M12 = s;
+            m.M21 = -s;
+            m.M22 = c;
+            return m;
         }
 
         public static bool TryInvert (SCNMatrix4 matrix, out SCNMatrix4 inverse)
         {
+            // Use System.Numerics for the inversion (only operation we don't implement
+            // by hand). It uses float, which is acceptable since inversion is rarely
+            // chained — the precision-critical operations (mul, ctor, Create*) stay in
+            // nfloat below.
             var ok = Matrix4x4.Invert (matrix.ToNumerics (), out var inv);
             inverse = FromNumerics (inv);
             return ok;
@@ -419,10 +451,11 @@ namespace SceneKit
 
         public static SCNVector4 Transform (SCNVector4 v, SCNMatrix4 m)
         {
-            var x = v.X * m.M11 + v.Y * m.M12 + v.Z * m.M13 + v.W * m.M14;
-            var y = v.X * m.M21 + v.Y * m.M22 + v.Z * m.M23 + v.W * m.M24;
-            var z = v.X * m.M31 + v.Y * m.M32 + v.Z * m.M33 + v.W * m.M34;
-            var w = v.X * m.M41 + v.Y * m.M42 + v.Z * m.M43 + v.W * m.M44;
+            // Row-vector convention: result = v * m, i.e. result_j = sum_i v_i * m_ij.
+            var x = v.X * m.M11 + v.Y * m.M21 + v.Z * m.M31 + v.W * m.M41;
+            var y = v.X * m.M12 + v.Y * m.M22 + v.Z * m.M32 + v.W * m.M42;
+            var z = v.X * m.M13 + v.Y * m.M23 + v.Z * m.M33 + v.W * m.M43;
+            var w = v.X * m.M14 + v.Y * m.M24 + v.Z * m.M34 + v.W * m.M44;
             return new SCNVector4 (x, y, z, w);
         }
 
@@ -436,27 +469,38 @@ namespace SceneKit
         }
 
         public readonly bool Equals (SCNMatrix4 other) =>
-            M11 == other.M11 && M12 == other.M12 && M13 == other.M13 && M14 == other.M14 &&
-            M21 == other.M21 && M22 == other.M22 && M23 == other.M23 && M24 == other.M24 &&
-            M31 == other.M31 && M32 == other.M32 && M33 == other.M33 && M34 == other.M34 &&
-            M41 == other.M41 && M42 == other.M42 && M43 == other.M43 && M44 == other.M44;
+            Column0.Equals (other.Column0) &&
+            Column1.Equals (other.Column1) &&
+            Column2.Equals (other.Column2) &&
+            Column3.Equals (other.Column3);
 
         public override readonly bool Equals (object? obj) => obj is SCNMatrix4 m && Equals (m);
-        public override readonly int GetHashCode ()
-        {
-            var h = new HashCode ();
-            h.Add (M11); h.Add (M12); h.Add (M13); h.Add (M14);
-            h.Add (M21); h.Add (M22); h.Add (M23); h.Add (M24);
-            h.Add (M31); h.Add (M32); h.Add (M33); h.Add (M34);
-            h.Add (M41); h.Add (M42); h.Add (M43); h.Add (M44);
-            return h.ToHashCode ();
-        }
+        public override readonly int GetHashCode () => HashCode.Combine (Column0, Column1, Column2, Column3);
         public static bool operator == (SCNMatrix4 left, SCNMatrix4 right) => left.Equals (right);
         public static bool operator != (SCNMatrix4 left, SCNMatrix4 right) => !left.Equals (right);
 
-        public static SCNMatrix4 operator * (SCNMatrix4 left, SCNMatrix4 right)
+        public static SCNMatrix4 operator * (SCNMatrix4 a, SCNMatrix4 b)
         {
-            return FromNumerics (left.ToNumerics () * right.ToNumerics ());
+            // Native nfloat (= double) matrix multiply: (a*b)_ij = sum_k a_ik * b_kj.
+            // Implemented in full precision to match Microsoft.macOS / Microsoft.iOS.
+            var r = default (SCNMatrix4);
+            r.M11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31 + a.M14 * b.M41;
+            r.M12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32 + a.M14 * b.M42;
+            r.M13 = a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33 + a.M14 * b.M43;
+            r.M14 = a.M11 * b.M14 + a.M12 * b.M24 + a.M13 * b.M34 + a.M14 * b.M44;
+            r.M21 = a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31 + a.M24 * b.M41;
+            r.M22 = a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32 + a.M24 * b.M42;
+            r.M23 = a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33 + a.M24 * b.M43;
+            r.M24 = a.M21 * b.M14 + a.M22 * b.M24 + a.M23 * b.M34 + a.M24 * b.M44;
+            r.M31 = a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31 + a.M34 * b.M41;
+            r.M32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32 + a.M34 * b.M42;
+            r.M33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33 + a.M34 * b.M43;
+            r.M34 = a.M31 * b.M14 + a.M32 * b.M24 + a.M33 * b.M34 + a.M34 * b.M44;
+            r.M41 = a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + a.M44 * b.M41;
+            r.M42 = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + a.M44 * b.M42;
+            r.M43 = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + a.M44 * b.M43;
+            r.M44 = a.M41 * b.M14 + a.M42 * b.M24 + a.M43 * b.M34 + a.M44 * b.M44;
+            return r;
         }
 
         readonly Matrix4x4 ToNumerics ()
@@ -470,11 +514,12 @@ namespace SceneKit
 
         static SCNMatrix4 FromNumerics (Matrix4x4 m)
         {
-            return new SCNMatrix4 (
-                m.M11, m.M12, m.M13, m.M14,
-                m.M21, m.M22, m.M23, m.M24,
-                m.M31, m.M32, m.M33, m.M34,
-                m.M41, m.M42, m.M43, m.M44);
+            var r = default (SCNMatrix4);
+            r.M11 = m.M11; r.M12 = m.M12; r.M13 = m.M13; r.M14 = m.M14;
+            r.M21 = m.M21; r.M22 = m.M22; r.M23 = m.M23; r.M24 = m.M24;
+            r.M31 = m.M31; r.M32 = m.M32; r.M33 = m.M33; r.M34 = m.M34;
+            r.M41 = m.M41; r.M42 = m.M42; r.M43 = m.M43; r.M44 = m.M44;
+            return r;
         }
     }
 

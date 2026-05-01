@@ -51,9 +51,7 @@ namespace Praeclarum.Inspector
 
     public class EditContextBase
     {
-        #if __IOS__ || __MACOS__
         public virtual Foundation.NSUndoManager? UndoManager => null;
-        #endif
         
         public virtual object? EvalExpression (string exp)
         {
@@ -75,9 +73,7 @@ namespace Praeclarum.Inspector
     {
         public EditContextBase Context { get; }
 
-        #if __IOS__ || __MACOS__
         public Foundation.NSUndoManager? UndoManager => Context.UndoManager;
-        #endif
 
         public readonly InspectorAttribute Attributes;
 

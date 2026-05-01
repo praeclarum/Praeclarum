@@ -113,6 +113,15 @@ namespace SceneKit
         Any,
     }
 
+    public enum SCNMovabilityHint : long
+    {
+        Fixed,
+        Movable,
+    }
+
+    public delegate bool SCNNodeHandler (SCNNode node, out bool stop);
+    public delegate bool SCNNodePredicate (SCNNode node, out bool stop);
+
     public static class SCNLightingModel
     {
         public const string Blinn = "blinn";
@@ -1054,6 +1063,45 @@ namespace SceneKit
         public Action<SCNNode>? Apply { get; set; }
         public double Duration { get; set; }
 
+        public static SCNAction Create (Action<SCNNode> action)
+        {
+            return new SCNAction {
+                Apply = action,
+            };
+        }
+
+        public static SCNAction MoveBy (nfloat x, nfloat y, nfloat z, double duration)
+        {
+            return new SCNAction {
+                Duration = duration,
+                Apply = node => node.Position += new SCNVector3 (x, y, z),
+            };
+        }
+
+        public static SCNAction MoveTo (SCNVector3 position, double duration)
+        {
+            return new SCNAction {
+                Duration = duration,
+                Apply = node => node.Position = position,
+            };
+        }
+
+        public static SCNAction ScaleBy (nfloat scale, double duration)
+        {
+            return new SCNAction {
+                Duration = duration,
+                Apply = node => node.Scale *= scale,
+            };
+        }
+
+        public static SCNAction ScaleTo (nfloat scale, double duration)
+        {
+            return new SCNAction {
+                Duration = duration,
+                Apply = node => node.Scale = new SCNVector3 (scale, scale, scale),
+            };
+        }
+
         public static SCNAction RotateBy (nfloat angle, SCNVector3 axis, double duration)
         {
             return new SCNAction {
@@ -1065,6 +1113,67 @@ namespace SceneKit
                     r.Z = axis.Z;
                     r.W += angle;
                     node.Rotation = r;
+                },
+            };
+        }
+
+        public static SCNAction RotateTo (nfloat x, nfloat y, nfloat z, double duration)
+        {
+            return new SCNAction {
+                Duration = duration,
+                Apply = node => node.EulerAngles = new SCNVector3 (x, y, z),
+            };
+        }
+
+        public static SCNAction FadeOpacityTo (nfloat opacity, double duration)
+        {
+            return new SCNAction {
+                Duration = duration,
+                Apply = node => node.Opacity = opacity,
+            };
+        }
+
+        public static SCNAction Wait (double duration)
+        {
+            return new SCNAction {
+                Duration = duration,
+            };
+        }
+
+        public static SCNAction Sequence (params SCNAction[] actions)
+        {
+            var seq = actions ?? Array.Empty<SCNAction> ();
+            return new SCNAction {
+                Duration = seq.Sum (x => x?.Duration ?? 0),
+                Apply = node => {
+                    foreach (var action in seq) {
+                        action?.Apply?.Invoke (node);
+                    }
+                },
+            };
+        }
+
+        public static SCNAction Group (params SCNAction[] actions)
+        {
+            var group = actions ?? Array.Empty<SCNAction> ();
+            return new SCNAction {
+                Duration = group.Length == 0 ? 0 : group.Max (x => x?.Duration ?? 0),
+                Apply = node => {
+                    foreach (var action in group) {
+                        action?.Apply?.Invoke (node);
+                    }
+                },
+            };
+        }
+
+        public static SCNAction RepeatAction (SCNAction action, nuint count)
+        {
+            return new SCNAction {
+                Duration = action.Duration * count,
+                Apply = node => {
+                    for (nuint i = 0; i < count; i++) {
+                        action.Apply?.Invoke (node);
+                    }
                 },
             };
         }
@@ -1309,9 +1418,14 @@ namespace SceneKit
     {
         readonly List<SCNNode> children = new ();
         readonly Dictionary<string, SCNAction> actions = new (StringComparer.Ordinal);
+        readonly List<SCNAudioPlayer> audioPlayers = new ();
+        readonly List<SCNParticleSystem> particleSystems = new ();
 
         SCNNode? parent;
         SCNMatrix4 transform = SCNMatrix4.Identity;
+        bool hasBoundingBoxOverride;
+        SCNVector3 boundingBoxMinOverride;
+        SCNVector3 boundingBoxMaxOverride;
 
         public string? Name { get; set; }
         public SCNGeometry? Geometry { get; set; }
@@ -1319,6 +1433,11 @@ namespace SceneKit
         public SCNLight? Light { get; set; }
         public SCNPhysicsBody? PhysicsBody { get; set; }
         public SCNConstraint[]? Constraints { get; set; }
+        public SCNSkinner? Skinner { get; set; }
+        public nuint CategoryBitMask { get; set; } = 1;
+        public SCNMatrix4 Pivot { get; set; } = SCNMatrix4.Identity;
+        public SCNMovabilityHint MovabilityHint { get; set; } = SCNMovabilityHint.Movable;
+        public bool Paused { get; set; }
         public nfloat Opacity { get; set; } = 1;
         public bool Hidden { get; set; }
         public bool CastsShadow { get; set; } = true;
@@ -1351,6 +1470,10 @@ namespace SceneKit
             }
         }
 
+        public static SCNVector3 LocalFront => new (0, 0, -1);
+        public static SCNVector3 LocalRight => new (1, 0, 0);
+        public static SCNVector3 LocalUp => new (0, 1, 0);
+
         public SCNVector3 Position
         {
             get => new (Transform.M14, Transform.M24, Transform.M34);
@@ -1377,9 +1500,16 @@ namespace SceneKit
             }
         }
 
+        public SCNVector3 WorldRight => SCNVector3.Normalize (SCNVector3.TransformNormal (LocalRight, WorldTransform));
+        public SCNVector3 WorldUp => SCNVector3.Normalize (SCNVector3.TransformNormal (LocalUp, WorldTransform));
+        public SCNVector3 WorldFront => SCNVector3.Normalize (SCNVector3.TransformNormal (LocalFront, WorldTransform));
+
         public SCNNode PresentationNode => this;
         public SCNNode? ParentNode => parent;
         public SCNNode[] ChildNodes => children.ToArray ();
+        public string[] ActionKeys => actions.Keys.ToArray ();
+        public SCNAudioPlayer[] AudioPlayers => audioPlayers.ToArray ();
+        public SCNParticleSystem[] ParticleSystems => particleSystems.ToArray ();
 
         public static SCNNode Create () => new ();
 
@@ -1387,6 +1517,13 @@ namespace SceneKit
         {
             return new SCNNode {
                 Geometry = geometry,
+            };
+        }
+
+        public static SCNNode FromModelObject (MDLObject mdlObject)
+        {
+            return new SCNNode {
+                Name = mdlObject?.Name,
             };
         }
 
@@ -1401,6 +1538,24 @@ namespace SceneKit
             child.RemoveFromParentNode ();
             child.parent = this;
             children.Add (child);
+        }
+
+        public void InsertChildNode (SCNNode child, nint index)
+        {
+            if (child is null) {
+                return;
+            }
+            child.RemoveFromParentNode ();
+            child.parent = this;
+            if (index < 0) {
+                index = 0;
+            }
+            if (index >= children.Count) {
+                children.Add (child);
+            }
+            else {
+                children.Insert ((int)index, child);
+            }
         }
 
         public void AddNodes (params SCNNode[] nodes)
@@ -1424,6 +1579,21 @@ namespace SceneKit
             parent = null;
         }
 
+        public void ReplaceChildNode (SCNNode child, SCNNode child2)
+        {
+            if (child is null || child2 is null) {
+                return;
+            }
+            var i = children.IndexOf (child);
+            if (i < 0) {
+                return;
+            }
+            child.parent = null;
+            child2.RemoveFromParentNode ();
+            child2.parent = this;
+            children[i] = child2;
+        }
+
         public void RunAction (SCNAction action, string key)
         {
             if (action is null) {
@@ -1435,9 +1605,79 @@ namespace SceneKit
             action.Apply?.Invoke (this);
         }
 
+        public void RunAction (SCNAction action)
+        {
+            action?.Apply?.Invoke (this);
+        }
+
+        public void RunAction (SCNAction action, Action? completionHandler)
+        {
+            action?.Apply?.Invoke (this);
+            completionHandler?.Invoke ();
+        }
+
+        public void RunAction (SCNAction action, string? key, Action? completionHandler)
+        {
+            if (!string.IsNullOrEmpty (key)) {
+                RunAction (action, key);
+            }
+            else {
+                RunAction (action);
+            }
+            completionHandler?.Invoke ();
+        }
+
+        public bool HasActions () => actions.Count > 0;
+
+        public SCNAction? GetAction (string key)
+        {
+            return actions.TryGetValue (key, out var action) ? action : null;
+        }
+
+        public void RemoveAction (string key)
+        {
+            actions.Remove (key);
+        }
+
         public void RemoveAllActions ()
         {
             actions.Clear ();
+        }
+
+        public void AddAudioPlayer (SCNAudioPlayer player)
+        {
+            if (player is null) {
+                return;
+            }
+            audioPlayers.Add (player);
+        }
+
+        public void RemoveAudioPlayer (SCNAudioPlayer player)
+        {
+            audioPlayers.Remove (player);
+        }
+
+        public void RemoveAllAudioPlayers ()
+        {
+            audioPlayers.Clear ();
+        }
+
+        public void AddParticleSystem (SCNParticleSystem system)
+        {
+            if (system is null) {
+                return;
+            }
+            particleSystems.Add (system);
+        }
+
+        public void RemoveParticleSystem (SCNParticleSystem system)
+        {
+            particleSystems.Remove (system);
+        }
+
+        public void RemoveAllParticleSystems ()
+        {
+            particleSystems.Clear ();
         }
 
         public SCNVector3 ConvertPositionFromNode (SCNVector3 position, SCNNode? fromNode)
@@ -1467,6 +1707,15 @@ namespace SceneKit
             return worldVec;
         }
 
+        public SCNVector3 ConvertVectorToNode (SCNVector3 vector, SCNNode? toNode)
+        {
+            var worldVec = SCNVector3.TransformNormal (vector, WorldTransform);
+            if (toNode is null) {
+                return worldVec;
+            }
+            return toNode.ConvertVectorFromNode (worldVec, null);
+        }
+
         public SCNMatrix4 ConvertTransformFromNode (SCNMatrix4 t, SCNNode? fromNode)
         {
             var world = fromNode is null ? t : fromNode.WorldTransform * t;
@@ -1490,12 +1739,24 @@ namespace SceneKit
 
         public virtual void GetBoundingBox (ref SCNVector3 min, ref SCNVector3 max)
         {
+            if (hasBoundingBoxOverride) {
+                min = boundingBoxMinOverride;
+                max = boundingBoxMaxOverride;
+                return;
+            }
             if (Geometry is null) {
                 min = SCNVector3.Zero;
                 max = SCNVector3.Zero;
                 return;
             }
             Geometry.GetBoundingBox (ref min, ref max);
+        }
+
+        public virtual void SetBoundingBox (ref SCNVector3 min, ref SCNVector3 max)
+        {
+            hasBoundingBoxOverride = true;
+            boundingBoxMinOverride = min;
+            boundingBoxMaxOverride = max;
         }
 
         public virtual void GetBoundingSphere (ref SCNVector3 center, ref nfloat radius)
@@ -1507,6 +1768,166 @@ namespace SceneKit
             radius = (max - center).Length;
         }
 
+        public SCNNode Clone ()
+        {
+            var cloned = (SCNNode)Copy ();
+            foreach (var child in children) {
+                cloned.AddChildNode (child.Clone ());
+            }
+            return cloned;
+        }
+
+        public SCNNode FlattenedClone ()
+        {
+            var clone = Clone ();
+            var flattened = new SCNNode {
+                Name = clone.Name,
+                Geometry = clone.Geometry,
+                Camera = clone.Camera,
+                Light = clone.Light,
+                PhysicsBody = clone.PhysicsBody,
+                Constraints = clone.Constraints,
+                Skinner = clone.Skinner,
+                CategoryBitMask = clone.CategoryBitMask,
+                Pivot = clone.Pivot,
+                MovabilityHint = clone.MovabilityHint,
+                Paused = clone.Paused,
+                Opacity = clone.Opacity,
+                Hidden = clone.Hidden,
+                CastsShadow = clone.CastsShadow,
+                RenderingOrder = clone.RenderingOrder,
+                Orientation = clone.Orientation,
+                Rotation = clone.Rotation,
+                EulerAngles = clone.EulerAngles,
+                Scale = clone.Scale,
+                Transform = clone.Transform,
+            };
+            foreach (var desc in clone.EnumerateHierarchy ()) {
+                if (desc.Geometry is not null && !ReferenceEquals (desc, clone)) {
+                    flattened.AddChildNode (new SCNNode {
+                        Geometry = desc.Geometry,
+                        Transform = desc.WorldTransform,
+                        Name = desc.Name,
+                    });
+                }
+            }
+            return flattened;
+        }
+
+        IEnumerable<SCNNode> EnumerateHierarchy ()
+        {
+            yield return this;
+            foreach (var child in children) {
+                foreach (var c in child.EnumerateHierarchy ()) {
+                    yield return c;
+                }
+            }
+        }
+
+        public void EnumerateChildNodes (SCNNodeHandler handler)
+        {
+            if (handler is null) {
+                return;
+            }
+            foreach (var child in children.ToArray ()) {
+                if (handler (child, out var stop) || stop) {
+                    break;
+                }
+            }
+        }
+
+        public void EnumerateHierarchy (SCNNodeHandler handler)
+        {
+            if (handler is null) {
+                return;
+            }
+            foreach (var node in EnumerateHierarchy ()) {
+                if (handler (node, out var stop) || stop) {
+                    break;
+                }
+            }
+        }
+
+        public SCNNode? FindChildNode (string childName, bool recursively)
+        {
+            if (string.IsNullOrEmpty (childName)) {
+                return null;
+            }
+            foreach (var child in children) {
+                if (string.Equals (child.Name, childName, StringComparison.Ordinal)) {
+                    return child;
+                }
+                if (recursively) {
+                    var recursiveResult = child.FindChildNode (childName, recursively: true);
+                    if (recursiveResult is not null) {
+                        return recursiveResult;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public SCNNode[] FindNodes (SCNNodePredicate predicate)
+        {
+            if (predicate is null) {
+                return Array.Empty<SCNNode> ();
+            }
+            var result = new List<SCNNode> ();
+            foreach (var node in EnumerateHierarchy ()) {
+                var keep = predicate (node, out var stop);
+                if (keep) {
+                    result.Add (node);
+                }
+                if (stop) {
+                    break;
+                }
+            }
+            return result.ToArray ();
+        }
+
+        public void LocalTranslate (SCNVector3 translation)
+        {
+            Position += ConvertVectorToNode (translation, ParentNode);
+        }
+
+        public void LocalRotate (SCNQuaternion rotation)
+        {
+            Orientation = rotation;
+        }
+
+        public void Rotate (SCNQuaternion worldRotation, SCNVector3 worldTarget)
+        {
+            Orientation = worldRotation;
+            WorldPosition = worldTarget;
+        }
+
+        public void Look (SCNVector3 worldTarget)
+        {
+            Look (worldTarget, LocalUp, LocalFront);
+        }
+
+        public void Look (SCNVector3 worldTarget, SCNVector3 worldUp, SCNVector3 localFront)
+        {
+            var forward = worldTarget - WorldPosition;
+            if (forward.LengthSquared == 0) {
+                return;
+            }
+            forward.Normalize ();
+            var right = SCNVector3.Cross (worldUp, forward);
+            if (right.LengthSquared == 0) {
+                right = LocalRight;
+            }
+            right.Normalize ();
+            var up = SCNVector3.Cross (forward, right);
+            up.Normalize ();
+
+            var wt = WorldTransform;
+            wt.M11 = right.X; wt.M21 = right.Y; wt.M31 = right.Z;
+            wt.M12 = up.X; wt.M22 = up.Y; wt.M32 = up.Z;
+            wt.M13 = -forward.X; wt.M23 = -forward.Y; wt.M33 = -forward.Z;
+            WorldTransform = wt;
+        }
+
         public NSObject Copy ()
         {
             var n = new SCNNode {
@@ -1516,6 +1937,11 @@ namespace SceneKit
                 Light = Light,
                 PhysicsBody = PhysicsBody,
                 Constraints = Constraints,
+                Skinner = Skinner,
+                CategoryBitMask = CategoryBitMask,
+                Pivot = Pivot,
+                MovabilityHint = MovabilityHint,
+                Paused = Paused,
                 Opacity = Opacity,
                 Hidden = Hidden,
                 CastsShadow = CastsShadow,
@@ -1526,6 +1952,13 @@ namespace SceneKit
                 Scale = Scale,
                 Transform = Transform,
             };
+            n.audioPlayers.AddRange (audioPlayers);
+            n.particleSystems.AddRange (particleSystems);
+            if (hasBoundingBoxOverride) {
+                n.hasBoundingBoxOverride = true;
+                n.boundingBoxMinOverride = boundingBoxMinOverride;
+                n.boundingBoxMaxOverride = boundingBoxMaxOverride;
+            }
             return n;
         }
 
@@ -1587,7 +2020,11 @@ namespace SceneKit
     public abstract class SCNSceneRendererDelegate : NSObject
     {
         public virtual void Update (ISCNSceneRenderer renderer, double timeInSeconds) { }
+        public virtual void DidApplyAnimations (ISCNSceneRenderer renderer, double timeInSeconds) { }
+        public virtual void DidApplyConstraints (ISCNSceneRenderer renderer, double timeInSeconds) { }
         public virtual void DidSimulatePhysics (ISCNSceneRenderer renderer, double timeInSeconds) { }
+        public virtual void WillRenderScene (ISCNSceneRenderer renderer, SCNScene scene, double timeInSeconds) { }
+        public virtual void DidRenderScene (ISCNSceneRenderer renderer, SCNScene scene, double timeInSeconds) { }
     }
 
     public abstract class SCNViewDelegate : NSObject
@@ -1643,12 +2080,23 @@ namespace SceneKit
         {
             return point;
         }
+
+        public virtual void Render (double timeInSeconds)
+        {
+            SceneRendererDelegate?.Update (this, timeInSeconds);
+            SceneRendererDelegate?.DidApplyAnimations (this, timeInSeconds);
+            SceneRendererDelegate?.DidApplyConstraints (this, timeInSeconds);
+            SceneRendererDelegate?.DidSimulatePhysics (this, timeInSeconds);
+            SceneRendererDelegate?.WillRenderScene (this, Scene, timeInSeconds);
+            SceneRendererDelegate?.DidRenderScene (this, Scene, timeInSeconds);
+        }
     }
 
     public class SCNLayer : NSObject, ISCNSceneRenderer
     {
         public SCNScene Scene { get; set; } = SCNScene.Create ();
         public SCNNode? PointOfView { get; set; }
+        public SCNSceneRendererDelegate? SceneRendererDelegate { get; set; }
         public IMTLDevice? Device { get; set; }
         public IMTLCommandQueue? CommandQueue { get; set; }
     }
@@ -1657,6 +2105,7 @@ namespace SceneKit
     {
         public SCNScene Scene { get; set; } = SCNScene.Create ();
         public SCNNode? PointOfView { get; set; }
+        public SCNSceneRendererDelegate? SceneRendererDelegate { get; set; }
         public IMTLDevice? Device { get; set; }
         public IMTLCommandQueue? CommandQueue { get; set; }
 
@@ -1675,6 +2124,15 @@ namespace SceneKit
 
         public void Render (double timeInSeconds)
         {
+            if (Scene is null) {
+                return;
+            }
+            SceneRendererDelegate?.Update (this, timeInSeconds);
+            SceneRendererDelegate?.DidApplyAnimations (this, timeInSeconds);
+            SceneRendererDelegate?.DidApplyConstraints (this, timeInSeconds);
+            SceneRendererDelegate?.DidSimulatePhysics (this, timeInSeconds);
+            SceneRendererDelegate?.WillRenderScene (this, Scene, timeInSeconds);
+            SceneRendererDelegate?.DidRenderScene (this, Scene, timeInSeconds);
         }
 
         public void Render (double timeInSeconds, CGRect viewport, IMTLCommandBuffer commandBuffer, MTLRenderPassDescriptor renderPassDescriptor)

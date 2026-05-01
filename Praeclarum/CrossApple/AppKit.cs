@@ -25,7 +25,7 @@ namespace AppKit
 		public NSColor? BackgroundColor { get; set; }
 		public bool WantsLayer { get; set; }
 		public bool Hidden { get; set; }
-		public bool IsFlipped { get => false; }
+		public virtual bool IsFlipped { get => false; }
 		public NSViewResizingMask AutoresizingMask { get; set; }
 		public virtual void AddSubview (NSView subview) { }
 		public virtual void RemoveFromSuperview () { }

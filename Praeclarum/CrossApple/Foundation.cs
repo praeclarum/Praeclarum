@@ -1,14 +1,18 @@
 #nullable enable
 
+#if !__IOS__ && !__MACOS__ && !__TVOS__ && !__MACCATALYST__
+
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language itself in future versions of C#.
+// global using nfloat = System.Runtime.InteropServices.NFloat;
+global using nfloat = System.Double;
+#pragma warning restore CS8981
+
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-#if !__IOS__ && !__MACOS__ && !__TVOS__ && !__MACCATALYST__
-
 using ObjCRuntime;
-using CloudKit;
 
 namespace Foundation
 {
@@ -993,7 +997,7 @@ namespace Foundation
         INSItemProviderWriting,
         INSMutableCopying,
         INSSecureCoding,
-        ICKRecordValue
+        CloudKit.ICKRecordValue
     {
         /// <summary>An <see cref="T:Foundation.NSString" /> instance for an empty (zero-length) string.</summary>
         public static readonly NSString Empty = new ("");

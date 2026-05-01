@@ -2161,6 +2161,8 @@ namespace UIKit
         public CoreAnimation.CALayer Layer { get; } = new ();
         public UIViewContentMode ContentMode { get; set; }
         public UIViewAutoresizing AutoresizingMask { get; set; }
+        public virtual bool CanBecomeFirstResponder => false;
+        public virtual CGSize IntrinsicContentSize => CGSize.Empty;
         public CGAffineTransform Transform { get; set; } = CGAffineTransform.MakeIdentity ();
         public bool TranslatesAutoresizingMaskIntoConstraints { get; set; } = true;
         public UITraitCollection TraitCollection { get; } = new ();
@@ -2184,6 +2186,7 @@ namespace UIKit
         public virtual CGPoint ConvertPointFromView (CGPoint point, UIView? fromView) => point;
         public virtual CGRect ConvertRectToView (CGRect rect, UIView? toView) => rect;
         public virtual CGRect ConvertRectFromView (CGRect rect, UIView? fromView) => rect;
+        public virtual void ViewDidChangeEffectiveAppearance () { }
         public void AddGestureRecognizer (UIGestureRecognizer gr) { }
         public void RemoveGestureRecognizer (UIGestureRecognizer gr) { }
         public virtual void Draw (CGRect rect) { }
@@ -2205,7 +2208,9 @@ namespace UIKit
         public CGSize PreferredContentSize { get; set; }
         public UITraitCollection TraitCollection { get; } = new ();
         public UIModalPresentationStyle ModalPresentationStyle { get; set; }
+        public virtual bool PrefersHomeIndicatorAutoHidden => false;
         public UIViewController () { }
+        public virtual void LoadView () { }
         public virtual void ViewDidLoad () { }
         public virtual void ViewWillAppear (bool animated) { }
         public virtual void ViewDidAppear (bool animated) { }
@@ -2213,12 +2218,20 @@ namespace UIKit
         public virtual void ViewDidDisappear (bool animated) { }
         public virtual void ViewWillLayoutSubviews () { }
         public virtual void ViewDidLayoutSubviews () { }
+        public virtual void ViewDidLayout () { ViewDidLayoutSubviews (); }
         public virtual void DidReceiveMemoryWarning () { }
         public virtual void PresentViewController (UIViewController vc, bool animated, Action? completion) => completion?.Invoke ();
         public virtual void DismissViewController (bool animated, Action? completion) => completion?.Invoke ();
         public virtual void AddChildViewController (UIViewController vc) { }
         public virtual void RemoveFromParentViewController () { }
         public virtual void DidMoveToParentViewController (UIViewController? parent) { }
+        public virtual bool CanPerform (Selector action, NSObject withSender) => true;
+        public virtual void Cut (NSObject sender) { }
+        public virtual void Copy (NSObject sender) { }
+        public virtual void Delete (NSObject sender) { }
+        public virtual void Paste (NSObject sender) { }
+        public virtual void SelectAll (NSObject sender) { }
+        public virtual NSObject ValidRequestorForSendType (string sendType, string returnType) => this;
     }
 
     public class UINavigationController : UIViewController
@@ -2512,6 +2525,10 @@ namespace UIKit
         public UICollectionView CollectionView { get; set; } = new ();
         public UICollectionViewController () { }
         public UICollectionViewController (UICollectionViewLayout layout) { CollectionView = new UICollectionView (CGRect.Empty, layout); }
+        public virtual nint NumberOfSections (UICollectionView collectionView) => 1;
+        public virtual nint GetItemsCount (UICollectionView collectionView, nint section) => 0;
+        public virtual UICollectionViewCell GetCell (UICollectionView collectionView, NSIndexPath indexPath) => new ();
+        public virtual void ItemSelected (UICollectionView collectionView, NSIndexPath indexPath) { }
     }
 
     public class UIDocument : NSObject
@@ -2526,6 +2543,11 @@ namespace UIKit
         public virtual System.Threading.Tasks.Task<bool> OpenAsync () => System.Threading.Tasks.Task.FromResult (true);
         public virtual System.Threading.Tasks.Task<bool> CloseAsync () => System.Threading.Tasks.Task.FromResult (true);
         public virtual System.Threading.Tasks.Task<bool> SaveAsync (NSUrl url, UIDocumentSaveOperation op) => System.Threading.Tasks.Task.FromResult (true);
+        public virtual NSDictionary? GetFileAttributesToWrite (NSUrl forUrl, UIDocumentSaveOperation saveOperation, out NSError? outError)
+        {
+            outError = null;
+            return null;
+        }
         public virtual NSObject? ContentsForType (string typeName, out NSError? outError) { outError = null; return null; }
         public virtual bool LoadFromContents (NSObject contents, string typeName, out NSError? outError) { outError = null; return true; }
         public void UpdateChangeCount (UIDocumentChangeKind change) { }

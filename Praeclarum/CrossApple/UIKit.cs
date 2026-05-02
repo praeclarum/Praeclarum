@@ -2136,6 +2136,11 @@ namespace UIKit
 #if !__MACOS__ && !__IOS__ && !__MACCATALYST__
     // CROSS PLATFORM BASE DEFINITIONS
 
+    public class NSLayoutConstraint : NSObject
+    {
+        public NSLayoutConstraint () { }
+    }
+
     public enum UIGestureRecognizerState
     {
         Began,
@@ -2193,6 +2198,7 @@ namespace UIKit
         public static void Animate (double duration, Action animations) => animations ();
         public static void Animate (double duration, Action animations, Action? completion) { animations (); completion?.Invoke (); }
         public static void AnimateNotify (double duration, Action animations, Action<bool>? completion) { animations (); completion?.Invoke (true); }
+        public virtual void TraitCollectionDidChange (UITraitCollection? previousTraitCollection) {}
     }
 
     public class UIViewController : NSObject
@@ -2208,6 +2214,7 @@ namespace UIKit
         public CGSize PreferredContentSize { get; set; }
         public UITraitCollection TraitCollection { get; } = new ();
         public UIModalPresentationStyle ModalPresentationStyle { get; set; }
+        public virtual bool CanBecomeFirstResponder => false;
         public virtual bool PrefersHomeIndicatorAutoHidden => false;
         public UIViewController () { }
         public virtual void LoadView () { }
@@ -2558,6 +2565,51 @@ namespace UIKit
     [Flags]
     public enum UIDocumentState { Normal = 0, Closed = 1, InConflict = 2, SavingError = 4, EditingDisabled = 8, ProgressAvailable = 16 }
 
+    public class UIDropInteraction : NSObject
+    {
+        public IUIDropInteractionDelegate? Delegate { get; set; }
+        public UIDropInteraction () { }
+        public UIDropInteraction (IUIDropInteractionDelegate del) { Delegate = del; }
+    }
+
+    public interface IUIDropInteractionDelegate
+    {
+        UIDropProposal SessionDidUpdate (UIDropInteraction interaction, IUIDropSession session);
+        bool CanHandleSession (UIDropInteraction interaction, IUIDropSession session);
+        void PerformDrop (UIDropInteraction interaction, IUIDropSession session);
+    }
+
+    public class UIDropInteractionDelegate : NSObject, IUIDropInteractionDelegate
+    {
+        public virtual UIDropProposal SessionDidUpdate (UIDropInteraction interaction, IUIDropSession session) => new (UIDropOperation.Cancel);
+        public virtual bool CanHandleSession (UIDropInteraction interaction, IUIDropSession session) => false;
+        public virtual void PerformDrop (UIDropInteraction interaction, IUIDropSession session) { }
+    }
+
+    public enum UIDropOperation { Cancel, Copy, Move, Forbidden }
+
+    public class UIDropProposal : NSObject
+    {
+        public UIDropOperation Operation { get; set; }
+        public UIDropProposal (UIDropOperation op) => Operation = op;
+    }
+
+    public interface IUIDropSession
+    {
+        bool CanLoadObjectsOfClass (Type aClass);
+        IEnumerable<NSObject> Items { get; }
+        bool IsRestrictedToDraggingApplication { get; }
+        bool IsFromCurrentApp { get; }
+    }
+
+    public class UIDropSession : IUIDropSession
+    {
+        public bool CanLoadObjectsOfClass (Type aClass) => false;
+        public IEnumerable<NSObject> Items => Array.Empty<NSObject> ();
+        public bool IsRestrictedToDraggingApplication => false;
+        public bool IsFromCurrentApp => false;
+    }
+
     public class UIEvent : NSObject
     {
         public double Timestamp { get; set; }
@@ -2590,6 +2642,12 @@ namespace UIKit
         public nuint NumberOfTouches { get; set; }
         public CGPoint LocationInView (UIView? view) => CGPoint.Empty;
         public CGPoint LocationOfTouch (nuint touchIndex, UIView? view) => CGPoint.Empty;
+    }
+
+    public class UIKeyboardEventArgs : EventArgs
+    {
+        public string Key { get; }
+        public UIKeyboardEventArgs (string key) => Key = key;
     }
 
     public class UIPanGestureRecognizer : UIGestureRecognizer

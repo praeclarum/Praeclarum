@@ -15,39 +15,58 @@ namespace Praeclarum.App
 	{
 		// https://developer.apple.com/documentation/storekit/skstorereviewcontroller/requesting_app_store_reviews
 
-		readonly string numPositiveKey;
-		readonly string shownKey;
+		const string CountKey = "ReviewCountTotal";
+		const string LastShownVersionKey = "ReviewLastShownVersion";
+		const string LastShownDateKey = "ReviewLastShownDate";
+
+		static readonly TimeSpan MinTimeBetweenPrompts = TimeSpan.FromDays (60);
+
+		readonly string appVersionMajorMinor;
 		readonly NSUserDefaults defs;
 
 		int MinNumPositiveActions { get; }
 
-		int NumPositiveActions => (int)defs.IntForKey (numPositiveKey);
+		int NumPositiveActions => (int)defs.IntForKey (CountKey);
 
-		bool Shown => defs.BoolForKey (shownKey);
+		string LastShownVersion => defs.StringForKey (LastShownVersionKey) ?? "";
 
-		public bool NeedsReview => !Shown;
+		DateTime? LastShownDate {
+			get {
+				var ticks = defs.DoubleForKey (LastShownDateKey);
+				if (ticks <= 0 || ticks > long.MaxValue)
+					return null;
+				return new DateTime ((long)ticks, DateTimeKind.Utc);
+			}
+		}
 
-		public ReviewNagging (int minNumPositiveActions = 5)
+		bool ShownForThisVersion => LastShownVersion == appVersionMajorMinor;
+
+		bool EnoughTimeSinceLastShown =>
+			LastShownDate is not DateTime lastShown ||
+			(DateTime.UtcNow - lastShown) >= MinTimeBetweenPrompts;
+
+		public bool NeedsReview => !ShownForThisVersion && EnoughTimeSinceLastShown;
+
+		public ReviewNagging (int minNumPositiveActions = 3)
 		{
 			var appVersionFull = NSBundle.MainBundle.InfoDictionary["CFBundleShortVersionString"]?.ToString () ?? "1.0";
-			var appVersionMajorMinor = string.Join (".", appVersionFull.Split ('.').Take (2));
+			appVersionMajorMinor = string.Join (".", appVersionFull.Split ('.').Take (2));
 
 			defs = NSUserDefaults.StandardUserDefaults;
-			numPositiveKey = "ReviewCount" + appVersionMajorMinor;
-			shownKey = "ReviewShown" + appVersionMajorMinor;
 			MinNumPositiveActions = minNumPositiveActions;
 		}
 
 		public void Reset ()
 		{
-			defs.SetInt (0, numPositiveKey);
-			defs.SetBool (false, shownKey);
+			defs.SetInt (0, CountKey);
+			defs.RemoveObject (LastShownVersionKey);
+			defs.RemoveObject (LastShownDateKey);
 		}
 
 		public void RegisterPositiveAction ()
 		{
 			try {
-				defs.SetInt (NumPositiveActions + 1, numPositiveKey);
+				defs.SetInt (NumPositiveActions + 1, CountKey);
 				Log.Info ("Num Review Actions = " + NumPositiveActions);
 			}
 			catch (Exception ex) {
@@ -58,8 +77,8 @@ namespace Praeclarum.App
 		public bool ShouldPresent {
 			get {
 				var osok = UIDevice.CurrentDevice.CheckSystemVersion (10, 3);
-				var shouldPresent = osok && !Shown && NumPositiveActions >= MinNumPositiveActions;
-				Log.Info ($"Present Review (os={osok}, s={Shown}, n={NumPositiveActions}) = {shouldPresent}");
+				var shouldPresent = osok && NeedsReview && NumPositiveActions >= MinNumPositiveActions;
+				Log.Info ($"Present Review (os={osok}, shownForVersion={ShownForThisVersion}, timeOK={EnoughTimeSinceLastShown}, n={NumPositiveActions}) = {shouldPresent}");
 				return shouldPresent;
 			}
 		}
@@ -69,10 +88,31 @@ namespace Praeclarum.App
 			try {
 				if (ShouldPresent) {
 
-					defs.SetBool (true, shownKey);
+					defs.SetString (appVersionMajorMinor, LastShownVersionKey);
+					defs.SetDouble ((double)DateTime.UtcNow.Ticks, LastShownDateKey);
+					defs.SetInt (0, CountKey);
 
-					SKStoreReviewController.RequestReview ();
+					RequestReview ();
 				}
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+			}
+		}
+
+		static void RequestReview ()
+		{
+			try {
+				if (UIDevice.CurrentDevice.CheckSystemVersion (14, 0)) {
+					var scene = UIApplication.SharedApplication.ConnectedScenes
+						.OfType<UIWindowScene> ()
+						.FirstOrDefault (s => s.ActivationState == UISceneActivationState.ForegroundActive);
+					if (scene is not null) {
+						SKStoreReviewController.RequestReview (scene);
+						return;
+					}
+				}
+				SKStoreReviewController.RequestReview ();
 			}
 			catch (Exception ex) {
 				Log.Error (ex);

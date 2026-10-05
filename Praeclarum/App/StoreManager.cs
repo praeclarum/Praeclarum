@@ -96,6 +96,7 @@ namespace Praeclarum.App
 				completion?.TrySetException (processingError);
 			else
 				completion?.TrySetResult (true);
+			Log.Info ($"STORE RestoreProcessed: restoredTransactions={productsRestored.Count}");
 			await RestoredAsync (error);
 		}
 
@@ -135,7 +136,7 @@ namespace Praeclarum.App
 					} catch (Exception ex) {
 						if (IsRestoring)
 							restoreProcessingError ??= ex;
-						Log.Error (ex);
+						Log.Error ("STORE transaction processing failed", ex);
 					}
 				}
 			} catch (Exception ex) {

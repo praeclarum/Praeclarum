@@ -183,8 +183,9 @@ namespace Praeclarum.App
 				var record = await GetPlatformCloudKitSubAsync(otherPlat, db);
 				if (record is { } sub && prices.FirstOrDefault(x => x.Months == sub.NumMonths) is { } price)
 				{
-					Console.WriteLine("PRO FOUND OTHER SUB = {0} on {1}", record.PurchaseDate, record.Platform);
-					await AddSubscriptionAsync(null, record.PurchaseDate, SKPaymentTransactionState.Restored, price, otherPlat);
+					var purchaseDate = record.PurchaseDate;
+					await AddSubscriptionAsync(null, purchaseDate, SKPaymentTransactionState.Restored, price, otherPlat);
+					Log.Info ($"PRO FOUND OTHER SUB = {purchaseDate:O} on {otherPlat}, months={price.Months}");
 				}
 			}
 		}
@@ -213,7 +214,7 @@ namespace Praeclarum.App
 			}
 			catch (Exception ex)
 			{
-				Log.Error (ex);
+				Log.Error ("PRO iCloud backup failed", ex);
 			}
 			finally {
 				cloudSaveLock.Release ();

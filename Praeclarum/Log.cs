@@ -35,7 +35,7 @@ namespace Praeclarum
 					props["Context"] = context;
 				}
 				Logger?.TrackError (ex, props);
-				WriteLine("E", ex.ToString());
+				WriteLine ("E", string.IsNullOrWhiteSpace (context) ? ex.ToString () : context + ": " + ex);
 			}
 			catch
 			{
@@ -186,4 +186,3 @@ namespace Praeclarum
 #endif
 	}
 }
-

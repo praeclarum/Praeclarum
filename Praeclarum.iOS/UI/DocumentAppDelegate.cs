@@ -162,7 +162,6 @@ namespace Praeclarum.UI
 					if (Settings.IsPatron) {
 						Settings.IsPatron = DateTime.UtcNow <= Settings.PatronEndDate;
 					}
-					StoreManager.Shared.RestoredActions.Add (HandlePurchaseRestoredAsync);
 					StoreManager.Shared.PurchasingActions.Add (HandlePurchasingAsync);
 					StoreManager.Shared.CompletionActions.Add (HandlePurchaseCompletionAsync);
 					StoreManager.Shared.FailActions.Add (HandlePurchaseFailAsync);
@@ -305,14 +304,6 @@ namespace Praeclarum.UI
 			}
 
 			return shouldPerformAdditionalDelegateHandling;
-		}
-
-		static async Task HandlePurchaseRestoredAsync (NSError error)
-		{
-			// await TipJarForm.HandlePurchaseRestoredAsync(error);
-			await ProService.Shared.HandlePurchaseRestoredAsync(error);
-			await ProForm.HandlePurchaseRestoredAsync(error);
-			// await PatronForm.HandlePurchaseRestoredAsync (error);
 		}
 
 		static async Task HandlePurchasingAsync (StoreKit.SKPaymentTransaction t)

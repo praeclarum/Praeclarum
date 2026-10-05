@@ -272,6 +272,7 @@ namespace Praeclarum.UI
 				}
 			}
 			b.AttributedTitle = titleAS;
+			b.Enabled = Section.GetItemEnabled (Item);
 		}
 		public void FormatItem ()
 		{

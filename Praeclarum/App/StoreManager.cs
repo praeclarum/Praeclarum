@@ -39,34 +39,75 @@ namespace Praeclarum.App
 			SKPaymentQueue.DefaultQueue.AddPayment (payment);
 		}
 
-		public bool IsRestoring { get; private set; }
+		public bool IsRestoring => restoreCompletion is not null;
+		// This task represents Apple's request, not how long a screen waits for it.
+		// StoreKit provides neither a restore cancellation API nor a request ID in its callbacks.
+		TaskCompletionSource<bool>? restoreCompletion;
+		Task transactionProcessing = Task.CompletedTask;
+		Exception? restoreProcessingError;
 
 		public void Restore ()
 		{
-			if (IsRestoring) return;
-			IsRestoring = true;
+			RestoreAsync ().ContinueWith (Log.TaskError);
+		}
+
+		public Task RestoreAsync ()
+		{
+			// Another caller joins the existing request. Only Apple's callback completes it.
+			if (restoreCompletion is { } pending)
+				return pending.Task;
+			var completion = new TaskCompletionSource<bool> (TaskCreationOptions.RunContinuationsAsynchronously);
+			restoreCompletion = completion;
+			restoreProcessingError = null;
 			Console.WriteLine ("STORE Restore()");
 			productsRestored.Clear ();
-			SKPaymentQueue.DefaultQueue.RestoreCompletedTransactions ();
+			try {
+				SKPaymentQueue.DefaultQueue.RestoreCompletedTransactions ();
+			}
+			catch (Exception ex) {
+				restoreCompletion = null;
+				completion.TrySetException (ex);
+			}
+			return completion.Task;
 		}
 
 		public override async void RestoreCompletedTransactionsFinished (SKPaymentQueue queue)
 		{
-			IsRestoring = false;
 			Console.WriteLine ("STORE RestoreCompleted()");
-			await RestoredAsync(error: null);
+			await CompleteRestoreAsync (error: null);
 		}
 
 		public override async void RestoreCompletedTransactionsFailedWithError (SKPaymentQueue queue, NSError error)
 		{
-			IsRestoring = false;
 			Console.WriteLine ("STORE ERROR RestoreError ({0})", error);
-			await RestoredAsync(error: error);
+			await CompleteRestoreAsync (error);
 		}
 
-		public override async void UpdatedTransactions (SKPaymentQueue queue, SKPaymentTransaction[] transactions)
+		async Task CompleteRestoreAsync (NSError? error)
 		{
-			if (transactions == null)
+			var completion = restoreCompletion;
+			// StoreKit's finished callback can arrive while an async transaction handler is still running.
+			await transactionProcessing;
+			if (ReferenceEquals (restoreCompletion, completion))
+				restoreCompletion = null;
+			if (error is not null)
+				completion?.TrySetException (new NSErrorException (error));
+			else if (restoreProcessingError is { } processingError)
+				completion?.TrySetException (processingError);
+			else
+				completion?.TrySetResult (true);
+			await RestoredAsync (error);
+		}
+
+		public override void UpdatedTransactions (SKPaymentQueue queue, SKPaymentTransaction[] transactions)
+		{
+			transactionProcessing = ProcessTransactionsAsync (transactionProcessing, transactions);
+		}
+
+		async Task ProcessTransactionsAsync (Task previous, SKPaymentTransaction[] transactions)
+		{
+			await previous;
+			if (transactions is null)
 				return;
 			try {
 				foreach (var t in transactions) {
@@ -92,10 +133,14 @@ namespace Praeclarum.App
 							break;
 						}
 					} catch (Exception ex) {
+						if (IsRestoring)
+							restoreProcessingError ??= ex;
 						Log.Error (ex);
 					}
 				}
 			} catch (Exception ex) {
+				if (IsRestoring)
+					restoreProcessingError ??= ex;
 				Log.Error (ex);
 			}
 		}
@@ -152,4 +197,3 @@ namespace Praeclarum.App
 		}
 	}
 }
-

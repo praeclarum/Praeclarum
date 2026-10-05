@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Runtime;
 using System.IO;
+using System.Threading;
 
 #if __IOS__ || __MACOS__
 using CloudKit;
@@ -38,6 +39,9 @@ namespace Praeclarum.App
 		public static readonly ProService Shared = new ProService ();
 
 		readonly ProPrice[] prices;
+		static readonly TimeSpan CloudRestoreTimeout = TimeSpan.FromSeconds (30);
+		readonly SemaphoreSlim cloudSaveLock = new SemaphoreSlim (1, 1);
+		Task<string?>? restoreTask;
 
 		public ProPrice[] Prices => prices;
 
@@ -107,10 +111,40 @@ namespace Praeclarum.App
 		}
 
 #if __IOS__ || __MACOS__
-		public void Restore ()
+		public Task<string?> RestoreAsync ()
 		{
-			StoreManager.Shared.Restore ();
-			RestoreFromCloudKit ();
+			if (restoreTask is { IsCompleted: false } pending)
+				return pending;
+			return restoreTask = RestoreCoreAsync ();
+		}
+
+		async Task<string?> RestoreCoreAsync ()
+		{
+			var cloudRestore = RestoreFromCloudKitAsync ().WaitAsync (CloudRestoreTimeout);
+			// Observe backup failures even when an App Store subscription lets us finish immediately.
+			_ = cloudRestore.ContinueWith (Log.TaskError);
+			string? error = null;
+			try {
+				await StoreManager.Shared.RestoreAsync ();
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+				error = ex.Message;
+			}
+
+			// iCloud is only a fallback. An active subscription never waits for the backup.
+			if (!SubscribedToPro) {
+				try {
+					await cloudRestore;
+				}
+				catch (Exception ex) {
+					var cloudError = ex is TimeoutException
+						? "The iCloud subscription backup did not respond in time. Please try restoring again."
+						: "The iCloud subscription backup could not be checked: " + ex.Message;
+					error = error is null ? cloudError : error + "\n\n" + cloudError;
+				}
+			}
+			return error;
 		}
 		public void RestoreFromCloudKit ()
 		{
@@ -119,72 +153,52 @@ namespace Praeclarum.App
 
 		async Task<CKDatabase?> GetCloudKitDatabaseAsync()
 		{
-			try
-			{
-				var containerId = DocumentAppDelegate.Shared?.App.CloudKitContainerId;
-				var container = containerId is { } cid ? CKContainer.FromIdentifier(cid) : CKContainer.DefaultContainer;
-				var status = await container.GetAccountStatusAsync();
-				var hasCloud = status == CKAccountStatus.Available;
-				if (!hasCloud)
-					return null;
-				return container.PrivateCloudDatabase;
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
+			var containerId = DocumentAppDelegate.Shared?.App.CloudKitContainerId;
+			var container = containerId is { } cid ? CKContainer.FromIdentifier(cid) : CKContainer.DefaultContainer;
+			var status = await container.GetAccountStatusAsync();
+			if (status == CKAccountStatus.NoAccount)
 				return null;
-			}
+			if (status != CKAccountStatus.Available)
+				throw new InvalidOperationException ("iCloud account is unavailable (" + status + ").");
+			return container.PrivateCloudDatabase;
 		}
 
 		async Task<ProSubscriptionCloudRecord?> GetPlatformCloudKitSubAsync(SubPlatform platform, CKDatabase db)
 		{
-			try
-			{
-				var pred = NSPredicate.FromFormat($"Platform == '{platform}'");
-				var query = new CKQuery(ProSubscriptionCloudRecord.RecordName, pred);
-				var recs = await db.PerformQueryAsync(query, CKRecordZone.DefaultRecordZone().ZoneId);
-				//Console.WriteLine("NUM PRO RECS = {0}", recs.Length);
-				return
-					recs
-					.Select(x => new ProSubscriptionCloudRecord(x))
-					.OrderByDescending(x => x.PurchaseDate)
-					.FirstOrDefault();
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
-				return null;
-			}
+			var pred = NSPredicate.FromFormat($"Platform == '{platform}'");
+			var query = new CKQuery(ProSubscriptionCloudRecord.RecordName, pred);
+			var recs = await db.PerformQueryAsync(query, CKRecordZone.DefaultRecordZone().ZoneId);
+			return recs
+				.Select(x => new ProSubscriptionCloudRecord(x))
+				.OrderByDescending(x => x.PurchaseEndDate)
+				.ThenByDescending(x => x.PurchaseDate)
+				.FirstOrDefault();
 		}
 
 		async Task RestoreFromCloudKitAsync()
 		{
-			try
+			if ((await GetCloudKitDatabaseAsync()) is { } db)
 			{
-				if ((await GetCloudKitDatabaseAsync()) is { } db)
+				var otherPlat = GetOtherPlatform();
+				var record = await GetPlatformCloudKitSubAsync(otherPlat, db);
+				if (record is { } sub && prices.FirstOrDefault(x => x.Months == sub.NumMonths) is { } price)
 				{
-					var otherPlat = GetOtherPlatform();
-					var record = await GetPlatformCloudKitSubAsync(GetOtherPlatform(), db);
-					if (record is { } sub && prices.FirstOrDefault(x => x.Months == sub.NumMonths) is { } price)
-					{
-						Console.WriteLine("PRO FOUND OTHER SUB = {0} on {1}", record.PurchaseDate, record.Platform);
-						await AddSubscriptionAsync(null, record.PurchaseDate, SKPaymentTransactionState.Restored, price, otherPlat);
-					}
+					Console.WriteLine("PRO FOUND OTHER SUB = {0} on {1}", record.PurchaseDate, record.Platform);
+					await AddSubscriptionAsync(null, record.PurchaseDate, SKPaymentTransactionState.Restored, price, otherPlat);
 				}
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex);
 			}
 		}
 
-		async Task SaveToCloudKitAsync (DateTime date, int months)
+		async Task SaveToCloudKitAsync (DateTime date, int months, bool reset = false)
 		{
+			await cloudSaveLock.WaitAsync ();
 			try
 			{
 				if ((await GetCloudKitDatabaseAsync ()) is { } db)
 				{
 					var record = await GetPlatformCloudKitSubAsync (GetThisPlatform (), db);
+					if (!reset && record is not null && record.PurchaseEndDate >= date.AddMonths (months))
+						return;
 
 					if (record is not object)
 					{
@@ -201,26 +215,22 @@ namespace Praeclarum.App
 			{
 				Log.Error (ex);
 			}
+			finally {
+				cloudSaveLock.Release ();
+			}
 		}
 #else
-		public void Restore()
-		{
-		}
+		public Task<string?> RestoreAsync () => Task.FromResult<string?> (null);
 		public void RestoreFromCloudKit ()
 		{
 		}
 		async Task RestoreFromCloudKitAsync()
 		{
 		}
-		async Task SaveToCloudKitAsync ()
+		async Task SaveToCloudKitAsync (DateTime date, int months, bool reset = false)
 		{
 		}
 #endif
-
-		public Task HandlePurchaseRestoredAsync (NSError? error)
-		{
-			return Task.CompletedTask;
-		}
 
 		public async Task HandlePurchaseCompletionAsync (StoreKit.SKPaymentTransaction t)
 		{
@@ -338,17 +348,18 @@ namespace Praeclarum.App
 			}
 		}
 
-		async Task SaveSubscriptionIfNewerAsync(DateTime date, int months, SubPlatform fromPlatform)
+		void SaveSubscriptionIfLonger (DateTime date, int months, SubPlatform fromPlatform)
 		{
-			var settings = DocumentAppDelegate.Shared?.Settings;
-			if (settings is null || date > settings.SubscribedToProDate)
+			var settings = DocumentAppDelegate.Shared?.Settings
+				?? throw new InvalidOperationException ("Subscription settings have not been initialized.");
+			if (date.AddMonths (months) > settings.SubscribedToProEndDate ())
 			{
-				await SaveSubscriptionAsync(date, months, fromPlatform);
+				SaveSubscription (date, months, fromPlatform);
 				SignalProChanged ();
 			}
 		}
 
-		async Task SaveSubscriptionAsync (DateTime date, int months, SubPlatform fromPlatform)
+		void SaveSubscription (DateTime date, int months, SubPlatform fromPlatform)
 		{
 			if (DocumentAppDelegate.Shared?.Settings is { } settings)
 			{
@@ -356,26 +367,26 @@ namespace Praeclarum.App
 				settings.SubscribedToProMonths = months;
 				settings.SubscribedToProFromPlatform = fromPlatform.ToString ();
 			}
-
-			//var save = new SavedSub (date, months);
-			//save.TrySave ();
-			if (fromPlatform == GetThisPlatform())
-			{
-				await SaveToCloudKitAsync(date, months);
-			}
 		}
 
-		async Task AddSubscriptionAsync (string? transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p, SubPlatform fromPlatform)
+		Task AddSubscriptionAsync (string? transactionId, DateTime transactionDate, SKPaymentTransactionState transactionState, ProPrice p, SubPlatform fromPlatform)
 		{
-			await SaveSubscriptionIfNewerAsync(transactionDate, p.Months, fromPlatform);
+			SaveSubscriptionIfLonger (transactionDate, p.Months, fromPlatform);
+			// Back up this platform's purchase even if another platform has a longer subscription.
+			// Backup I/O must never hold up the unlock notification or StoreKit completion.
+			if (fromPlatform == GetThisPlatform ())
+				_ = SaveToCloudKitAsync (transactionDate, p.Months).ContinueWith (Log.TaskError);
+			return Task.CompletedTask;
 		}
 
-		public async Task DeletePastPurchasesAsync ()
+		public Task DeletePastPurchasesAsync ()
 		{
 			try
 			{
-				await SaveSubscriptionAsync (new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc), 0, GetThisPlatform());
+				var date = new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+				SaveSubscription (date, 0, GetThisPlatform ());
 				SignalProChanged ();
+				_ = SaveToCloudKitAsync (date, 0, reset: true).ContinueWith (Log.TaskError);
 			}
 			catch (NSErrorException ex)
 			{
@@ -386,6 +397,7 @@ namespace Praeclarum.App
 			{
 				Log.Error (ex);
 			}
+			return Task.CompletedTask;
 		}
 	}
 
@@ -481,4 +493,3 @@ namespace Praeclarum.App
 	}
 #endif
 }
-

@@ -29,6 +29,7 @@ namespace Praeclarum.UI
 		bool subscribedToPro => ProService.SubscribedToPro;
 
 		string? isPurchasing = null;
+		bool isRestoring;
 
 		public ProForm()
 		{
@@ -92,11 +93,43 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public async Task<int> RestorePastPurchasesAsync()
-		{
-			service.Restore();			
+		public Task<int> RestorePastPurchasesAsync() => RestorePastPurchasesAsync (TimeSpan.FromMinutes (2));
 
-			return 0;
+		internal async Task<int> RestorePastPurchasesAsync (TimeSpan responseTimeout)
+		{
+			if (isRestoring)
+				return subscribedToPro ? 1 : 0;
+			isRestoring = true;
+			try {
+				RefreshSubscriptionSections ();
+				// Stop waiting without cancelling or faulting the shared Apple request.
+				var error = await service.RestoreAsync ().WaitAsync (responseTimeout);
+				if (error is not null) {
+					var status = subscribedToPro ? "\n\nYour Pro features are unlocked." : "";
+					ShowAlert ("Restore Failed", error + status);
+				}
+				else if (subscribedToPro) {
+					ShowAlert ("Pro Subscription Restored", "Your Pro subscription is active and Pro features are unlocked.");
+				}
+				else {
+					ShowAlert ("No Active Subscription Found", $"The restore check completed, but no active {DocumentAppDelegate.AppName} Pro subscription was found.\n\nMake sure you are signed in to the App Store with the Apple Account used to subscribe. If you subscribed on another platform, also check your iCloud account.");
+				}
+				return subscribedToPro ? 1 : 0;
+			}
+			catch (TimeoutException) {
+				var status = subscribedToPro ? "\n\nYour Pro features are unlocked." : "";
+				ShowAlert ("Restore Still in Progress", "The App Store has not finished responding. You can keep using the app. Any purchases it returns will be applied automatically. You can select Restore again to check for the result." + status);
+				return subscribedToPro ? 1 : 0;
+			}
+			catch (Exception ex) {
+				Log.Error (ex);
+				ShowAlert ("Restore Failed", ex.Message);
+				return subscribedToPro ? 1 : 0;
+			}
+			finally {
+				isRestoring = false;
+				RefreshSubscriptionSections ();
+			}
 		}
 
 		async Task DeletePastPurchasesAsync()
@@ -142,14 +175,19 @@ namespace Praeclarum.UI
 				needsPrices = false;
 			}
 
+			RefreshSubscriptionSections ();
+
+			return subscribedToPro ? 1 : 0;
+		}
+
+		void RefreshSubscriptionSections ()
+		{
 			aboutSection.SetPatronage();
 			buySection.SetPatronage(isPurchasing);
 
 			ReloadSection(aboutSection);
 			ReloadSection(buySection);
 			ReloadSection(restoreSection);
-
-			return subscribedToPro ? 1 : 0;
 		}
 
 		public static async Task HandlePurchaseFailAsync(StoreKit.SKPaymentTransaction t)
@@ -195,22 +233,6 @@ namespace Praeclarum.UI
 		private static void ShowThanksAlert ()
 		{
 			visibleForm?.ShowAlert ("Thank you!", $"You have successfully subscribed to {DocumentAppDelegate.Shared?.App?.Name ?? ""} Pro!\n\nPro features are now unlocked.\n\nYour continued support is very much appreciated.");
-		}
-
-		public static async Task HandlePurchaseRestoredAsync(NSError? error)
-		{
-#if __IOS__
-			if (!ProService.SubscribedToPro)
-			{
-				visibleForm?.ShowAlert ("No Subscriptions Found", $"You are not currently subscribed to {DocumentAppDelegate.Shared.App.Name} Pro.\n\nChoose one of the pricing plans to subscribe.");
-			}
-			else
-			{
-				ShowThanksAlert ();
-			}
-			if (visibleForm is not null)
-				await visibleForm.RefreshProDataAsync ();
-#endif
 		}
 
 		public static async Task HandlePurchasingAsync(StoreKit.SKPaymentTransaction t)
@@ -344,7 +366,7 @@ namespace Praeclarum.UI
 			{
 				if (item is ProPrice p)
 				{
-					return purchasingProductId is not string;
+					return purchasingProductId is not string && Form is ProForm { isRestoring: false };
 				}
 				else
 				{
@@ -454,8 +476,13 @@ namespace Praeclarum.UI
 
 			public override bool GetItemEnabled (object item)
 			{
-				return true;
+				return Form is ProForm { isRestoring: false, isPurchasing: null };
 			}
+
+			public override string GetItemTitle (object item) => Form is ProForm { isRestoring: true }
+				? "Restoring Pro Subscription…" : base.GetItemTitle (item);
+
+			public override bool GetItemDisplayActivity (object item) => Form is ProForm { isRestoring: true };
 
 			async void RestoreAsync()
 			{
@@ -463,9 +490,6 @@ namespace Praeclarum.UI
 				{
 					try
 					{
-						if (StoreManager.Shared.IsRestoring)
-							return;
-
 						var n = await form.RestorePastPurchasesAsync();
 						Form?.ReloadSection(this);
 					}
@@ -544,4 +568,3 @@ namespace Praeclarum.UI
 		}
 	}
 }
-

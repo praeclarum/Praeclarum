@@ -182,9 +182,26 @@ namespace Praeclarum.UI
 			}
 
 			//
+			// The UI is constructed when the scene connects (ConnectScene)
+			//
+			return true;
+		}
+
+		bool sceneConnectedBefore = false;
+
+		/// <summary>
+		/// Builds the UI in the app's window scene. The system can disconnect a background scene
+		/// and reconnect it later in the same process, so this can run more than once.
+		/// </summary>
+		internal void ConnectScene (UIWindowScene windowScene, UISceneConnectionOptions connectionOptions)
+		{
+			var isFirstConnection = !sceneConnectedBefore;
+			sceneConnectedBefore = true;
+
+			//
 			// Construct the UI
 			//
-			window = new UIWindow (UIScreen.MainScreen.Bounds);
+			window = new UIWindow (windowScene);
 
 			if (useDocumentBrowser) {
 				var utis = App.ContentTypes.ToArray ();
@@ -211,6 +228,13 @@ namespace Praeclarum.UI
 
 				UpdateBrowserToolbar (false);
 
+				try {
+					OnDocumentBrowserCreated (docBrowser);
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+				}
+
 				window.BackgroundColor = Theme.Current.DocumentBackgroundColor;
 			}
 			else {
@@ -236,32 +260,52 @@ namespace Praeclarum.UI
 
 			window.MakeKeyAndVisible ();
 
-			var shouldPerformAdditionalDelegateHandling = true;
-
-			UIApplicationShortcutItem scitem = null;
-			var scitemKey = UIApplication.LaunchOptionsShortcutItemKey;
-			if (launchOptions != null && launchOptions.ContainsKey (scitemKey)) {
-				shouldPerformAdditionalDelegateHandling = false;
-				scitem = launchOptions[scitemKey] as UIApplicationShortcutItem;
-			}
+			//
+			// Launch actions arrive with the scene rather than in launchOptions
+			//
+			var scitem = connectionOptions?.ShortcutItem;
+			var launchUrl = connectionOptions?.UrlContexts?.ToArray ().FirstOrDefault ()?.Url;
 
 			if (useDocumentBrowser) {
 				uiInitialized = true;
 				if (FileSystemManager.Shared != null)
 					FileSystemManager.Shared.ActiveFileSystem = new DeviceFileSystem ();
-				var del = docBrowser?.Delegate as DocumentsBrowserDelegate;
-				if (ShouldRestoreDocs ()) {
+				var browser = docBrowser;
+				var del = browser?.Delegate as DocumentsBrowserDelegate;
+
+				// Don't reopen the last document when launched to open something else
+				var openingOther = false;
+				try {
+					if (launchUrl is not null) {
+						openingOther = HandleOpenUrl (launchUrl);
+					}
+					if (scitem is not null) {
+						openingOther = true;
+						HandleShortcutItemAsync (scitem).ContinueWith (t => {
+							if (t.IsFaulted)
+								Log.Error (t.Exception);
+						});
+					}
+				}
+				catch (Exception ex) {
+					Log.Error (ex);
+				}
+
+				if (isFirstConnection && ShouldRestoreDocs ()) {
 					RestoreDocumentation ().ContinueWith (t => {
-						if (!t.IsFaulted)
+						if (!t.IsFaulted && !openingOther)
 							BeginInvokeOnMainThread (() =>
-								del?.PresentLastDocument (docBrowser, false));
+								del?.PresentLastDocument (browser, false));
 					});
 				}
-				else {
-					del?.PresentLastDocument (docBrowser, false);
+				else if (!openingOther) {
+					del?.PresentLastDocument (browser, false);
 				}
 			}
-			else {
+			else if (isFirstConnection) {
+				if (launchUrl is not null) {
+					HandleOpenUrl (launchUrl);
+				}
 				//
 				// Init the file system
 				//
@@ -302,8 +346,24 @@ namespace Praeclarum.UI
 					Log.Error (ex);
 				}
 			}
+		}
 
-			return shouldPerformAdditionalDelegateHandling;
+		/// <summary>
+		/// Saves and closes the open document when the scene goes away, without forgetting it,
+		/// so it reopens if the scene reconnects.
+		/// </summary>
+		internal async Task DisconnectSceneAsync ()
+		{
+			if (docBrowser?.Delegate is DocumentsBrowserDelegate del) {
+				await del.CloseDocumentForSceneDisconnectAsync ();
+			}
+		}
+
+		/// <summary>
+		/// Called each time the document browser is created, so apps can customize it.
+		/// </summary>
+		protected virtual void OnDocumentBrowserCreated (UIDocumentBrowserViewController browser)
+		{
 		}
 
 		static async Task HandlePurchasingAsync (StoreKit.SKPaymentTransaction t)
@@ -516,23 +576,7 @@ namespace Praeclarum.UI
 			return Task.FromResult (0);
 		}
 
-		public override async void PerformActionForShortcutItem (UIApplication application, UIApplicationShortcutItem shortcutItem, UIOperationHandler completionHandler)
-		{
-			try {
-				await HandleShortcutItemAsync (shortcutItem);
-			}
-			catch (Exception ex) {
-				Log.Error (ex);
-			}
-			try {
-				completionHandler (true);
-			}
-			catch (Exception ex) {
-				Log.Error (ex);
-			}
-		}
-
-		async Task HandleShortcutItemAsync (UIApplicationShortcutItem scitem)
+		internal async Task HandleShortcutItemAsync (UIApplicationShortcutItem scitem)
 		{
 			switch (scitem.Type) {
 				case "new": {
@@ -580,7 +624,7 @@ namespace Praeclarum.UI
 		bool uiInitialized = false;
 		NSUrl pendingUrl = null;
 
-		public override void DidEnterBackground (UIApplication application)
+		internal void SceneDidEnterBackground ()
 		{
 			try {
 				var ed = CurrentDocumentEditor;
@@ -593,7 +637,7 @@ namespace Praeclarum.UI
 			}
 		}
 
-		public override void WillEnterForeground (UIApplication application)
+		internal void SceneWillEnterForeground ()
 		{
 			try {
 				UpdateFonts ();
@@ -645,7 +689,7 @@ namespace Praeclarum.UI
 		}
 #endif
 
-		public override bool OpenUrl (UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
+		internal bool HandleOpenUrl (NSUrl url)
 		{
 #if !NO_DROPBOX
 			try {
@@ -1216,8 +1260,7 @@ namespace Praeclarum.UI
 
 			if (docBrowser is { } db && db.Delegate is Praeclarum.UI.DocumentsBrowserDelegate del)
 			{
-				var url = del.CreateTempUrl();
-				await docBrowser.RevealDocumentAsync(url, true);				
+				await del.CreateAndPresentNewDocumentAsync (db);
 			}
 			else
 			{
@@ -2245,6 +2288,28 @@ namespace Praeclarum.UI
 			}
 		}
 
+		/// <summary>
+		/// Creates a new document in the app's Documents folder (where Gallery downloads go)
+		/// and opens it. Used by New Circuit actions that don't go through the browser's create button.
+		/// </summary>
+		public async Task CreateAndPresentNewDocumentAsync (UIDocumentBrowserViewController controller)
+		{
+			var docsDir = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var ext = "." + app.DefaultExtension;
+			var path = Path.Combine (docsDir, app.DocumentBaseName + ext);
+			for (var i = 2; File.Exists (path); i++) {
+				path = Path.Combine (docsDir, app.DocumentBaseName + " " + i + ext);
+			}
+			var url = NSUrl.FromFilename (path);
+			var doc = (UIDocument)app.CreateDocument (url);
+			if (!await doc.SaveAsync (url, UIDocumentSaveOperation.ForCreating)) {
+				Log.Error ($"Failed to create new document: {url}");
+				return;
+			}
+			await doc.CloseAsync ();
+			PresentDocument (controller, url, true);
+		}
+
 		public override void DidPickDocumentUrls (UIDocumentBrowserViewController controller, NSUrl[] documentUrls)
 		{
 			var url = documentUrls.FirstOrDefault ();
@@ -2265,6 +2330,7 @@ namespace Praeclarum.UI
 		}
 
 		Func<bool, Task> dismissLastDocument;
+		IDocumentEditor presentedEditor;
 
 		public void PresentDocument (UIDocumentBrowserViewController controller, NSUrl url, bool animated)
 		{
@@ -2285,6 +2351,7 @@ namespace Praeclarum.UI
 				rvc.NavigationItem.LeftBarButtonItem = new UIBarButtonItem (UIBarButtonSystemItem.Done, (sender, e) => {
 					dismiss (true);
 					Interlocked.CompareExchange (ref dismissLastDocument, null, dismiss);
+					Interlocked.CompareExchange (ref presentedEditor, null, editor);
 				});
 
 				var d = dismissLastDocument;
@@ -2304,6 +2371,7 @@ namespace Praeclarum.UI
 						editor.BindDocument ();
 						controller.PresentViewController (nvc, animated, null);
 						dismissLastDocument = dismiss;
+						presentedEditor = editor;
 						SaveLastUrl (url);
 					}
 					catch (Exception ex) {
@@ -2336,6 +2404,27 @@ namespace Praeclarum.UI
 			if (doc != null)
 				await doc.CloseAsync ();
 			//Console.WriteLine (doc);
+		}
+
+		/// <summary>
+		/// Saves and closes the presented document without dismissing its UI or clearing the
+		/// last URL. The scene is going away, and the document should reopen when it reconnects.
+		/// </summary>
+		internal async Task CloseDocumentForSceneDisconnectAsync ()
+		{
+			var editor = Interlocked.Exchange (ref presentedEditor, null);
+			dismissLastDocument = null;
+			if (editor == null)
+				return;
+
+			Log.Info ($"Closing editor for scene disconnect: {editor}");
+
+			var doc = editor.Document;
+			await editor.SaveDocument ();
+			editor.UnbindDocument ();
+			editor.UnbindUI ();
+			if (doc != null)
+				await doc.CloseAsync ();
 		}
 
 		static readonly NSString lastUrlKey = new NSString ("com.praeclarum.last-url");
